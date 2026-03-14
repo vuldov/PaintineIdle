@@ -6,14 +6,16 @@ import type { ResourceId } from '@/types'
 export function ResourceBar() {
   const resources = useResourceStore((state) => state.resources)
 
-  const produitsFinis = (Object.keys(resources) as ResourceId[]).filter(
-    (id) => resources[id].unlocked && RESOURCES_DATA[id].category === 'produit_fini'
+  // Top bar : produits finis + monnaie
+  const topBarResources = (Object.keys(resources) as ResourceId[]).filter(
+    (id) => resources[id].unlocked
+      && (RESOURCES_DATA[id].category === 'produit_fini' || RESOURCES_DATA[id].category === 'monnaie')
   )
 
   return (
     <header className="sticky top-0 z-10 bg-amber-100/90 backdrop-blur-sm border-b border-amber-300 px-4 py-3 shadow-sm">
       <div className="flex flex-wrap items-center justify-center gap-8">
-        {produitsFinis.map((id) => {
+        {topBarResources.map((id) => {
           const resource = resources[id]
           const data = RESOURCES_DATA[id]
           return (

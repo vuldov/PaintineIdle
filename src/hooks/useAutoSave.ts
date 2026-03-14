@@ -3,8 +3,14 @@ import Decimal from 'decimal.js'
 import type { ResourceId, BuildingId } from '@/types'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
-import { SAVE_KEY, AUTOSAVE_INTERVAL_MS, MAX_OFFLINE_SECONDS } from '@/lib/constants'
-import { calcProduction } from '@/mechanics/productionMechanics'
+import { useUpgradeStore } from '@/store/upgradeStore'
+import {
+  SAVE_KEY,
+  AUTOSAVE_INTERVAL_MS,
+  MAX_OFFLINE_SECONDS,
+  GAME_VERSION,
+} from '@/lib/constants'
+import { calcProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
 
 // ─── Types de sérialisation ──────────────────────────────────────
 
@@ -28,8 +34,9 @@ interface SerializedBuilding {
 }
 
 interface SaveData {
-  resources: Record<ResourceId, SerializedResource>
-  buildings: Record<BuildingId, SerializedBuilding>
+  resources: Record<string, SerializedResource>
+  buildings: Record<string, SerializedBuilding>
+  upgrades?: Record<string, { purchased: boolean }>
   version: number
   lastSave: number
 }
@@ -39,10 +46,11 @@ interface SaveData {
 function serializeSave(): SaveData {
   const { resources } = useResourceStore.getState()
   const { buildings } = useBuildingStore.getState()
+  const { upgrades } = useUpgradeStore.getState()
 
-  const serializedResources = {} as Record<ResourceId, SerializedResource>
+  const serializedResources: Record<string, SerializedResource> = {}
   for (const [id, resource] of Object.entries(resources)) {
-    serializedResources[id as ResourceId] = {
+    serializedResources[id] = {
       id: resource.id,
       amount: resource.amount.toString(),
       perSecond: resource.perSecond.toString(),
@@ -51,9 +59,9 @@ function serializeSave(): SaveData {
     }
   }
 
-  const serializedBuildings = {} as Record<BuildingId, SerializedBuilding>
+  const serializedBuildings: Record<string, SerializedBuilding> = {}
   for (const [id, building] of Object.entries(buildings)) {
-    serializedBuildings[id as BuildingId] = {
+    serializedBuildings[id] = {
       id: building.id,
       count: building.count,
       baseCost: building.baseCost.toString(),
@@ -65,10 +73,16 @@ function serializeSave(): SaveData {
     }
   }
 
+  const serializedUpgrades: Record<string, { purchased: boolean }> = {}
+  for (const [id, upgrade] of Object.entries(upgrades)) {
+    serializedUpgrades[id] = { purchased: upgrade.purchased }
+  }
+
   return {
     resources: serializedResources,
     buildings: serializedBuildings,
-    version: 1,
+    upgrades: serializedUpgrades,
+    version: GAME_VERSION,
     lastSave: Date.now(),
   }
 }
@@ -86,6 +100,12 @@ function loadGame() {
 
   try {
     const data: SaveData = JSON.parse(raw)
+
+    // Migration : si ancienne sauvegarde v1, on la supprime et on repart à zéro
+    if (data.version < 2) {
+      localStorage.removeItem(SAVE_KEY)
+      return
+    }
 
     // Restaurer les ressources
     const resourceState = useResourceStore.getState()
@@ -124,37 +144,56 @@ function loadGame() {
     }
     useBuildingStore.setState({ buildings: restoredBuildings })
 
-    // Progrès hors-ligne
+    // Restaurer les upgrades
+    if (data.upgrades) {
+      const upgradeState = useUpgradeStore.getState()
+      const restoredUpgrades = { ...upgradeState.upgrades }
+      for (const [id, serialized] of Object.entries(data.upgrades)) {
+        if (restoredUpgrades[id]) {
+          restoredUpgrades[id] = {
+            ...restoredUpgrades[id],
+            purchased: serialized.purchased,
+          }
+        }
+      }
+      useUpgradeStore.setState({ upgrades: restoredUpgrades })
+    }
+
+    // Progrès hors-ligne (simplifié : applique le net sur la durée)
     const offlineSeconds = Math.min(
       (Date.now() - data.lastSave) / 1000,
       MAX_OFFLINE_SECONDS
     )
 
     if (offlineSeconds > 1) {
-      // Assembler un état minimal pour calcProduction
+      const resources = useResourceStore.getState().resources
+      const buildings = useBuildingStore.getState().buildings
+      const upgrades = useUpgradeStore.getState().upgrades
+
       const state = {
-        resources: useResourceStore.getState().resources,
-        buildings: useBuildingStore.getState().buildings,
-        upgrades: {},
+        resources,
+        buildings,
+        upgrades,
         prestige: {
-          etoiles: useResourceStore.getState().resources.etoiles.amount,
-          etoilesCettePartie: useResourceStore.getState().resources.etoiles.amount,
+          etoiles: resources.etoiles.amount,
+          etoilesCettePartie: resources.etoiles.amount,
           totalPrestiges: 0,
-          bonusMultiplier: useResourceStore.getState().resources.etoiles.amount.mul(0.1).add(1),
+          bonusMultiplier: resources.etoiles.amount.mul(0.1).add(1),
         },
         stats: {
-          totalCroissantsProduits: useResourceStore.getState().resources.croissants.totalEarned,
+          totalCroissantsProduits: resources.croissants.totalEarned,
           tempsDeJeu: 0,
           totalClics: 0,
-          meilleurCroissantsParSeconde: useResourceStore.getState().resources.croissants.perSecond,
+          meilleurCroissantsParSeconde: resources.croissants.perSecond,
           dateDebut: Date.now(),
         },
-        version: 1,
+        version: GAME_VERSION,
         lastSave: data.lastSave,
       }
 
-      const production = calcProduction(state)
-      useResourceStore.getState().addResources(production, offlineSeconds)
+      const result = calcProduction(state)
+      const deltas = calcClampedDelta(result, resources, offlineSeconds)
+      useResourceStore.getState().applyDeltas(deltas)
     }
   } catch {
     console.warn('Impossible de charger la sauvegarde, elle sera ignorée.')
@@ -163,32 +202,21 @@ function loadGame() {
 
 // ─── Hook ────────────────────────────────────────────────────────
 
-/**
- * Autosave toutes les 30 secondes en localStorage.
- * Charge la sauvegarde au montage et applique le progrès hors-ligne.
- */
 export function useAutoSave() {
-  // Charger la sauvegarde au montage
   useEffect(() => {
     loadGame()
   }, [])
 
-  // Autosave périodique
   useEffect(() => {
-    const interval = setInterval(() => {
-      saveGame()
-    }, AUTOSAVE_INTERVAL_MS)
+    const interval = setInterval(saveGame, AUTOSAVE_INTERVAL_MS)
 
-    // Sauvegarder aussi avant de quitter la page
-    const handleBeforeUnload = () => {
-      saveGame()
-    }
+    const handleBeforeUnload = () => saveGame()
     window.addEventListener('beforeunload', handleBeforeUnload)
 
     return () => {
       clearInterval(interval)
       window.removeEventListener('beforeunload', handleBeforeUnload)
-      saveGame() // Sauvegarder au démontage
+      saveGame()
     }
   }, [])
 }

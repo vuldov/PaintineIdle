@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useRef } from 'react'
 import type { ResourceId } from '@/types'
-import type Decimal from 'decimal.js'
-import { calcProduction } from '@/mechanics/productionMechanics'
+import { calcProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
-import { BUILDING_ORDER, RESOURCE_UNLOCK_THRESHOLDS } from '@/lib/constants'
+import { useCraftingStore } from '@/store/craftingStore'
+import {
+  BUILDING_ORDER,
+  BUILDING_UNLOCK_THRESHOLDS,
+  RESOURCE_UNLOCK_THRESHOLDS,
+} from '@/lib/constants'
 
 /**
- * Assemble un GameState complet à partir des stores pour les fonctions pures de mechanics.
+ * Assemble un GameState à partir des stores.
  */
 function getGameState() {
   const { resources } = useResourceStore.getState()
@@ -32,34 +36,33 @@ function getGameState() {
       meilleurCroissantsParSeconde: resources.croissants.perSecond,
       dateDebut: Date.now(),
     },
-    version: 1,
+    version: 2,
     lastSave: Date.now(),
   }
 }
 
 /**
- * Vérifie et débloque les bâtiments et ressources selon les seuils atteints.
+ * Vérifie et débloque bâtiments et ressources.
  */
 function checkUnlocks() {
   const { resources, unlockResource } = useResourceStore.getState()
   const { buildings, unlockBuilding } = useBuildingStore.getState()
-  const totalCroissants = resources.croissants.totalEarned
 
   // Déblocage des bâtiments
   for (const id of BUILDING_ORDER) {
-    const building = buildings[id]
-    if (building.unlocked) continue
-    if (totalCroissants.gte(building.baseCost.div(2))) {
+    if (buildings[id].unlocked) continue
+    const threshold = BUILDING_UNLOCK_THRESHOLDS[id]
+    if (!threshold) continue
+    if (resources[threshold.resource].totalEarned.gte(threshold.amount)) {
       unlockBuilding(id)
     }
   }
 
-  // Déblocage des ressources secondaires
+  // Déblocage des ressources
   for (const [resourceId, condition] of Object.entries(RESOURCE_UNLOCK_THRESHOLDS)) {
     if (!condition) continue
     if (resources[resourceId as ResourceId].unlocked) continue
-    const source = resources[condition.resource]
-    if (source.totalEarned.gte(condition.amount)) {
+    if (resources[condition.resource].totalEarned.gte(condition.amount)) {
       unlockResource(resourceId as ResourceId)
     }
   }
@@ -67,7 +70,6 @@ function checkUnlocks() {
 
 /**
  * Game loop principal via requestAnimationFrame.
- * Delta time en secondes, cappé à 1s pour éviter les sauts.
  */
 export function useGameLoop() {
   const lastTimeRef = useRef<number>(0)
@@ -84,16 +86,19 @@ export function useGameLoop() {
     const delta = Math.min(rawDelta, 1)
     lastTimeRef.current = timestamp
 
-    // Calculer la production
+    // 1. Avancer le crafting manuel
+    useCraftingStore.getState().tickCrafting(delta)
+
+    // 2. Production automatique (bâtiments)
     const state = getGameState()
-    const production: Record<ResourceId, Decimal> = calcProduction(state)
+    const result = calcProduction(state)
+    const deltas = calcClampedDelta(result, state.resources, delta)
 
-    // Mettre à jour les ressources
-    const { addResources, updatePerSecond } = useResourceStore.getState()
-    addResources(production, delta)
-    updatePerSecond(production)
+    const { applyDeltas, updatePerSecond } = useResourceStore.getState()
+    applyDeltas(deltas)
+    updatePerSecond(result.net)
 
-    // Vérifier les déblocages
+    // 3. Déblocages
     checkUnlocks()
 
     rafRef.current = requestAnimationFrame(tick)
@@ -101,8 +106,6 @@ export function useGameLoop() {
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(tick)
-    return () => {
-      cancelAnimationFrame(rafRef.current)
-    }
+    return () => { cancelAnimationFrame(rafRef.current) }
   }, [tick])
 }

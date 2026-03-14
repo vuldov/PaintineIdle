@@ -2,7 +2,14 @@ import type Decimal from 'decimal.js'
 
 // ─── Identifiants ────────────────────────────────────────────────
 
-export type ResourceId = 'croissants' | 'beurre' | 'farine' | 'reputation' | 'etoiles'
+export type ResourceId =
+  | 'croissants'
+  | 'beurre'
+  | 'farine'
+  | 'pate'
+  | 'pantins_coins'
+  | 'reputation'
+  | 'etoiles'
 
 export type BuildingId =
   | 'fournil'
@@ -15,6 +22,8 @@ export type BuildingId =
   | 'empire'
 
 export type UpgradeId = string
+
+export type CraftingRecipeId = 'petrissage' | 'cuisson'
 
 // ─── Ressources ──────────────────────────────────────────────────
 
@@ -39,13 +48,32 @@ export interface Building {
   unlocked: boolean
 }
 
+// ─── Crafting (fabrication manuelle) ─────────────────────────────
+
+export interface CraftingInput {
+  resource: ResourceId
+  amount: Decimal
+}
+
+export interface CraftingOutput {
+  resource: ResourceId
+  amount: Decimal
+}
+
+export interface CraftingTask {
+  recipeId: CraftingRecipeId
+  progress: number          // 0 → 1
+  totalSeconds: number
+}
+
 // ─── Upgrades ────────────────────────────────────────────────────
 
 export type UpgradeEffectType =
   | 'building_multiplier'
   | 'global_multiplier'
   | 'resource_multiplier'
-  | 'click_multiplier'
+  | 'crafting_speed'
+  | 'sell_multiplier'
   | 'cost_reduction'
   | 'synergy'
   | 'unlock'
@@ -54,6 +82,7 @@ export interface UpgradeEffect {
   type: UpgradeEffectType
   targetBuilding?: BuildingId
   targetResource?: ResourceId
+  targetRecipe?: CraftingRecipeId
   synergyBuildings?: [BuildingId, BuildingId]
   multiplier: Decimal
 }
@@ -92,10 +121,10 @@ export interface PrestigeState {
 
 export interface GameStats {
   totalCroissantsProduits: Decimal
-  tempsDeJeu: number            // en secondes
+  tempsDeJeu: number
   totalClics: number
   meilleurCroissantsParSeconde: Decimal
-  dateDebut: number             // timestamp unix
+  dateDebut: number
 }
 
 // ─── État global ─────────────────────────────────────────────────

@@ -19,11 +19,12 @@ export function IngredientPanel() {
 
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
-      <h2 className="text-sm font-semibold text-amber-800 mb-3">Ressources</h2>
+      <h2 className="text-sm font-semibold text-amber-800 mb-3">Ingrédients</h2>
       <div className="flex flex-wrap gap-x-6 gap-y-2">
         {visible.map((id) => {
           const resource = resources[id]
           const data = RESOURCES_DATA[id]
+          const isNegative = resource.perSecond.lt(0)
           return (
             <div key={id} className="flex items-center gap-2 text-amber-900">
               <span className="text-lg" role="img" aria-label={data.name}>
@@ -34,7 +35,8 @@ export function IngredientPanel() {
                   <NumberDisplay value={resource.amount} />
                   <span className="ml-1 font-normal text-amber-700">{data.name}</span>
                 </span>
-                <span className="text-xs text-amber-500">
+                <span className={`text-xs ${isNegative ? 'text-red-500' : 'text-amber-500'}`}>
+                  {isNegative ? '' : '+'}
                   <NumberDisplay value={resource.perSecond} />/s
                 </span>
               </div>

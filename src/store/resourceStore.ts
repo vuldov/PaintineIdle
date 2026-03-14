@@ -11,7 +11,7 @@ function createInitialResources(): Record<ResourceId, Resource> {
     const resourceId = id as ResourceId
     resources[resourceId] = {
       id: resourceId,
-      amount: new Decimal(0),
+      amount: data.initialAmount,
       perSecond: new Decimal(0),
       totalEarned: new Decimal(0),
       unlocked: data.initiallyUnlocked,
@@ -25,20 +25,23 @@ function createInitialResources(): Record<ResourceId, Resource> {
 interface ResourceStore {
   resources: Record<ResourceId, Resource>
 
-  /** Produit des croissants manuellement (clic), reçoit la puissance calculée */
-  clickCroissant: (power: Decimal) => void
-
-  /** Ajoute des ressources selon la production par seconde × delta */
-  addResources: (production: Record<ResourceId, Decimal>, delta: number) => void
+  /** Applique un delta (positif ou négatif) à chaque ressource */
+  applyDeltas: (deltas: Record<ResourceId, Decimal>) => void
 
   /** Met à jour les perSecond affichées */
-  updatePerSecond: (production: Record<ResourceId, Decimal>) => void
+  updatePerSecond: (net: Record<ResourceId, Decimal>) => void
 
   /** Dépense une ressource. Retourne true si succès. */
   spendResource: (resourceId: ResourceId, amount: Decimal) => boolean
 
   /** Vérifie si le joueur a assez d'une ressource */
   canAfford: (resourceId: ResourceId, amount: Decimal) => boolean
+
+  /** Ajoute une quantité à une ressource */
+  addResource: (resourceId: ResourceId, amount: Decimal) => void
+
+  /** Vend des croissants : retire les croissants et ajoute les pantins_coins */
+  sellCroissants: (croissants: Decimal, coins: Decimal) => void
 
   /** Débloque une ressource */
   unlockResource: (resourceId: ResourceId) => void
@@ -52,50 +55,31 @@ interface ResourceStore {
 export const useResourceStore = create<ResourceStore>((set, get) => ({
   resources: createInitialResources(),
 
-  clickCroissant: (power) => {
-    set((state) => {
-      const croissants = state.resources.croissants
-      return {
-        resources: {
-          ...state.resources,
-          croissants: {
-            ...croissants,
-            amount: croissants.amount.add(power),
-            totalEarned: croissants.totalEarned.add(power),
-          },
-        },
-      }
-    })
-  },
-
-  addResources: (production, delta) => {
+  applyDeltas: (deltas) => {
     set((state) => {
       const updated = { ...state.resources }
-      for (const [id, perSecond] of Object.entries(production)) {
+      for (const [id, delta] of Object.entries(deltas)) {
         const resourceId = id as ResourceId
-        const gained = perSecond.mul(delta)
-        if (gained.isZero()) continue
-
+        if (delta.isZero()) continue
         const resource = updated[resourceId]
+        const newAmount = Decimal.max(resource.amount.add(delta), 0)
+        const gained = delta.gt(0) ? delta : new Decimal(0)
         updated[resourceId] = {
           ...resource,
-          amount: resource.amount.add(gained),
-          totalEarned: resource.totalEarned.add(Decimal.max(gained, 0)),
+          amount: newAmount,
+          totalEarned: resource.totalEarned.add(gained),
         }
       }
       return { resources: updated }
     })
   },
 
-  updatePerSecond: (production) => {
+  updatePerSecond: (net) => {
     set((state) => {
       const updated = { ...state.resources }
-      for (const [id, perSecond] of Object.entries(production)) {
+      for (const [id, perSecond] of Object.entries(net)) {
         const resourceId = id as ResourceId
-        updated[resourceId] = {
-          ...updated[resourceId],
-          perSecond,
-        }
+        updated[resourceId] = { ...updated[resourceId], perSecond }
       }
       return { resources: updated }
     })
@@ -121,14 +105,41 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
     return get().resources[resourceId].amount.gte(amount)
   },
 
+  addResource: (resourceId, amount) => {
+    set((state) => {
+      const resource = state.resources[resourceId]
+      return {
+        resources: {
+          ...state.resources,
+          [resourceId]: {
+            ...resource,
+            amount: resource.amount.add(amount),
+            totalEarned: resource.totalEarned.add(amount),
+          },
+        },
+      }
+    })
+  },
+
+  sellCroissants: (croissants, coins) => {
+    set((state) => {
+      const c = state.resources.croissants
+      const p = state.resources.pantins_coins
+      return {
+        resources: {
+          ...state.resources,
+          croissants: { ...c, amount: c.amount.sub(croissants) },
+          pantins_coins: { ...p, amount: p.amount.add(coins), totalEarned: p.totalEarned.add(coins) },
+        },
+      }
+    })
+  },
+
   unlockResource: (resourceId) => {
     set((state) => ({
       resources: {
         ...state.resources,
-        [resourceId]: {
-          ...state.resources[resourceId],
-          unlocked: true,
-        },
+        [resourceId]: { ...state.resources[resourceId], unlocked: true },
       },
     }))
   },
