@@ -42,6 +42,10 @@ function App() {
           </div>
         </section>
       </main>
+
+      <footer className="text-center py-6 text-amber-600 text-sm border-t border-amber-200 mt-8">
+        Fait avec ❤️‍🔥 par Lucas Antonelli
+      </footer>
     </div>
   )
 }
