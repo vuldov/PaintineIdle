@@ -1,7 +1,8 @@
 import { useUpgradeStore, isUpgradeVisible } from '@/store/upgradeStore'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
-import { UPGRADES_DATA, UPGRADE_ORDER, RESOURCES_DATA } from '@/lib/constants'
+import { UPGRADES_DATA, UPGRADE_ORDER } from '@/lib/upgrades'
+import { RESOURCES_DATA } from '@/lib/resources'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 
 export function UpgradePanel() {

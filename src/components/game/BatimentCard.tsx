@@ -1,10 +1,13 @@
 import { useBuildingStore } from '@/store/buildingStore'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
-import { BUILDINGS_DATA, RESOURCES_DATA } from '@/lib/constants'
-import { calcCost, calcCostReduction } from '@/mechanics/productionMechanics'
+import { BUILDINGS_DATA } from '@/lib/buildings'
+import { RESOURCES_DATA } from '@/lib/resources'
+import { calcCost, calcCostReduction, calcBuildingRates } from '@/mechanics/productionMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import type { BuildingId } from '@/types'
+
+// ─── Composant ───────────────────────────────────────────────────
 
 interface BatimentCardProps {
   buildingId: BuildingId
@@ -21,6 +24,7 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
   )
   const data = BUILDINGS_DATA[buildingId]
   const costEmoji = RESOURCES_DATA[building.costResource].emoji
+  const { produces, consumes } = calcBuildingRates(buildingId, building.baseProduction, upgrades)
 
   if (!building.unlocked) return null
 
@@ -41,10 +45,23 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
         </span>
       </div>
 
-      <div className="flex items-center justify-between mt-3">
-        <span className="text-xs text-amber-700">
-          +<NumberDisplay value={building.baseProduction} /> {RESOURCES_DATA[data.producedResource].emoji}/s chacun
-        </span>
+      {/* Production & consommation par unité */}
+      <div className="text-xs space-y-0.5 mt-2 mb-3">
+        {produces.map((p) => (
+          <span key={`p-${p.resource}`} className="flex items-center gap-1 text-green-700">
+            <span>+<NumberDisplay value={p.amount} />/s</span>
+            <span>{RESOURCES_DATA[p.resource].emoji} {RESOURCES_DATA[p.resource].name}</span>
+          </span>
+        ))}
+        {consumes.map((c) => (
+          <span key={`c-${c.resource}`} className="flex items-center gap-1 text-red-500">
+            <span>-<NumberDisplay value={c.amount} />/s</span>
+            <span>{RESOURCES_DATA[c.resource].emoji} {RESOURCES_DATA[c.resource].name}</span>
+          </span>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-end">
         <button
           onClick={() => buyBuilding(buildingId)}
           disabled={!canAfford}

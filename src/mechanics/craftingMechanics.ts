@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js'
 import type { CraftingRecipeId, Resource, ResourceId, Upgrade, UpgradeId } from '@/types'
-import { CRAFTING_RECIPES, BASE_SELL_RATE } from '@/lib/constants'
-import type { CraftingRecipeData } from '@/lib/constants'
+import { CRAFTING_RECIPES, BASE_SELL_RATE } from '@/lib/crafting'
+import type { CraftingRecipeData } from '@/lib/crafting'
 
 /**
  * Vérifie si le joueur a assez de ressources pour lancer une recette.

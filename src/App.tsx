@@ -5,7 +5,7 @@ import { IngredientPanel } from '@/components/game/IngredientPanel'
 import { CraftingPanel } from '@/components/game/CraftingPanel'
 import { UpgradePanel } from '@/components/game/UpgradePanel'
 import { BatimentCard } from '@/components/game/BatimentCard'
-import { BUILDING_ORDER } from '@/lib/constants'
+import { BUILDING_ORDER } from '@/lib/buildings'
 
 function App() {
   useGameLoop()

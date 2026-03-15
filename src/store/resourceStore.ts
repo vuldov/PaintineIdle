@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import Decimal from 'decimal.js'
 import type { Resource, ResourceId } from '@/types'
-import { RESOURCES_DATA } from '@/lib/constants'
+import { RESOURCES_DATA } from '@/lib/resources'
 
 // ─── État initial des ressources ─────────────────────────────────
 

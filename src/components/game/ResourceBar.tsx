@@ -1,5 +1,5 @@
 import { useResourceStore } from '@/store/resourceStore'
-import { RESOURCES_DATA } from '@/lib/constants'
+import { RESOURCES_DATA } from '@/lib/resources'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import type { ResourceId } from '@/types'
 

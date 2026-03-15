@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import Decimal from 'decimal.js'
 import type { Upgrade, UpgradeId } from '@/types'
-import { UPGRADES_DATA } from '@/lib/constants'
+import { UPGRADES_DATA } from '@/lib/upgrades'
 import { useResourceStore } from '@/store/resourceStore'
 
 // ─── État initial ────────────────────────────────────────────────

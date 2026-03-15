@@ -4,12 +4,7 @@ import type { ResourceId, BuildingId } from '@/types'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
-import {
-  SAVE_KEY,
-  AUTOSAVE_INTERVAL_MS,
-  MAX_OFFLINE_SECONDS,
-  GAME_VERSION,
-} from '@/lib/constants'
+import { SAVE_KEY, AUTOSAVE_INTERVAL_MS, MAX_OFFLINE_SECONDS, GAME_VERSION } from '@/lib/constants'
 import { calcProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
 
 // ─── Types de sérialisation ──────────────────────────────────────

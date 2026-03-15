@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { CraftingRecipeId, CraftingTask } from '@/types'
-import { CRAFTING_RECIPES } from '@/lib/constants'
+import { CRAFTING_RECIPES } from '@/lib/crafting'
 import { canStartCrafting, calcCraftingDuration } from '@/mechanics/craftingMechanics'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'

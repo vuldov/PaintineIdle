@@ -1,14 +1,81 @@
 import Decimal from 'decimal.js'
-import type { Building, GameState, ResourceId, Upgrade, UpgradeId } from '@/types'
+import type { Building, BuildingId, GameState, ResourceId, Upgrade, UpgradeId } from '@/types'
 import {
   BUILDINGS_DATA,
-  BASE_INGREDIENT_REGEN,
-  BASE_SELL_RATE,
   PETRISSAGE_BEURRE_RATIO,
   PETRISSAGE_FARINE_RATIO,
   CUISSON_PATE_RATIO,
   VENTE_CROISSANT_RATIO,
-} from '@/lib/constants'
+} from '@/lib/buildings'
+import { BASE_INGREDIENT_REGEN } from '@/lib/resources'
+import { BASE_SELL_RATE } from '@/lib/crafting'
+
+// ─── Taux de production par bâtiment (pour affichage) ────────────
+
+export interface RateInfo {
+  resource: ResourceId
+  amount: Decimal
+}
+
+export interface BuildingRates {
+  produces: RateInfo[]
+  consumes: RateInfo[]
+}
+
+/**
+ * Calcule la production et consommation effectives par unité de bâtiment,
+ * en tenant compte des upgrades (building_multiplier + global_multiplier).
+ * Fonction pure — utilisable dans les composants ET les tests.
+ */
+export function calcBuildingRates(
+  buildingId: BuildingId,
+  baseProduction: Decimal,
+  upgrades: Record<UpgradeId, Upgrade>,
+): BuildingRates {
+  const data = BUILDINGS_DATA[buildingId]
+
+  let bMult = new Decimal(1)
+  let globalMult = new Decimal(1)
+  for (const upgrade of Object.values(upgrades)) {
+    if (!upgrade.purchased) continue
+    if (upgrade.effect.type === 'building_multiplier' && upgrade.effect.targetBuilding === buildingId) {
+      bMult = bMult.mul(upgrade.effect.multiplier)
+    }
+    if (upgrade.effect.type === 'global_multiplier') {
+      globalMult = globalMult.mul(upgrade.effect.multiplier)
+    }
+  }
+
+  const effectiveProd = baseProduction.mul(bMult).mul(globalMult)
+
+  const produces: RateInfo[] = []
+  const consumes: RateInfo[] = []
+
+  switch (data.pipelineRole) {
+    case 'petrissage':
+      produces.push({ resource: 'pate', amount: effectiveProd })
+      consumes.push({ resource: 'beurre', amount: effectiveProd.mul(PETRISSAGE_BEURRE_RATIO) })
+      consumes.push({ resource: 'farine', amount: effectiveProd.mul(PETRISSAGE_FARINE_RATIO) })
+      break
+    case 'cuisson':
+      produces.push({ resource: 'croissants', amount: effectiveProd })
+      consumes.push({ resource: 'pate', amount: effectiveProd.mul(CUISSON_PATE_RATIO) })
+      break
+    case 'vente':
+      produces.push({ resource: 'pantins_coins', amount: effectiveProd.mul(VENTE_CROISSANT_RATIO) })
+      consumes.push({ resource: 'croissants', amount: effectiveProd.mul(VENTE_CROISSANT_RATIO) })
+      break
+    case 'ingredients':
+      produces.push({ resource: 'beurre', amount: effectiveProd })
+      produces.push({ resource: 'farine', amount: effectiveProd.mul(1.5) })
+      break
+    case 'full_pipeline':
+      produces.push({ resource: 'croissants', amount: effectiveProd })
+      break
+  }
+
+  return { produces, consumes }
+}
 
 // ─── Coûts ───────────────────────────────────────────────────────
 

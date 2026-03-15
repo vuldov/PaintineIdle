@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { Building, BuildingId } from '@/types'
-import { BUILDINGS_DATA } from '@/lib/constants'
+import { BUILDINGS_DATA } from '@/lib/buildings'
 import { calcCost, calcCostReduction } from '@/mechanics/productionMechanics'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'

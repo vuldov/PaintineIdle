@@ -4,7 +4,8 @@ import { useUpgradeStore } from '@/store/upgradeStore'
 import { useCraftingStore } from '@/store/craftingStore'
 import { canStartCrafting, calcSellValue } from '@/mechanics/craftingMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
-import { CRAFTING_RECIPES, CRAFTING_ORDER, RESOURCES_DATA } from '@/lib/constants'
+import { CRAFTING_RECIPES, CRAFTING_ORDER } from '@/lib/crafting'
+import { RESOURCES_DATA } from '@/lib/resources'
 import type { CraftingRecipeId } from '@/types'
 
 // ─── Bouton de fabrication ───────────────────────────────────────

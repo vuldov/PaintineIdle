@@ -5,11 +5,8 @@ import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useCraftingStore } from '@/store/craftingStore'
-import {
-  BUILDING_ORDER,
-  BUILDING_UNLOCK_THRESHOLDS,
-  RESOURCE_UNLOCK_THRESHOLDS,
-} from '@/lib/constants'
+import { BUILDING_ORDER, BUILDING_UNLOCK_THRESHOLDS } from '@/lib/buildings'
+import { RESOURCE_UNLOCK_THRESHOLDS } from '@/lib/resources'
 
 /**
  * Assemble un GameState à partir des stores.

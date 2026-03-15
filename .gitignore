@@ -32,3 +32,4 @@ lerna-debug.log*
 *.sw?
 
 CLAUDE.md
+.claude/*
