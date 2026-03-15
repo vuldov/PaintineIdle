@@ -1,16 +1,16 @@
 import { create } from 'zustand'
 import Decimal from 'decimal.js'
-import type { Upgrade, UpgradeId } from '@/types'
-import { UPGRADES_DATA } from '@/lib/upgrades'
+import type { Upgrade, UpgradeId, Resource } from '@/types'
+import { ALL_UPGRADES } from '@/lib/products/registry'
 import { useResourceStore } from '@/store/resourceStore'
 
-// ─── État initial ────────────────────────────────────────────────
+// ─── Initial state ──────────────────────────────────────────────
 
-function createInitialUpgrades(): Record<UpgradeId, Upgrade> {
-  const upgrades: Record<UpgradeId, Upgrade> = {}
-  for (const [id, data] of Object.entries(UPGRADES_DATA)) {
+function createInitialUpgrades(): Record<string, Upgrade> {
+  const upgrades: Record<string, Upgrade> = {}
+  for (const [id, data] of Object.entries(ALL_UPGRADES)) {
     upgrades[id] = {
-      id,
+      id: data.id,
       name: data.name,
       description: data.description,
       purchased: false,
@@ -18,30 +18,32 @@ function createInitialUpgrades(): Record<UpgradeId, Upgrade> {
       costResource: data.costResource,
       effect: data.effect,
       unlockCondition: data.unlockCondition,
+      scope: data.scope,
     }
   }
   return upgrades
 }
 
-// ─── Interface ───────────────────────────────────────────────────
+// ─── Interface ──────────────────────────────────────────────────
 
 interface UpgradeStore {
-  upgrades: Record<UpgradeId, Upgrade>
+  upgrades: Record<string, Upgrade>
 
-  /** Achète une amélioration. Retourne true si succès. */
+  /** Buy an upgrade. Returns true if successful. */
   buyUpgrade: (upgradeId: UpgradeId) => boolean
 
-  /** Remet les upgrades à zéro (prestige) */
+  /** Reset upgrades (prestige) */
   resetUpgrades: () => void
 }
 
-// ─── Store ───────────────────────────────────────────────────────
+// ─── Store ──────────────────────────────────────────────────────
 
 export const useUpgradeStore = create<UpgradeStore>((set, get) => ({
   upgrades: createInitialUpgrades(),
 
   buyUpgrade: (upgradeId) => {
-    const upgrade = get().upgrades[upgradeId]
+    const uid = upgradeId as string
+    const upgrade = get().upgrades[uid]
     if (!upgrade || upgrade.purchased) return false
 
     const resourceStore = useResourceStore.getState()
@@ -52,8 +54,8 @@ export const useUpgradeStore = create<UpgradeStore>((set, get) => ({
     set((state) => ({
       upgrades: {
         ...state.upgrades,
-        [upgradeId]: {
-          ...state.upgrades[upgradeId],
+        [uid]: {
+          ...state.upgrades[uid],
           purchased: true,
         },
       },
@@ -67,18 +69,18 @@ export const useUpgradeStore = create<UpgradeStore>((set, get) => ({
   },
 }))
 
-// ─── Helpers (fonctions pures, lisent le state mais pas de side-effect) ──
+// ─── Visibility check (pure function) ──────────────────────────
 
 /**
- * Vérifie si une amélioration est visible (condition de déblocage remplie).
+ * Check if an upgrade should be visible based on its unlock condition.
  */
 export function isUpgradeVisible(
-  upgradeId: UpgradeId,
-  resources: ReturnType<typeof useResourceStore.getState>['resources'],
-  buildings: Record<string, { count: number }>,
-  purchasedUpgrades: Record<UpgradeId, { purchased: boolean }>,
+  upgradeId: string,
+  allResources: Record<string, Resource>,
+  allBuildings: Record<string, { count: number }>,
+  purchasedUpgrades: Record<string, { purchased: boolean }>,
 ): boolean {
-  const data = UPGRADES_DATA[upgradeId]
+  const data = ALL_UPGRADES[upgradeId]
   if (!data) return false
 
   const cond = data.unlockCondition
@@ -86,17 +88,21 @@ export function isUpgradeVisible(
   switch (cond.type) {
     case 'resource_threshold': {
       if (!cond.resourceId) return false
-      const resource = resources[cond.resourceId]
+      const rid = cond.resourceId as string
+      const resource = allResources[rid]
+      if (!resource) return false
       return resource.totalEarned.gte(cond.threshold)
     }
     case 'building_count': {
       if (!cond.buildingId) return false
-      const building = buildings[cond.buildingId]
+      const bid = cond.buildingId as string
+      const building = allBuildings[bid]
       return building ? new Decimal(building.count).gte(cond.threshold) : false
     }
     case 'upgrade_purchased': {
       if (!cond.upgradeId) return false
-      return purchasedUpgrades[cond.upgradeId]?.purchased ?? false
+      const uid = cond.upgradeId as string
+      return purchasedUpgrades[uid]?.purchased ?? false
     }
     default:
       return false

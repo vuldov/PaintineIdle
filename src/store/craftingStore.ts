@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import type { CraftingRecipeId, CraftingTask } from '@/types'
-import { CRAFTING_RECIPES } from '@/lib/crafting'
+import type { CraftingRecipeId, CraftingTask, ProductId } from '@/types'
+import { ALL_CRAFTING } from '@/lib/products/registry'
 import { canStartCrafting, calcCraftingDuration } from '@/mechanics/craftingMechanics'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
@@ -8,79 +8,108 @@ import { useUpgradeStore } from '@/store/upgradeStore'
 // ─── Interface ───────────────────────────────────────────────────
 
 interface CraftingStore {
-  /** Tâche en cours (null si rien) */
-  activeTask: CraftingTask | null
+  /** Active tasks per product (null if none) */
+  activeTasks: Record<ProductId, CraftingTask | null>
 
-  /** Lance une fabrication manuelle. Déduit les inputs immédiatement. */
-  startCrafting: (recipeId: CraftingRecipeId) => boolean
+  /** Start crafting for a specific product */
+  startCrafting: (productId: ProductId, recipeId: CraftingRecipeId) => boolean
 
-  /** Appelé par le game loop : avance la barre de progression.
-   *  Retourne true si la tâche vient de se terminer (output donné). */
-  tickCrafting: (delta: number) => boolean
+  /** Tick all active crafting tasks. Returns list of completed product IDs. */
+  tickCrafting: (delta: number) => ProductId[]
+
+  /** Get active task for a product */
+  getActiveTask: (productId: ProductId) => CraftingTask | null
 
   /** Reset (prestige) */
   resetCrafting: () => void
 }
 
+function createEmptyTasks(): Record<ProductId, CraftingTask | null> {
+  return {
+    croissants: null,
+    pains_au_chocolat: null,
+    chocolatines: null,
+    pizzas: null,
+  }
+}
+
 // ─── Store ───────────────────────────────────────────────────────
 
 export const useCraftingStore = create<CraftingStore>((set, get) => ({
-  activeTask: null,
+  activeTasks: createEmptyTasks(),
 
-  startCrafting: (recipeId) => {
-    // Déjà en train de crafter ?
-    if (get().activeTask !== null) return false
+  startCrafting: (productId, recipeId) => {
+    const currentTask = get().activeTasks[productId]
+    if (currentTask !== null) return false
 
-    const resources = useResourceStore.getState().resources
-    if (!canStartCrafting(recipeId, resources)) return false
+    const rid = recipeId as string
+    const recipe = ALL_CRAFTING[rid]
+    if (!recipe) return false
 
-    // Déduire les inputs
-    const recipe = CRAFTING_RECIPES[recipeId]
+    // Check resources
+    const allResources = useResourceStore.getState().getAllResources()
+    if (!canStartCrafting(recipe, allResources)) return false
+
+    // Deduct inputs
     const resourceStore = useResourceStore.getState()
     for (const input of recipe.inputs) {
       resourceStore.spendResource(input.resource, input.amount)
     }
 
-    // Calculer la durée effective
+    // Calculate effective duration
     const upgrades = useUpgradeStore.getState().upgrades
     const duration = calcCraftingDuration(recipe, upgrades)
 
-    set({
-      activeTask: {
-        recipeId,
-        progress: 0,
-        totalSeconds: duration,
+    set((state) => ({
+      activeTasks: {
+        ...state.activeTasks,
+        [productId]: {
+          recipeId,
+          progress: 0,
+          totalSeconds: duration,
+        },
       },
-    })
+    }))
 
     return true
   },
 
   tickCrafting: (delta) => {
-    const task = get().activeTask
-    if (!task) return false
+    const tasks = get().activeTasks
+    const completed: ProductId[] = []
+    const updatedTasks = { ...tasks }
 
-    const newProgress = task.progress + delta / task.totalSeconds
+    for (const [productId, task] of Object.entries(tasks)) {
+      if (!task) continue
 
-    if (newProgress >= 1) {
-      // Terminé ! Donner l'output
-      const recipe = CRAFTING_RECIPES[task.recipeId]
-      useResourceStore.getState().addResource(recipe.output.resource, recipe.output.amount)
+      const newProgress = task.progress + delta / task.totalSeconds
 
-      set({ activeTask: null })
-      return true
+      if (newProgress >= 1) {
+        // Complete: give output
+        const rid = task.recipeId as string
+        const recipe = ALL_CRAFTING[rid]
+        if (recipe) {
+          useResourceStore.getState().addResource(recipe.output.resource, recipe.output.amount)
+        }
+        updatedTasks[productId as ProductId] = null
+        completed.push(productId as ProductId)
+      } else {
+        updatedTasks[productId as ProductId] = {
+          ...task,
+          progress: newProgress,
+        }
+      }
     }
 
-    set({
-      activeTask: {
-        ...task,
-        progress: newProgress,
-      },
-    })
-    return false
+    set({ activeTasks: updatedTasks })
+    return completed
+  },
+
+  getActiveTask: (productId) => {
+    return get().activeTasks[productId]
   },
 
   resetCrafting: () => {
-    set({ activeTask: null })
+    set({ activeTasks: createEmptyTasks() })
   },
 }))

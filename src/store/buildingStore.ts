@@ -1,56 +1,96 @@
 import { create } from 'zustand'
-import type { Building, BuildingId } from '@/types'
-import { BUILDINGS_DATA } from '@/lib/buildings'
+import type { Building, BuildingId, ProductId } from '@/types'
+import { PRODUCT_REGISTRY, getBuildingProduct } from '@/lib/products/registry'
 import { calcCost, calcCostReduction } from '@/mechanics/productionMechanics'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 
-// ─── État initial des bâtiments ──────────────────────────────────
+// ─── Initial state ──────────────────────────────────────────────
 
-function createInitialBuildings(): Record<BuildingId, Building> {
-  const buildings = {} as Record<BuildingId, Building>
-  for (const [id, data] of Object.entries(BUILDINGS_DATA)) {
-    const buildingId = id as BuildingId
-    buildings[buildingId] = {
-      id: buildingId,
-      count: 0,
-      baseCost: data.baseCost,
-      costResource: data.costResource,
-      costMultiplier: data.costMultiplier,
-      baseProduction: data.baseProduction,
-      producedResource: data.producedResource,
-      unlocked: buildingId === 'fournil', // Seul le fournil est débloqué au départ
+function createInitialBuildings(): Record<ProductId, Record<string, Building>> {
+  const result = {} as Record<ProductId, Record<string, Building>>
+  for (const [productId, bundle] of Object.entries(PRODUCT_REGISTRY)) {
+    const buildings: Record<string, Building> = {}
+    for (const [id, data] of Object.entries(bundle.buildings)) {
+      buildings[id] = {
+        id: data.id,
+        count: 0,
+        baseCost: data.baseCost,
+        costResource: data.costResource,
+        costMultiplier: data.costMultiplier,
+        baseProduction: data.baseProduction,
+        producedResource: data.producedResource,
+        unlocked: false,
+      }
     }
+    result[productId as ProductId] = buildings
   }
-  return buildings
+  return result
 }
 
-// ─── Interface du store ──────────────────────────────────────────
+// ─── Interface ──────────────────────────────────────────────────
 
 interface BuildingStore {
-  buildings: Record<BuildingId, Building>
+  buildings: Record<ProductId, Record<string, Building>>
 
-  /** Achète un bâtiment. Retourne true si l'achat a réussi. */
-  buyBuilding: (buildingId: BuildingId) => boolean
+  /** Get a building by ID (searches all products) */
+  getBuilding: (id: BuildingId) => Building | undefined
 
-  /** Débloque un bâtiment */
-  unlockBuilding: (buildingId: BuildingId) => void
+  /** Get all buildings flattened */
+  getAllBuildings: () => Record<string, Building>
 
-  /** Remet les bâtiments à zéro (prestige) */
+  /** Get buildings for a specific product */
+  getBuildingsForProduct: (productId: ProductId) => Record<string, Building>
+
+  /** Buy a building */
+  buyBuilding: (id: BuildingId) => boolean
+
+  /** Unlock a building */
+  unlockBuilding: (id: BuildingId) => void
+
+  /** Reset building counts (prestige) */
   resetBuildings: () => void
 }
 
-// ─── Store ───────────────────────────────────────────────────────
+// ─── Store ──────────────────────────────────────────────────────
 
 export const useBuildingStore = create<BuildingStore>((set, get) => ({
   buildings: createInitialBuildings(),
 
-  buyBuilding: (buildingId) => {
-    const building = get().buildings[buildingId]
-    if (!building.unlocked) return false
+  getBuilding: (id) => {
+    const bid = id as string
+    for (const productBuildings of Object.values(get().buildings)) {
+      if (productBuildings[bid]) return productBuildings[bid]
+    }
+    return undefined
+  },
+
+  getAllBuildings: () => {
+    const all: Record<string, Building> = {}
+    for (const productBuildings of Object.values(get().buildings)) {
+      Object.assign(all, productBuildings)
+    }
+    return all
+  },
+
+  getBuildingsForProduct: (productId) => {
+    return get().buildings[productId] ?? {}
+  },
+
+  buyBuilding: (id) => {
+    const bid = id as string
+    const productId = getBuildingProduct(bid)
+    if (!productId) return false
+
+    const building = get().buildings[productId]?.[bid]
+    if (!building || !building.unlocked) return false
 
     const { upgrades } = useUpgradeStore.getState()
-    const costReduction = calcCostReduction(upgrades)
+    // Filter upgrades to same product scope for cost reduction
+    const scopedUpgrades = Object.fromEntries(
+      Object.entries(upgrades).filter(([, u]) => u.scope === productId || u.scope === 'global')
+    )
+    const costReduction = calcCostReduction(scopedUpgrades)
     const cost = calcCost(building, building.count, costReduction)
     const resourceStore = useResourceStore.getState()
 
@@ -61,9 +101,12 @@ export const useBuildingStore = create<BuildingStore>((set, get) => ({
     set((state) => ({
       buildings: {
         ...state.buildings,
-        [buildingId]: {
-          ...state.buildings[buildingId],
-          count: state.buildings[buildingId].count + 1,
+        [productId]: {
+          ...state.buildings[productId],
+          [bid]: {
+            ...state.buildings[productId][bid],
+            count: state.buildings[productId][bid].count + 1,
+          },
         },
       },
     }))
@@ -71,13 +114,20 @@ export const useBuildingStore = create<BuildingStore>((set, get) => ({
     return true
   },
 
-  unlockBuilding: (buildingId) => {
+  unlockBuilding: (id) => {
+    const bid = id as string
+    const productId = getBuildingProduct(bid)
+    if (!productId) return
+
     set((state) => ({
       buildings: {
         ...state.buildings,
-        [buildingId]: {
-          ...state.buildings[buildingId],
-          unlocked: true,
+        [productId]: {
+          ...state.buildings[productId],
+          [bid]: {
+            ...state.buildings[productId][bid],
+            unlocked: true,
+          },
         },
       },
     }))

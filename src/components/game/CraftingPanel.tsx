@@ -2,23 +2,35 @@ import Decimal from 'decimal.js'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useCraftingStore } from '@/store/craftingStore'
+import { useProduct } from './ProductContext'
 import { canStartCrafting, calcSellValue } from '@/mechanics/craftingMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
-import { CRAFTING_RECIPES, CRAFTING_ORDER } from '@/lib/crafting'
-import { RESOURCES_DATA } from '@/lib/resources'
+import { ALL_RESOURCES } from '@/lib/products/registry'
 import type { CraftingRecipeId } from '@/types'
 
-// ─── Bouton de fabrication ───────────────────────────────────────
+// ─── Crafting button ────────────────────────────────────────────
 
 function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
-  const recipe = CRAFTING_RECIPES[recipeId]
-  const resources = useResourceStore((state) => state.resources)
-  const activeTask = useCraftingStore((state) => state.activeTask)
+  const { productId, bundle } = useProduct()
+  const rid = recipeId as string
+  const recipe = bundle.craftingRecipes[rid]
+
+  const globalResources = useResourceStore((state) => state.globalResources)
+  const productResources = useResourceStore((state) => state.productResources)
+  const activeTask = useCraftingStore((state) => state.activeTasks[productId])
   const startCrafting = useCraftingStore((state) => state.startCrafting)
+
+  if (!recipe) return null
+
+  // Merge resources for canStartCrafting check (inline, not in selector)
+  const allResources: Record<string, { amount: Decimal }> = { ...globalResources }
+  for (const res of Object.values(productResources)) {
+    Object.assign(allResources, res)
+  }
 
   const isActive = activeTask?.recipeId === recipeId
   const isBusy = activeTask !== null
-  const hasInputs = canStartCrafting(recipeId, resources)
+  const hasInputs = canStartCrafting(recipe, allResources)
   const canStart = !isBusy && hasInputs
 
   const progress = isActive ? activeTask.progress : 0
@@ -30,19 +42,22 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
         <div>
           <h3 className="font-semibold text-amber-900 text-sm">{recipe.name}</h3>
           <p className="text-xs text-amber-600">
-            {recipe.inputs.map((inp, i) => (
-              <span key={inp.resource}>
-                {i > 0 && ' + '}
-                <NumberDisplay value={inp.amount} /> {RESOURCES_DATA[inp.resource].emoji}
-              </span>
-            ))}
-            {' → '}
-            <NumberDisplay value={recipe.output.amount} /> {RESOURCES_DATA[recipe.output.resource].emoji}
+            {recipe.inputs.map((inp, i) => {
+              const resData = ALL_RESOURCES[inp.resource as string]
+              return (
+                <span key={inp.resource as string}>
+                  {i > 0 && ' + '}
+                  <NumberDisplay value={inp.amount} /> {resData?.emoji}
+                </span>
+              )
+            })}
+            {' \u2192 '}
+            <NumberDisplay value={recipe.output.amount} /> {ALL_RESOURCES[recipe.output.resource as string]?.emoji}
           </p>
         </div>
       </div>
 
-      {/* Barre de progression */}
+      {/* Progress bar */}
       <div className="h-3 bg-gray-100 rounded-full overflow-hidden mb-2">
         <div
           className="h-full bg-amber-400 rounded-full"
@@ -51,7 +66,7 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
       </div>
 
       <button
-        onClick={() => startCrafting(recipeId)}
+        onClick={() => startCrafting(productId, recipeId)}
         disabled={!canStart}
         className={`
           w-full py-2 rounded-lg text-sm font-medium transition-colors
@@ -69,23 +84,40 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
   )
 }
 
-// ─── Bouton de vente ─────────────────────────────────────────────
+// ─── Sell button ────────────────────────────────────────────────
 
 function SellButton() {
-  const croissants = useResourceStore((state) => state.resources.croissants.amount)
-  const sellCroissants = useResourceStore((state) => state.sellCroissants)
+  const { productId, bundle } = useProduct()
+  const finishedId = bundle.finishedProductId
+  const finishedRid = finishedId as string
+
+  const finishedResource = useResourceStore((state) => state.productResources[productId]?.[finishedRid])
+  const productAmount = finishedResource?.amount ?? new Decimal(0)
+  const sellProduct = useResourceStore((state) => state.sellProduct)
   const upgrades = useUpgradeStore((state) => state.upgrades)
 
-  const hasCroissants = croissants.gte(1)
-  const sellAmount = hasCroissants ? croissants.floor() : new Decimal(0)
-  const sellValue = calcSellValue(sellAmount, upgrades, new Decimal(1))
+  // Filter upgrades to this product's scope
+  const scopedUpgrades = Object.fromEntries(
+    Object.entries(upgrades).filter(([, u]) => u.scope === productId || u.scope === 'global')
+  )
+
+  const hasProduct = productAmount.gte(1)
+  const sellAmount = hasProduct ? productAmount.floor() : new Decimal(0)
+  const sellValue = calcSellValue(sellAmount, scopedUpgrades, new Decimal(1), bundle.baseSellRate)
+
+  const finishedEmoji = ALL_RESOURCES[finishedRid]?.emoji ?? bundle.definition.emoji
 
   const handleSell = () => {
-    if (!hasCroissants) return
-    const current = useResourceStore.getState().resources.croissants.amount.floor()
-    if (current.lt(1)) return
-    const value = calcSellValue(current, useUpgradeStore.getState().upgrades, new Decimal(1))
-    sellCroissants(current, value)
+    if (!hasProduct) return
+    const currentAmount = useResourceStore.getState().productResources[productId]?.[finishedRid]?.amount
+    if (!currentAmount || currentAmount.lt(1)) return
+    const current = currentAmount.floor()
+    const currentUpgrades = useUpgradeStore.getState().upgrades
+    const currentScopedUpgrades = Object.fromEntries(
+      Object.entries(currentUpgrades).filter(([, u]) => u.scope === productId || u.scope === 'global')
+    )
+    const value = calcSellValue(current, currentScopedUpgrades, new Decimal(1), bundle.baseSellRate)
+    sellProduct(finishedId, current, value)
   }
 
   return (
@@ -95,40 +127,42 @@ function SellButton() {
         <div>
           <h3 className="font-semibold text-green-900 text-sm">Vendre</h3>
           <p className="text-xs text-green-600">
-            Vendez vos croissants pour des Paintines Coins
+            Vendez vos {bundle.definition.name.toLowerCase()} pour des Paintines Coins
           </p>
         </div>
       </div>
 
       <button
         onClick={handleSell}
-        disabled={!hasCroissants}
+        disabled={!hasProduct}
         className={`
           w-full py-2 rounded-lg text-sm font-medium transition-colors
-          ${hasCroissants
+          ${hasProduct
             ? 'bg-green-500 text-white hover:bg-green-600 active:bg-green-700 cursor-pointer'
             : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }
         `}
       >
-        {hasCroissants
-          ? <>Vendre <NumberDisplay value={sellAmount} /> 🥐 → <NumberDisplay value={sellValue} /> 🪙</>
-          : 'Aucun croissant à vendre'
+        {hasProduct
+          ? <>Vendre <NumberDisplay value={sellAmount} /> {finishedEmoji} {'\u2192'} <NumberDisplay value={sellValue} /> 🪙</>
+          : `Aucun(e) ${bundle.definition.name.toLowerCase()} a vendre`
         }
       </button>
     </div>
   )
 }
 
-// ─── Panel complet ───────────────────────────────────────────────
+// ─── Panel ──────────────────────────────────────────────────────
 
 export function CraftingPanel() {
+  const { bundle } = useProduct()
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold text-amber-800">Atelier</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {CRAFTING_ORDER.map((id) => (
-          <CraftingButton key={id} recipeId={id} />
+        {bundle.craftingOrder.map((id) => (
+          <CraftingButton key={id as string} recipeId={id} />
         ))}
         <SellButton />
       </div>

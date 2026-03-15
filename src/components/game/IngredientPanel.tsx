@@ -1,29 +1,27 @@
 import { useResourceStore } from '@/store/resourceStore'
-import { RESOURCES_DATA } from '@/lib/resources'
+import { useProduct } from './ProductContext'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
-import type { ResourceId } from '@/types'
 
 export function IngredientPanel() {
-  const resources = useResourceStore((state) => state.resources)
+  const { productId, bundle } = useProduct()
+  const productResources = useResourceStore((state) => state.productResources[productId])
 
-  const ingredients = (Object.keys(resources) as ResourceId[]).filter(
-    (id) => resources[id].unlocked && RESOURCES_DATA[id].category === 'ingredient'
-  )
+  if (!productResources) return null
 
-  const meta = (Object.keys(resources) as ResourceId[]).filter(
-    (id) => resources[id].unlocked && RESOURCES_DATA[id].category === 'meta'
-  )
+  // Filter resources of the active product that are ingredients or intermediaire
+  const visible = Object.entries(bundle.resources)
+    .filter(([, data]) => data.category === 'ingredient' || data.category === 'intermediaire')
+    .filter(([id]) => productResources[id]?.unlocked)
 
-  const visible = [...ingredients, ...meta]
   if (visible.length === 0) return null
 
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
-      <h2 className="text-sm font-semibold text-amber-800 mb-3">Ingrédients</h2>
+      <h2 className="text-sm font-semibold text-amber-800 mb-3">Ingredients</h2>
       <div className="flex flex-wrap gap-x-6 gap-y-2">
-        {visible.map((id) => {
-          const resource = resources[id]
-          const data = RESOURCES_DATA[id]
+        {visible.map(([id, data]) => {
+          const resource = productResources[id]
+          if (!resource) return null
           const isNegative = resource.perSecond.lt(0)
           return (
             <div key={id} className="flex items-center gap-2 text-amber-900">

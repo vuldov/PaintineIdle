@@ -1,72 +1,76 @@
 import { useCallback, useEffect, useRef } from 'react'
+import Decimal from 'decimal.js'
 import type { ResourceId } from '@/types'
-import { calcProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
+import { PANTINS_COINS_ID } from '@/types'
+import { calcTotalProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useCraftingStore } from '@/store/craftingStore'
-import { BUILDING_ORDER, BUILDING_UNLOCK_THRESHOLDS } from '@/lib/buildings'
-import { RESOURCE_UNLOCK_THRESHOLDS } from '@/lib/resources'
+import { useProductStore } from '@/store/productStore'
+import {
+  PRODUCT_REGISTRY,
+  PRODUCT_ORDER,
+  SHARED_RESOURCE_UNLOCK_THRESHOLDS,
+  getAllBuildingUnlockThresholds,
+} from '@/lib/products/registry'
 
 /**
- * Assemble un GameState à partir des stores.
- */
-function getGameState() {
-  const { resources } = useResourceStore.getState()
-  const { buildings } = useBuildingStore.getState()
-  const { upgrades } = useUpgradeStore.getState()
-
-  return {
-    resources,
-    buildings,
-    upgrades,
-    prestige: {
-      etoiles: resources.etoiles.amount,
-      etoilesCettePartie: resources.etoiles.amount,
-      totalPrestiges: 0,
-      bonusMultiplier: resources.etoiles.amount.mul(0.1).add(1),
-    },
-    stats: {
-      totalCroissantsProduits: resources.croissants.totalEarned,
-      tempsDeJeu: 0,
-      totalClics: 0,
-      meilleurCroissantsParSeconde: resources.croissants.perSecond,
-      dateDebut: Date.now(),
-    },
-    version: 2,
-    lastSave: Date.now(),
-  }
-}
-
-/**
- * Vérifie et débloque bâtiments et ressources.
+ * Check and unlock buildings and resources.
  */
 function checkUnlocks() {
-  const { resources, unlockResource } = useResourceStore.getState()
-  const { buildings, unlockBuilding } = useBuildingStore.getState()
+  const resourceStore = useResourceStore.getState()
+  const allResources = resourceStore.getAllResources()
+  const buildingStore = useBuildingStore.getState()
 
-  // Déblocage des bâtiments
-  for (const id of BUILDING_ORDER) {
-    if (buildings[id].unlocked) continue
-    const threshold = BUILDING_UNLOCK_THRESHOLDS[id]
-    if (!threshold) continue
-    if (resources[threshold.resource].totalEarned.gte(threshold.amount)) {
-      unlockBuilding(id)
+  // Building unlocks (all products)
+  const thresholds = getAllBuildingUnlockThresholds()
+  const allBuildings = buildingStore.getAllBuildings()
+
+  for (const [bid, threshold] of Object.entries(thresholds)) {
+    const building = allBuildings[bid]
+    if (!building || building.unlocked) continue
+    const res = allResources[threshold.resource as string]
+    if (res && res.totalEarned.gte(threshold.amount)) {
+      buildingStore.unlockBuilding(building.id)
     }
   }
 
-  // Déblocage des ressources
-  for (const [resourceId, condition] of Object.entries(RESOURCE_UNLOCK_THRESHOLDS)) {
+  // Shared resource unlocks (reputation, etoiles)
+  for (const [resourceId, condition] of Object.entries(SHARED_RESOURCE_UNLOCK_THRESHOLDS)) {
     if (!condition) continue
-    if (resources[resourceId as ResourceId].unlocked) continue
-    if (resources[condition.resource].totalEarned.gte(condition.amount)) {
-      unlockResource(resourceId as ResourceId)
+    const res = allResources[resourceId]
+    if (!res || res.unlocked) continue
+    const condRes = allResources[condition.resource as string]
+    if (condRes && condRes.totalEarned.gte(condition.amount)) {
+      resourceStore.unlockResource(resourceId as ResourceId)
     }
   }
 }
 
 /**
- * Game loop principal via requestAnimationFrame.
+ * Check if new products should be unlocked based on pantins_coins totalEarned.
+ */
+function checkProductUnlocks() {
+  const resourceStore = useResourceStore.getState()
+  const coinsResource = resourceStore.globalResources[PANTINS_COINS_ID as string]
+  if (!coinsResource) return
+
+  const productStore = useProductStore.getState()
+  const totalCoins = coinsResource.totalEarned
+
+  for (const productId of PRODUCT_ORDER) {
+    if (productStore.isUnlocked(productId)) continue
+    const bundle = PRODUCT_REGISTRY[productId]
+    if (!bundle.definition.unlockCondition) continue
+    if (totalCoins.gte(bundle.definition.unlockCondition.amount)) {
+      productStore.unlockProduct(productId)
+    }
+  }
+}
+
+/**
+ * Game loop using requestAnimationFrame.
  */
 export function useGameLoop() {
   const lastTimeRef = useRef<number>(0)
@@ -83,20 +87,37 @@ export function useGameLoop() {
     const delta = Math.min(rawDelta, 1)
     lastTimeRef.current = timestamp
 
-    // 1. Avancer le crafting manuel
+    // 1. Tick all active crafting tasks
     useCraftingStore.getState().tickCrafting(delta)
 
-    // 2. Production automatique (bâtiments)
-    const state = getGameState()
-    const result = calcProduction(state)
-    const deltas = calcClampedDelta(result, state.resources, delta)
+    // 2. Calculate production for all unlocked products
+    const { unlockedProducts } = useProductStore.getState()
+    const buildingStore = useBuildingStore.getState()
+    const { upgrades } = useUpgradeStore.getState()
+    const resourceStore = useResourceStore.getState()
 
-    const { applyDeltas, updatePerSecond } = useResourceStore.getState()
-    applyDeltas(deltas)
-    updatePerSecond(result.net)
+    // Calculate prestige multiplier from etoiles
+    const etoilesAmount = resourceStore.globalResources['etoiles']?.amount ?? new Decimal(0)
+    const prestigeMultiplier = etoilesAmount.mul(0.1).add(1)
 
-    // 3. Déblocages
+    const totalResult = calcTotalProduction(
+      unlockedProducts,
+      PRODUCT_REGISTRY,
+      buildingStore.buildings,
+      upgrades,
+      prestigeMultiplier,
+    )
+
+    // 3. Apply clamped deltas
+    const allResources = resourceStore.getAllResources()
+    const deltas = calcClampedDelta(totalResult, allResources, delta)
+
+    resourceStore.applyDeltas(deltas)
+    resourceStore.updatePerSecond(totalResult.totalNet)
+
+    // 4. Check unlocks
     checkUnlocks()
+    checkProductUnlocks()
 
     rafRef.current = requestAnimationFrame(tick)
   }, [])

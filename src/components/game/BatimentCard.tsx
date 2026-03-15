@@ -1,32 +1,48 @@
 import { useBuildingStore } from '@/store/buildingStore'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
-import { BUILDINGS_DATA } from '@/lib/buildings'
-import { RESOURCES_DATA } from '@/lib/resources'
+import { useProduct } from './ProductContext'
+import { ALL_RESOURCES } from '@/lib/products/registry'
 import { calcCost, calcCostReduction, calcBuildingRates } from '@/mechanics/productionMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import type { BuildingId } from '@/types'
 
-// ─── Composant ───────────────────────────────────────────────────
+// ─── Component ───────────────────────────────────────────────────
 
 interface BatimentCardProps {
   buildingId: BuildingId
 }
 
 export function BatimentCard({ buildingId }: BatimentCardProps) {
-  const building = useBuildingStore((state) => state.buildings[buildingId])
+  const { productId, bundle } = useProduct()
+  const bid = buildingId as string
+
+  const building = useBuildingStore((state) => state.buildings[productId]?.[bid])
   const buyBuilding = useBuildingStore((state) => state.buyBuilding)
   const upgrades = useUpgradeStore((state) => state.upgrades)
-  const costReduction = calcCostReduction(upgrades)
-  const cost = calcCost(building, building.count, costReduction)
-  const canAfford = useResourceStore((state) =>
-    state.canAfford(building.costResource, cost)
-  )
-  const data = BUILDINGS_DATA[buildingId]
-  const costEmoji = RESOURCES_DATA[building.costResource].emoji
-  const { produces, consumes } = calcBuildingRates(buildingId, building.baseProduction, upgrades)
 
-  if (!building.unlocked) return null
+  // Filter upgrades to this product's scope
+  const scopedUpgrades = Object.fromEntries(
+    Object.entries(upgrades).filter(([, u]) => u.scope === productId || u.scope === 'global')
+  )
+  const costReduction = calcCostReduction(scopedUpgrades)
+  const cost = building ? calcCost(building, building.count, costReduction) : undefined
+
+  const canAfford = useResourceStore((state) =>
+    building && cost ? state.canAfford(building.costResource, cost) : false
+  )
+
+  const data = bundle.buildings[bid]
+
+  if (!building || !data || !building.unlocked) return null
+
+  const costEmoji = ALL_RESOURCES[building.costResource as string]?.emoji ?? '🪙'
+  const { produces, consumes } = calcBuildingRates(
+    data,
+    bundle.pipelineConfig.stages,
+    building.baseProduction,
+    scopedUpgrades,
+  )
 
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -45,20 +61,26 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
         </span>
       </div>
 
-      {/* Production & consommation par unité */}
+      {/* Production & consumption per unit */}
       <div className="text-xs space-y-0.5 mt-2 mb-3">
-        {produces.map((p) => (
-          <span key={`p-${p.resource}`} className="flex items-center gap-1 text-green-700">
-            <span>+<NumberDisplay value={p.amount} />/s</span>
-            <span>{RESOURCES_DATA[p.resource].emoji} {RESOURCES_DATA[p.resource].name}</span>
-          </span>
-        ))}
-        {consumes.map((c) => (
-          <span key={`c-${c.resource}`} className="flex items-center gap-1 text-red-500">
-            <span>-<NumberDisplay value={c.amount} />/s</span>
-            <span>{RESOURCES_DATA[c.resource].emoji} {RESOURCES_DATA[c.resource].name}</span>
-          </span>
-        ))}
+        {produces.map((p) => {
+          const resData = ALL_RESOURCES[p.resource as string]
+          return (
+            <span key={`p-${p.resource as string}`} className="flex items-center gap-1 text-green-700">
+              <span>+<NumberDisplay value={p.amount} />/s</span>
+              <span>{resData?.emoji} {resData?.name}</span>
+            </span>
+          )
+        })}
+        {consumes.map((c) => {
+          const resData = ALL_RESOURCES[c.resource as string]
+          return (
+            <span key={`c-${c.resource as string}`} className="flex items-center gap-1 text-red-500">
+              <span>-<NumberDisplay value={c.amount} />/s</span>
+              <span>{resData?.emoji} {resData?.name}</span>
+            </span>
+          )
+        })}
       </div>
 
       <div className="flex items-center justify-end">
@@ -73,7 +95,7 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
             }
           `}
         >
-          <NumberDisplay value={cost} /> {costEmoji}
+          {cost && <NumberDisplay value={cost} />} {costEmoji}
         </button>
       </div>
     </div>

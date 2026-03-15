@@ -1,55 +1,77 @@
 import type Decimal from 'decimal.js'
 
-// ─── Identifiants ────────────────────────────────────────────────
+// ─── Branded string types ──────────────────────────────────────
+declare const __brand: unique symbol
+type Brand<T, B extends string> = T & { readonly [__brand]: B }
 
-export type ResourceId =
-  | 'croissants'
-  | 'beurre'
-  | 'farine'
-  | 'pate'
-  | 'pantins_coins'
-  | 'reputation'
-  | 'etoiles'
+export type ProductId = 'croissants' | 'pains_au_chocolat' | 'chocolatines' | 'pizzas'
+export type ResourceId = Brand<string, 'ResourceId'>
+export type BuildingId = Brand<string, 'BuildingId'>
+export type CraftingRecipeId = Brand<string, 'CraftingRecipeId'>
+export type UpgradeId = Brand<string, 'UpgradeId'>
 
-export type BuildingId =
-  | 'fournil'
-  | 'petrin'
-  | 'four_pro'
-  | 'boutique'
-  | 'laboratoire'
-  | 'usine'
-  | 'franchise'
-  | 'empire'
+// Helpers — cast raw strings into branded IDs
+export const resourceId = (id: string): ResourceId => id as ResourceId
+export const buildingId = (id: string): BuildingId => id as BuildingId
+export const craftingRecipeId = (id: string): CraftingRecipeId => id as CraftingRecipeId
+export const upgradeId = (id: string): UpgradeId => id as UpgradeId
 
-export type UpgradeId = string
+// ─── Entity scope ──────────────────────────────────────────────
+export type EntityScope = ProductId | 'global'
 
-export type CraftingRecipeId = 'petrissage' | 'cuisson'
+// ─── Special IDs ───────────────────────────────────────────────
+export const PANTINS_COINS_ID = resourceId('pantins_coins')
+export const REPUTATION_ID = resourceId('reputation')
+export const ETOILES_ID = resourceId('etoiles')
 
-// ─── Ressources ──────────────────────────────────────────────────
+// ─── Resource category ─────────────────────────────────────────
+export type ResourceCategory = 'ingredient' | 'intermediaire' | 'produit_fini' | 'monnaie' | 'meta'
 
-export interface Resource {
+// ─── Pipeline role ─────────────────────────────────────────────
+export type PipelineRole =
+  | 'petrissage'
+  | 'garnissage'
+  | 'cuisson'
+  | 'vente'
+  | 'ingredients'
+  | 'full_pipeline'
+
+// ─── Resource data (definition, not state) ─────────────────────
+export interface ResourceData {
   id: ResourceId
-  amount: Decimal
-  perSecond: Decimal
-  totalEarned: Decimal
-  unlocked: boolean
+  name: string
+  emoji: string
+  category: ResourceCategory
+  initiallyUnlocked: boolean
+  initialAmount: Decimal
+  scope: EntityScope
 }
 
-// ─── Bâtiments ───────────────────────────────────────────────────
-
-export interface Building {
+// ─── Building data (definition, not state) ─────────────────────
+export interface BuildingData {
   id: BuildingId
-  count: number
+  name: string
+  emoji: string
+  description: string
   baseCost: Decimal
   costResource: ResourceId
   costMultiplier: number
   baseProduction: Decimal
   producedResource: ResourceId
-  unlocked: boolean
+  pipelineRole: PipelineRole
+  scope: EntityScope
 }
 
-// ─── Crafting (fabrication manuelle) ─────────────────────────────
+// ─── Pipeline stage config (data-driven) ───────────────────────
+export interface PipelineStageConfig {
+  role: PipelineRole
+  consumes: Array<{ resource: ResourceId; ratio: Decimal }>
+  produces: Array<{ resource: ResourceId; ratio: Decimal }>
+  /** Optional: extra free production (e.g., reputation from vente) */
+  freeProduces?: Array<{ resource: ResourceId; ratio: Decimal }>
+}
 
+// ─── Crafting recipe data ──────────────────────────────────────
 export interface CraftingInput {
   resource: ResourceId
   amount: Decimal
@@ -60,14 +82,45 @@ export interface CraftingOutput {
   amount: Decimal
 }
 
-export interface CraftingTask {
-  recipeId: CraftingRecipeId
-  progress: number          // 0 → 1
-  totalSeconds: number
+export interface CraftingRecipeData {
+  id: CraftingRecipeId
+  name: string
+  emoji: string
+  verb: string
+  inputs: CraftingInput[]
+  output: CraftingOutput
+  durationSeconds: number
+  scope: EntityScope
 }
 
-// ─── Upgrades ────────────────────────────────────────────────────
+// ─── Product definition ────────────────────────────────────────
+export interface ProductDefinition {
+  id: ProductId
+  name: string
+  emoji: string
+  color: string
+  unlockCondition: { resource: ResourceId; amount: Decimal } | null
+}
 
+// ─── Product bundle ────────────────────────────────────────────
+export interface ProductBundle {
+  definition: ProductDefinition
+  resources: Record<string, ResourceData>
+  buildings: Record<string, BuildingData>
+  buildingOrder: BuildingId[]
+  buildingUnlockThresholds: Record<string, { resource: ResourceId; amount: Decimal }>
+  craftingRecipes: Record<string, CraftingRecipeData>
+  craftingOrder: CraftingRecipeId[]
+  upgrades: Record<string, UpgradeData>
+  upgradeOrder: UpgradeId[]
+  pipelineConfig: { stages: PipelineStageConfig[] }
+  passiveRegen: Record<string, Decimal>
+  /** The resource ID of the finished product (e.g., croissants, pains_au_chocolat) */
+  finishedProductId: ResourceId
+  baseSellRate: Decimal
+}
+
+// ─── Upgrade data ──────────────────────────────────────────────
 export type UpgradeEffectType =
   | 'building_multiplier'
   | 'global_multiplier'
@@ -97,6 +150,45 @@ export interface UnlockCondition {
   threshold: Decimal
 }
 
+export interface UpgradeData {
+  id: UpgradeId
+  name: string
+  description: string
+  emoji: string
+  cost: Decimal
+  costResource: ResourceId
+  effect: UpgradeEffect
+  unlockCondition: UnlockCondition
+  scope: EntityScope
+}
+
+// ─── Runtime state types ───────────────────────────────────────
+
+export interface Resource {
+  id: ResourceId
+  amount: Decimal
+  perSecond: Decimal
+  totalEarned: Decimal
+  unlocked: boolean
+}
+
+export interface Building {
+  id: BuildingId
+  count: number
+  baseCost: Decimal
+  costResource: ResourceId
+  costMultiplier: number
+  baseProduction: Decimal
+  producedResource: ResourceId
+  unlocked: boolean
+}
+
+export interface CraftingTask {
+  recipeId: CraftingRecipeId
+  progress: number          // 0 -> 1
+  totalSeconds: number
+}
+
 export interface Upgrade {
   id: UpgradeId
   name: string
@@ -106,6 +198,7 @@ export interface Upgrade {
   costResource: ResourceId
   effect: UpgradeEffect
   unlockCondition: UnlockCondition
+  scope: EntityScope
 }
 
 // ─── Prestige ────────────────────────────────────────────────────
@@ -127,12 +220,12 @@ export interface GameStats {
   dateDebut: number
 }
 
-// ─── État global ─────────────────────────────────────────────────
+// ─── Game state (assembled from stores, for mechanics) ──────────
 
 export interface GameState {
-  resources: Record<ResourceId, Resource>
-  buildings: Record<BuildingId, Building>
-  upgrades: Record<UpgradeId, Upgrade>
+  resources: Record<string, Resource>
+  buildings: Record<string, Building>
+  upgrades: Record<string, Upgrade>
   prestige: PrestigeState
   stats: GameStats
   version: number

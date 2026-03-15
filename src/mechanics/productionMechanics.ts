@@ -1,16 +1,15 @@
 import Decimal from 'decimal.js'
-import type { Building, BuildingId, GameState, ResourceId, Upgrade, UpgradeId } from '@/types'
-import {
-  BUILDINGS_DATA,
-  PETRISSAGE_BEURRE_RATIO,
-  PETRISSAGE_FARINE_RATIO,
-  CUISSON_PATE_RATIO,
-  VENTE_CROISSANT_RATIO,
-} from '@/lib/buildings'
-import { BASE_INGREDIENT_REGEN } from '@/lib/resources'
-import { BASE_SELL_RATE } from '@/lib/crafting'
+import type {
+  Building,
+  ResourceId,
+  Upgrade,
+  ProductBundle,
+  PipelineStageConfig,
+  BuildingData,
+} from '@/types'
+import { ETOILES_ID } from '@/types'
 
-// ─── Taux de production par bâtiment (pour affichage) ────────────
+// ─── Building rates (for display) ──────────────────────────────
 
 export interface RateInfo {
   resource: ResourceId
@@ -23,22 +22,21 @@ export interface BuildingRates {
 }
 
 /**
- * Calcule la production et consommation effectives par unité de bâtiment,
- * en tenant compte des upgrades (building_multiplier + global_multiplier).
- * Fonction pure — utilisable dans les composants ET les tests.
+ * Calculate effective production and consumption rates per building unit.
+ * Data-driven: uses the pipeline config from the bundle.
+ * Pure function.
  */
 export function calcBuildingRates(
-  buildingId: BuildingId,
+  buildingData: BuildingData,
+  pipelineStages: PipelineStageConfig[],
   baseProduction: Decimal,
-  upgrades: Record<UpgradeId, Upgrade>,
+  upgrades: Record<string, Upgrade>,
 ): BuildingRates {
-  const data = BUILDINGS_DATA[buildingId]
-
   let bMult = new Decimal(1)
   let globalMult = new Decimal(1)
   for (const upgrade of Object.values(upgrades)) {
     if (!upgrade.purchased) continue
-    if (upgrade.effect.type === 'building_multiplier' && upgrade.effect.targetBuilding === buildingId) {
+    if (upgrade.effect.type === 'building_multiplier' && (upgrade.effect.targetBuilding as string) === (buildingData.id as string)) {
       bMult = bMult.mul(upgrade.effect.multiplier)
     }
     if (upgrade.effect.type === 'global_multiplier') {
@@ -51,33 +49,53 @@ export function calcBuildingRates(
   const produces: RateInfo[] = []
   const consumes: RateInfo[] = []
 
-  switch (data.pipelineRole) {
-    case 'petrissage':
-      produces.push({ resource: 'pate', amount: effectiveProd })
-      consumes.push({ resource: 'beurre', amount: effectiveProd.mul(PETRISSAGE_BEURRE_RATIO) })
-      consumes.push({ resource: 'farine', amount: effectiveProd.mul(PETRISSAGE_FARINE_RATIO) })
-      break
-    case 'cuisson':
-      produces.push({ resource: 'croissants', amount: effectiveProd })
-      consumes.push({ resource: 'pate', amount: effectiveProd.mul(CUISSON_PATE_RATIO) })
-      break
-    case 'vente':
-      produces.push({ resource: 'pantins_coins', amount: effectiveProd.mul(VENTE_CROISSANT_RATIO) })
-      consumes.push({ resource: 'croissants', amount: effectiveProd.mul(VENTE_CROISSANT_RATIO) })
-      break
-    case 'ingredients':
-      produces.push({ resource: 'beurre', amount: effectiveProd })
-      produces.push({ resource: 'farine', amount: effectiveProd.mul(1.5) })
-      break
-    case 'full_pipeline':
-      produces.push({ resource: 'croissants', amount: effectiveProd })
-      break
+  // Find the matching pipeline stage for this building's role
+  const matchingStage = pipelineStages.find(s => s.role === buildingData.pipelineRole)
+
+  if (buildingData.pipelineRole === 'ingredients') {
+    // Ingredients role: produces all base ingredients consumed across the pipeline.
+    // "Base ingredient" = consumed by a stage but NOT produced by any stage.
+    const allProduced = new Set(
+      pipelineStages.flatMap(s => s.produces.map(p => p.resource as string))
+    )
+    const baseIngredients = new Set<string>()
+    for (const stage of pipelineStages) {
+      for (const c of stage.consumes) {
+        if (!allProduced.has(c.resource as string)) {
+          baseIngredients.add(c.resource as string)
+        }
+      }
+    }
+    // Primary resource (the building's producedResource) gets base production
+    produces.push({ resource: buildingData.producedResource, amount: effectiveProd })
+    // Other base ingredients get 1.5x production
+    for (const resId of baseIngredients) {
+      if (resId !== (buildingData.producedResource as string)) {
+        produces.push({ resource: resId as ResourceId, amount: effectiveProd.mul(1.5) })
+      }
+    }
+  } else if (buildingData.pipelineRole === 'full_pipeline') {
+    // Full pipeline just produces the finished product
+    const cuissonStage = pipelineStages.find(s => s.role === 'cuisson')
+    if (cuissonStage && cuissonStage.produces.length > 0) {
+      produces.push({ resource: cuissonStage.produces[0].resource, amount: effectiveProd })
+    } else {
+      produces.push({ resource: buildingData.producedResource, amount: effectiveProd })
+    }
+  } else if (matchingStage) {
+    // Pipeline stage: produce and consume based on config
+    for (const p of matchingStage.produces) {
+      produces.push({ resource: p.resource, amount: effectiveProd.mul(p.ratio) })
+    }
+    for (const c of matchingStage.consumes) {
+      consumes.push({ resource: c.resource, amount: effectiveProd.mul(c.ratio) })
+    }
   }
 
   return { produces, consumes }
 }
 
-// ─── Coûts ───────────────────────────────────────────────────────
+// ─── Cost calculations ──────────────────────────────────────────
 
 export function calcCost(building: Building, count: number, costReduction?: Decimal): Decimal {
   const base = building.baseCost.mul(Decimal.pow(building.costMultiplier, count))
@@ -91,9 +109,9 @@ export function calcBulkCost(building: Building, count: number, amount: number):
   return base.mul(Decimal.pow(r, count)).mul(Decimal.pow(r, amount).sub(1)).div(r.sub(1))
 }
 
-// ─── Réduction de coût ───────────────────────────────────────────
+// ─── Cost reduction from upgrades ───────────────────────────────
 
-export function calcCostReduction(upgrades: Record<UpgradeId, Upgrade>): Decimal {
+export function calcCostReduction(upgrades: Record<string, Upgrade>): Decimal {
   let reduction = new Decimal(1)
   for (const upgrade of Object.values(upgrades)) {
     if (!upgrade.purchased) continue
@@ -104,10 +122,10 @@ export function calcCostReduction(upgrades: Record<UpgradeId, Upgrade>): Decimal
   return reduction
 }
 
-// ─── Multiplicateur de vente ─────────────────────────────────────
+// ─── Sell multiplier ────────────────────────────────────────────
 
-function calcSellMultiplier(upgrades: Record<UpgradeId, Upgrade>): Decimal {
-  let mult = BASE_SELL_RATE
+function calcSellMultiplier(upgrades: Record<string, Upgrade>, baseSellRate: Decimal): Decimal {
+  let mult = baseSellRate
   for (const upgrade of Object.values(upgrades)) {
     if (!upgrade.purchased) continue
     if (upgrade.effect.type === 'sell_multiplier') {
@@ -117,57 +135,59 @@ function calcSellMultiplier(upgrades: Record<UpgradeId, Upgrade>): Decimal {
   return mult
 }
 
-// ─── Production pipeline ─────────────────────────────────────────
+// ─── Production pipeline ────────────────────────────────────────
 
-/** Une étape du pipeline qui consomme des ressources pour en produire d'autres */
+/** A pipeline stage that consumes resources to produce others */
 export interface PipelineStage {
-  consumes: Partial<Record<ResourceId, Decimal>>  // /s
-  produces: Partial<Record<ResourceId, Decimal>>   // /s
+  consumes: Record<string, Decimal>  // /s
+  produces: Record<string, Decimal>  // /s
 }
 
 export interface ProductionResult {
-  /** Production libre (regen, ingrédients, full_pipeline) — jamais throttlée */
-  freeProduction: Record<ResourceId, Decimal>
-  /** Étapes pipeline : chaque étape est throttlée indépendamment */
+  /** Free production (regen, ingredients, full_pipeline) -- never throttled */
+  freeProduction: Record<string, Decimal>
+  /** Pipeline stages: each throttled independently */
   stages: PipelineStage[]
-  /** Net pour l'affichage (free + stages, SANS throttle) */
-  net: Record<ResourceId, Decimal>
+  /** Net for display (free + stages, WITHOUT throttle) */
+  net: Record<string, Decimal>
 }
 
-function emptyRecord(): Record<ResourceId, Decimal> {
-  return {
-    croissants: new Decimal(0),
-    beurre: new Decimal(0),
-    farine: new Decimal(0),
-    pate: new Decimal(0),
-    pantins_coins: new Decimal(0),
-    reputation: new Decimal(0),
-    etoiles: new Decimal(0),
-  }
+function addTo(record: Record<string, Decimal>, key: string, value: Decimal) {
+  record[key] = (record[key] ?? new Decimal(0)).add(value)
 }
 
 /**
- * Calcule la production : sépare la production libre des étapes pipeline.
- * Fonction pure — aucun side-effect.
+ * Calculate production for a single product. Data-driven via ProductBundle.
+ * Pure function -- no store imports, no side-effects.
  */
-export function calcProduction(state: GameState): ProductionResult {
-  const freeProduction = emptyRecord()
+export function calcProductionForProduct(
+  bundle: ProductBundle,
+  buildings: Record<string, Building>,
+  upgrades: Record<string, Upgrade>,
+  prestigeMultiplier: Decimal,
+): ProductionResult {
+  const freeProduction: Record<string, Decimal> = {}
+  const etoilesId = ETOILES_ID as string
 
-  // Stages accumulés
-  const petrissageStage: PipelineStage = { consumes: {}, produces: {} }
-  const cuissonStage: PipelineStage = { consumes: {}, produces: {} }
-  const venteStage: PipelineStage = { consumes: {}, produces: {} }
+  // Initialize to zero for all known resources in this product + global
+  // (We'll accumulate into these)
 
-  // ── Multiplicateurs des upgrades ─────────────────────────────
-  const buildingMultipliers: Partial<Record<string, Decimal>> = {}
+  // Build per-stage accumulators
+  const stageAccumulators: PipelineStage[] = bundle.pipelineConfig.stages.map(() => ({
+    consumes: {},
+    produces: {},
+  }))
+
+  // ── Upgrade multipliers ───────────────────────────────────
+  const buildingMultipliers: Record<string, Decimal> = {}
   let globalMultiplier = new Decimal(1)
-  const resourceMultipliers: Partial<Record<ResourceId, Decimal>> = {}
+  const resourceMultipliers: Record<string, Decimal> = {}
 
-  for (const upgrade of Object.values(state.upgrades)) {
+  for (const upgrade of Object.values(upgrades)) {
     if (!upgrade.purchased) continue
     switch (upgrade.effect.type) {
       case 'building_multiplier': {
-        const target = upgrade.effect.targetBuilding
+        const target = upgrade.effect.targetBuilding as string | undefined
         if (target) {
           const current = buildingMultipliers[target] ?? new Decimal(1)
           buildingMultipliers[target] = current.mul(upgrade.effect.multiplier)
@@ -178,7 +198,7 @@ export function calcProduction(state: GameState): ProductionResult {
         globalMultiplier = globalMultiplier.mul(upgrade.effect.multiplier)
         break
       case 'resource_multiplier': {
-        const target = upgrade.effect.targetResource
+        const target = upgrade.effect.targetResource as string | undefined
         if (target) {
           const current = resourceMultipliers[target] ?? new Decimal(1)
           resourceMultipliers[target] = current.mul(upgrade.effect.multiplier)
@@ -188,157 +208,258 @@ export function calcProduction(state: GameState): ProductionResult {
     }
   }
 
-  const sellMultiplier = calcSellMultiplier(state.upgrades)
+  const sellMultiplier = calcSellMultiplier(upgrades, bundle.baseSellRate)
 
-  // ── Régénération passive → free ────────────────────────────
-  for (const [resId, regen] of Object.entries(BASE_INGREDIENT_REGEN)) {
-    if (regen) {
-      freeProduction[resId as ResourceId] = freeProduction[resId as ResourceId].add(regen)
-    }
+  // ── Passive regen -> free ──────────────────────────────────
+  for (const [resId, regen] of Object.entries(bundle.passiveRegen)) {
+    addTo(freeProduction, resId, regen)
   }
 
-  // ── Bâtiments ──────────────────────────────────────────────
-  for (const building of Object.values(state.buildings)) {
+  // ── Buildings ──────────────────────────────────────────────
+  for (const building of Object.values(buildings)) {
     if (building.count <= 0) continue
 
-    const bMult = buildingMultipliers[building.id] ?? new Decimal(1)
+    const bid = building.id as string
+    const buildingData = bundle.buildings[bid]
+    if (!buildingData) continue
+
+    const bMult = buildingMultipliers[bid] ?? new Decimal(1)
     const totalMult = bMult.mul(globalMultiplier)
     const baseProd = building.baseProduction.mul(building.count).mul(totalMult)
-    const data = BUILDINGS_DATA[building.id]
 
-    switch (data.pipelineRole) {
-      case 'petrissage': {
-        addTo(petrissageStage.produces, 'pate', baseProd)
-        addTo(petrissageStage.consumes, 'beurre', baseProd.mul(PETRISSAGE_BEURRE_RATIO))
-        addTo(petrissageStage.consumes, 'farine', baseProd.mul(PETRISSAGE_FARINE_RATIO))
-        break
+    // Find which pipeline stage this building belongs to
+    const stageIndex = bundle.pipelineConfig.stages.findIndex(
+      s => s.role === buildingData.pipelineRole
+    )
+
+    if (buildingData.pipelineRole === 'ingredients') {
+      // Ingredients: free production of all base ingredients.
+      // "Base ingredient" = consumed by a stage but NOT produced by any stage.
+      const allProduced = new Set(
+        bundle.pipelineConfig.stages.flatMap(s => s.produces.map(p => p.resource as string))
+      )
+      const baseIngredients = new Set<string>()
+      for (const stage of bundle.pipelineConfig.stages) {
+        for (const c of stage.consumes) {
+          if (!allProduced.has(c.resource as string)) {
+            baseIngredients.add(c.resource as string)
+          }
+        }
       }
-      case 'cuisson': {
-        addTo(cuissonStage.produces, 'croissants', baseProd)
-        addTo(cuissonStage.consumes, 'pate', baseProd.mul(CUISSON_PATE_RATIO))
-        break
+      // Primary resource gets base production
+      addTo(freeProduction, buildingData.producedResource as string, baseProd)
+      // Other base ingredients get 1.5x
+      for (const resId of baseIngredients) {
+        if (resId !== (buildingData.producedResource as string)) {
+          addTo(freeProduction, resId, baseProd.mul(1.5))
+        }
       }
-      case 'vente': {
-        const croissantsSold = baseProd.mul(VENTE_CROISSANT_RATIO)
-        addTo(venteStage.consumes, 'croissants', croissantsSold)
-        addTo(venteStage.produces, 'pantins_coins', croissantsSold.mul(sellMultiplier))
-        freeProduction.reputation = freeProduction.reputation.add(baseProd.mul(0.1))
-        break
+    } else if (buildingData.pipelineRole === 'full_pipeline') {
+      // Full pipeline: free production of finished product
+      const cuissonStage = bundle.pipelineConfig.stages.find(s => s.role === 'cuisson')
+      if (cuissonStage && cuissonStage.produces.length > 0) {
+        addTo(freeProduction, cuissonStage.produces[0].resource as string, baseProd)
+      } else {
+        addTo(freeProduction, buildingData.producedResource as string, baseProd)
       }
-      case 'ingredients': {
-        freeProduction.beurre = freeProduction.beurre.add(baseProd)
-        freeProduction.farine = freeProduction.farine.add(baseProd.mul(1.5))
-        break
+      // Also generate a bit of reputation
+      addTo(freeProduction, 'reputation', baseProd.mul(0.05))
+    } else if (stageIndex >= 0) {
+      const stageConfig = bundle.pipelineConfig.stages[stageIndex]
+      const accumulator = stageAccumulators[stageIndex]
+
+      // Apply consumes/produces based on config ratios
+      for (const c of stageConfig.consumes) {
+        addTo(accumulator.consumes, c.resource as string, baseProd.mul(c.ratio))
       }
-      case 'full_pipeline': {
-        freeProduction.croissants = freeProduction.croissants.add(baseProd)
-        freeProduction.reputation = freeProduction.reputation.add(baseProd.mul(0.05))
-        break
+      for (const p of stageConfig.produces) {
+        addTo(accumulator.produces, p.resource as string, baseProd.mul(p.ratio))
+      }
+
+      // Special case for vente: the "sells" use the sell multiplier on coins production
+      if (buildingData.pipelineRole === 'vente') {
+        // Override the coins production with sell multiplier
+        const coinsKey = 'pantins_coins'
+        if (accumulator.produces[coinsKey]) {
+          // Remove the base production and re-add with sell multiplier
+          const baseCoins = baseProd.mul(stageConfig.produces.find(p => (p.resource as string) === coinsKey)?.ratio ?? new Decimal(1))
+          accumulator.produces[coinsKey] = (accumulator.produces[coinsKey] ?? new Decimal(0)).sub(baseCoins).add(baseCoins.mul(sellMultiplier).div(bundle.baseSellRate))
+        }
+        // Free produces (like reputation from vente)
+        if (stageConfig.freeProduces) {
+          for (const fp of stageConfig.freeProduces) {
+            addTo(freeProduction, fp.resource as string, baseProd.mul(fp.ratio))
+          }
+        }
       }
     }
   }
 
-  // ── Multiplicateurs par ressource ──────────────────────────
+  // ── Resource multipliers ───────────────────────────────────
   for (const [resId, mult] of Object.entries(resourceMultipliers)) {
-    const rid = resId as ResourceId
-    freeProduction[rid] = freeProduction[rid].mul(mult)
-    // Aussi appliquer aux stages
-    for (const stage of [petrissageStage, cuissonStage, venteStage]) {
-      if (stage.produces[rid]) {
-        stage.produces[rid] = stage.produces[rid]!.mul(mult)
+    if (freeProduction[resId]) {
+      freeProduction[resId] = freeProduction[resId].mul(mult)
+    }
+    for (const stage of stageAccumulators) {
+      if (stage.produces[resId]) {
+        stage.produces[resId] = stage.produces[resId].mul(mult)
       }
     }
   }
 
-  // ── Prestige ───────────────────────────────────────────────
-  const pm = state.prestige.bonusMultiplier
-  for (const rid of Object.keys(freeProduction) as ResourceId[]) {
-    if (rid === 'etoiles') continue
-    freeProduction[rid] = freeProduction[rid].mul(pm)
+  // ── Prestige multiplier ────────────────────────────────────
+  for (const key of Object.keys(freeProduction)) {
+    if (key === etoilesId) continue
+    freeProduction[key] = freeProduction[key].mul(prestigeMultiplier)
   }
-  for (const stage of [petrissageStage, cuissonStage, venteStage]) {
-    for (const rid of Object.keys(stage.produces) as ResourceId[]) {
-      if (rid === 'etoiles') continue
-      stage.produces[rid] = stage.produces[rid]!.mul(pm)
+  for (const stage of stageAccumulators) {
+    for (const key of Object.keys(stage.produces)) {
+      if (key === etoilesId) continue
+      stage.produces[key] = stage.produces[key].mul(prestigeMultiplier)
     }
-    for (const rid of Object.keys(stage.consumes) as ResourceId[]) {
-      if (rid === 'etoiles') continue
-      stage.consumes[rid] = stage.consumes[rid]!.mul(pm)
-    }
-  }
-
-  const stages = [petrissageStage, cuissonStage, venteStage]
-
-  // ── Net (pour affichage, sans throttle) ────────────────────
-  const net = { ...freeProduction }
-  for (const stage of stages) {
-    for (const [rid, val] of Object.entries(stage.produces)) {
-      net[rid as ResourceId] = net[rid as ResourceId].add(val!)
-    }
-    for (const [rid, val] of Object.entries(stage.consumes)) {
-      net[rid as ResourceId] = net[rid as ResourceId].sub(val!)
+    for (const key of Object.keys(stage.consumes)) {
+      if (key === etoilesId) continue
+      stage.consumes[key] = stage.consumes[key].mul(prestigeMultiplier)
     }
   }
 
-  return { freeProduction, stages, net }
+  // ── Net (for display, without throttle) ────────────────────
+  const net: Record<string, Decimal> = {}
+  for (const [key, val] of Object.entries(freeProduction)) {
+    addTo(net, key, val)
+  }
+  for (const stage of stageAccumulators) {
+    for (const [key, val] of Object.entries(stage.produces)) {
+      addTo(net, key, val)
+    }
+    for (const [key, val] of Object.entries(stage.consumes)) {
+      net[key] = (net[key] ?? new Decimal(0)).sub(val)
+    }
+  }
+
+  return { freeProduction, stages: stageAccumulators, net }
 }
 
-function addTo(record: Partial<Record<ResourceId, Decimal>>, key: ResourceId, value: Decimal) {
-  record[key] = (record[key] ?? new Decimal(0)).add(value)
-}
+// ─── Multi-product total production ─────────────────────────────
 
-// ─── Clamped delta ───────────────────────────────────────────────
+export interface TotalProductionResult {
+  /** Per-product results */
+  perProduct: Record<string, ProductionResult>
+  /** Aggregated net across all products (for perSecond display) */
+  totalNet: Record<string, Decimal>
+  /** Aggregated free production across all products */
+  totalFreeProduction: Record<string, Decimal>
+  /** All stages from all products */
+  allStages: Array<{ productId: string; stage: PipelineStage }>
+}
 
 /**
- * Applique la production avec clamping par étape du pipeline.
- * Chaque étape est throttlée indépendamment : si le fournil manque
- * de pâte il s'arrête, mais le pétrin continue de tourner.
+ * Calculate total production across all unlocked products.
+ */
+export function calcTotalProduction(
+  unlockedProducts: string[],
+  bundles: Record<string, ProductBundle>,
+  allBuildings: Record<string, Record<string, Building>>,
+  allUpgrades: Record<string, Upgrade>,
+  prestigeMultiplier: Decimal,
+): TotalProductionResult {
+  const perProduct: Record<string, ProductionResult> = {}
+  const totalNet: Record<string, Decimal> = {}
+  const totalFreeProduction: Record<string, Decimal> = {}
+  const allStages: Array<{ productId: string; stage: PipelineStage }> = []
+
+  for (const productId of unlockedProducts) {
+    const bundle = bundles[productId]
+    if (!bundle) continue
+
+    const buildings = allBuildings[productId] ?? {}
+
+    // Filter upgrades that belong to this product or are global
+    const scopedUpgrades: Record<string, Upgrade> = {}
+    for (const [uid, upgrade] of Object.entries(allUpgrades)) {
+      if (upgrade.scope === productId || upgrade.scope === 'global') {
+        scopedUpgrades[uid] = upgrade
+      }
+    }
+
+    const result = calcProductionForProduct(bundle, buildings, scopedUpgrades, prestigeMultiplier)
+    perProduct[productId] = result
+
+    // Aggregate nets
+    for (const [key, val] of Object.entries(result.net)) {
+      addTo(totalNet, key, val)
+    }
+
+    // Aggregate free production
+    for (const [key, val] of Object.entries(result.freeProduction)) {
+      addTo(totalFreeProduction, key, val)
+    }
+
+    // Collect stages
+    for (const stage of result.stages) {
+      allStages.push({ productId, stage })
+    }
+  }
+
+  return { perProduct, totalNet, totalFreeProduction, allStages }
+}
+
+// ─── Clamped delta ──────────────────────────────────────────────
+
+/**
+ * Apply production with per-stage throttling.
+ * Works with the aggregated TotalProductionResult.
  */
 export function calcClampedDelta(
-  result: ProductionResult,
-  resources: Record<ResourceId, { amount: Decimal }>,
+  totalResult: TotalProductionResult,
+  resources: Record<string, { amount: Decimal }>,
   delta: number,
-): Record<ResourceId, Decimal> {
+): Record<string, Decimal> {
   const d = new Decimal(delta)
-  const deltas = emptyRecord()
+  const deltas: Record<string, Decimal> = {}
 
-  // 1. Production libre — toujours appliquée
-  for (const rid of Object.keys(deltas) as ResourceId[]) {
-    deltas[rid] = result.freeProduction[rid].mul(d)
+  // 1. Free production -- always applied
+  for (const [key, val] of Object.entries(totalResult.totalFreeProduction)) {
+    deltas[key] = val.mul(d)
   }
 
-  // 2. Simuler le stock courant (stock actuel + free production ce tick)
-  const simStock = emptyRecord()
-  for (const rid of Object.keys(simStock) as ResourceId[]) {
-    simStock[rid] = resources[rid].amount.add(deltas[rid])
+  // 2. Simulated stock (current + free production this tick)
+  const simStock: Record<string, Decimal> = {}
+  for (const [key, res] of Object.entries(resources)) {
+    simStock[key] = res.amount.add(deltas[key] ?? new Decimal(0))
+  }
+  // Also ensure we have entries for everything in deltas
+  for (const key of Object.keys(deltas)) {
+    if (!simStock[key]) {
+      simStock[key] = deltas[key]
+    }
   }
 
-  // 3. Chaque étape pipeline : throttle indépendant
-  for (const stage of result.stages) {
-    // Calculer le ratio de throttle pour cette étape
+  // 3. Each pipeline stage: independent throttle
+  for (const { stage } of totalResult.allStages) {
     let throttle = new Decimal(1)
     for (const [rid, consumed] of Object.entries(stage.consumes)) {
       if (!consumed || consumed.isZero()) continue
       const needed = consumed.mul(d)
-      const available = Decimal.max(simStock[rid as ResourceId], 0)
+      const available = Decimal.max(simStock[rid] ?? new Decimal(0), 0)
       const ratio = Decimal.min(available.div(needed), 1)
       throttle = Decimal.min(throttle, ratio)
     }
 
-    // Appliquer la consommation throttlée
+    // Apply throttled consumption
     for (const [rid, consumed] of Object.entries(stage.consumes)) {
       if (!consumed || consumed.isZero()) continue
       const effective = consumed.mul(d).mul(throttle)
-      deltas[rid as ResourceId] = deltas[rid as ResourceId].sub(effective)
-      simStock[rid as ResourceId] = simStock[rid as ResourceId].sub(effective)
+      deltas[rid] = (deltas[rid] ?? new Decimal(0)).sub(effective)
+      simStock[rid] = (simStock[rid] ?? new Decimal(0)).sub(effective)
     }
 
-    // Appliquer la production throttlée
+    // Apply throttled production
     for (const [rid, produced] of Object.entries(stage.produces)) {
       if (!produced || produced.isZero()) continue
       const effective = produced.mul(d).mul(throttle)
-      deltas[rid as ResourceId] = deltas[rid as ResourceId].add(effective)
-      simStock[rid as ResourceId] = simStock[rid as ResourceId].add(effective)
+      deltas[rid] = (deltas[rid] ?? new Decimal(0)).add(effective)
+      simStock[rid] = (simStock[rid] ?? new Decimal(0)).add(effective)
     }
   }
 
