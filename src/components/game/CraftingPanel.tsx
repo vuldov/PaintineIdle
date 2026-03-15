@@ -6,7 +6,7 @@ import { useProduct } from './ProductContext'
 import { canStartCrafting, calcSellValue } from '@/mechanics/craftingMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { ALL_RESOURCES } from '@/lib/products/registry'
-import type { CraftingRecipeId } from '@/types'
+import type { CraftingRecipeId, Resource } from '@/types'
 
 // ─── Crafting button ────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
   if (!recipe) return null
 
   // Merge resources for canStartCrafting check (inline, not in selector)
-  const allResources: Record<string, { amount: Decimal }> = { ...globalResources }
+  const allResources: Record<string, Resource> = { ...globalResources }
   for (const res of Object.values(productResources)) {
     Object.assign(allResources, res)
   }

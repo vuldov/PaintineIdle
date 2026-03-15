@@ -7,7 +7,7 @@ import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import type { UpgradeId, Resource } from '@/types'
 
 export function UpgradePanel() {
-  const { productId, bundle } = useProduct()
+  const { bundle } = useProduct()
   const upgrades = useUpgradeStore((state) => state.upgrades)
   const buyUpgrade = useUpgradeStore((state) => state.buyUpgrade)
   const globalResources = useResourceStore((state) => state.globalResources)
