@@ -73,7 +73,6 @@ function makeResourceAmounts(): Record<string, { amount: Decimal }> {
     result[id] = { amount: data.category === 'ingredient' ? new Decimal(100) : new Decimal(0) }
   }
   result['pantins_coins'] = { amount: new Decimal(0) }
-  result['reputation'] = { amount: new Decimal(0) }
   return result
 }
 

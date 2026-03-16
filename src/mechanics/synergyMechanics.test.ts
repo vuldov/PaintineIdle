@@ -401,35 +401,6 @@ describe('calcSynergyBonuses', () => {
       expect(result.globalSellMultiplier.toNumber()).toBeCloseTo(1.30, 10)
     })
 
-    it('applies scaling upgrade (total_upgrades) with reputation bonus', () => {
-      const upgrade: Upgrade = {
-        id: upgradeId('formation_scaling'),
-        name: 'test',
-        description: 'test',
-        purchased: true,
-        cost: new Decimal(0),
-        costResource: PANTINS_COINS_ID,
-        effect: {
-          type: 'scaling',
-          multiplier: new Decimal(1),
-          scalingEffect: {
-            source: 'total_upgrades',
-            bonusType: 'reputation',
-            bonusPerUnit: new Decimal(0.01),
-            scalingDivisor: 10,
-          },
-        },
-        unlockCondition: { type: 'resource_threshold', threshold: new Decimal(0) },
-        scope: 'global',
-      }
-      const result = calcSynergyBonuses(makeBaseInput({
-        purchasedUpgrades: [upgrade],
-        totalUpgradeCount: 25,
-      }))
-      // floor(25/10) = 2, 2 * 0.01 = 0.02, so 1 + 0.02 = 1.02
-      expect(result.ingredientMultipliers['reputation']?.toNumber()).toBeCloseTo(1.02, 10)
-    })
-
     it('applies cross_product_synergy upgrade', () => {
       const upgrade: Upgrade = {
         id: upgradeId('petit_dej'),

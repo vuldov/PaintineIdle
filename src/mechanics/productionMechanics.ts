@@ -300,7 +300,7 @@ export function calcProductionForProduct(
           const baseCoins = baseProd.mul(stageConfig.produces.find(p => (p.resource as string) === coinsKey)?.ratio ?? new Decimal(1))
           accumulator.produces[coinsKey] = (accumulator.produces[coinsKey] ?? new Decimal(0)).sub(baseCoins).add(baseCoins.mul(sellMultiplier).div(bundle.baseSellRate).mul(sellSynergyMult))
         }
-        // Free produces (like reputation from vente)
+        // Free produces from vente stage
         if (stageConfig.freeProduces) {
           for (const fp of stageConfig.freeProduces) {
             addTo(freeProduction, fp.resource as string, baseProd.mul(fp.ratio))

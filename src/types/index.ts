@@ -75,7 +75,7 @@ export interface PipelineStageConfig {
   role: PipelineRole
   consumes: Array<{ resource: ResourceId; ratio: Decimal }>
   produces: Array<{ resource: ResourceId; ratio: Decimal }>
-  /** Optional: extra free production (e.g., reputation from vente) */
+  /** Optional: extra free production from this stage */
   freeProduces?: Array<{ resource: ResourceId; ratio: Decimal }>
 }
 

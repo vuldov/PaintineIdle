@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import Decimal from 'decimal.js'
 import type { Resource, Upgrade } from '@/types'
-import { resourceId, PANTINS_COINS_ID } from '@/types'
+import { PANTINS_COINS_ID } from '@/types'
 import { CROISSANTS_BUNDLE } from '@/lib/products/croissants'
 import { canStartCrafting, calcCraftingDuration, calcSellValue } from './craftingMechanics'
 
