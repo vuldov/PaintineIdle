@@ -29,13 +29,6 @@ function makeResources(overrides: Record<string, Partial<Resource>> = {}): Recor
     totalEarned: new Decimal(0),
     unlocked: true,
   }
-  defaults['reputation'] = {
-    id: resourceId('reputation'),
-    amount: new Decimal(0),
-    perSecond: new Decimal(0),
-    totalEarned: new Decimal(0),
-    unlocked: false,
-  }
   for (const [key, value] of Object.entries(overrides)) {
     if (defaults[key]) {
       defaults[key] = { ...defaults[key], ...value }
