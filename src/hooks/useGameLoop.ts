@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useRef } from 'react'
-import Decimal from 'decimal.js'
-import type { ResourceId } from '@/types'
+import type Decimal from 'decimal.js'
+import type { ResourceId, ProductId, Upgrade } from '@/types'
 import { PANTINS_COINS_ID } from '@/types'
 import { calcTotalProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
+import { calcSynergyBonuses } from '@/mechanics/synergyMechanics'
+import type { SynergyCalcInput } from '@/mechanics/synergyMechanics'
+import { COMBO_DEFINITIONS } from '@/lib/synergies/combos'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useCraftingStore } from '@/store/craftingStore'
 import { useProductStore } from '@/store/productStore'
+import { useSynergyStore } from '@/store/synergyStore'
 import {
   PRODUCT_REGISTRY,
   PRODUCT_ORDER,
+  ALL_BUILDINGS as ALL_BUILDING_DATA,
   SHARED_RESOURCE_UNLOCK_THRESHOLDS,
   getAllBuildingUnlockThresholds,
 } from '@/lib/products/registry'
@@ -36,7 +41,7 @@ function checkUnlocks() {
     }
   }
 
-  // Shared resource unlocks (reputation, etoiles)
+  // Shared resource unlocks
   for (const [resourceId, condition] of Object.entries(SHARED_RESOURCE_UNLOCK_THRESHOLDS)) {
     if (!condition) continue
     const res = allResources[resourceId]
@@ -96,20 +101,74 @@ export function useGameLoop() {
     const { upgrades } = useUpgradeStore.getState()
     const resourceStore = useResourceStore.getState()
 
-    // Calculate prestige multiplier from etoiles
-    const etoilesAmount = resourceStore.globalResources['etoiles']?.amount ?? new Decimal(0)
-    const prestigeMultiplier = etoilesAmount.mul(0.1).add(1)
+    // Compute synergy bonuses
+    const allBuildings = buildingStore.getAllBuildings()
+    const allResources = resourceStore.getAllResources()
+
+    // Determine active products (products with at least 1 building in cuisson or full_pipeline)
+    const activeProductIds: ProductId[] = []
+    for (const productId of unlockedProducts) {
+      const productBuildings = buildingStore.buildings[productId as ProductId] ?? {}
+      const bundle = PRODUCT_REGISTRY[productId as ProductId]
+      if (!bundle) continue
+      let isActive = false
+      for (const [bid, building] of Object.entries(productBuildings)) {
+        if (building.count <= 0) continue
+        const data = bundle.buildings[bid]
+        if (data && (data.pipelineRole === 'cuisson' || data.pipelineRole === 'full_pipeline')) {
+          isActive = true
+          break
+        }
+      }
+      if (isActive) activeProductIds.push(productId as ProductId)
+    }
+
+    // Gather purchased upgrades
+    const purchasedUpgrades: Upgrade[] = Object.values(upgrades).filter(u => u.purchased)
+
+    // Count totals for scaling upgrades
+    let totalBuildingCount = 0
+    for (const building of Object.values(allBuildings)) {
+      totalBuildingCount += building.count
+    }
+    const totalUpgradeCount = purchasedUpgrades.length
+
+    // Gather resource totals for cross-product upgrades
+    const resourceTotals: Record<string, Decimal> = {}
+    for (const [rid, res] of Object.entries(allResources)) {
+      resourceTotals[rid] = res.totalEarned
+    }
+
+    const synergyInput: SynergyCalcInput = {
+      allBuildings,
+      allBuildingData: ALL_BUILDING_DATA,
+      purchasedUpgrades,
+      activeProductIds,
+      comboDefinitions: COMBO_DEFINITIONS,
+      totalBuildingCount,
+      totalUpgradeCount,
+      resourceTotals,
+    }
+
+    const synergyBonuses = calcSynergyBonuses(synergyInput)
+
+    // Update synergy store for UI components
+    useSynergyStore.getState().updateBonuses(
+      synergyBonuses,
+      activeProductIds,
+      totalBuildingCount,
+      totalUpgradeCount,
+    )
 
     const totalResult = calcTotalProduction(
       unlockedProducts,
       PRODUCT_REGISTRY,
       buildingStore.buildings,
       upgrades,
-      prestigeMultiplier,
+      synergyBonuses,
     )
 
     // 3. Apply clamped deltas
-    const allResources = resourceStore.getAllResources()
     const deltas = calcClampedDelta(totalResult, allResources, delta)
 
     resourceStore.applyDeltas(deltas)

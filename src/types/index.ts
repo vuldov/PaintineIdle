@@ -1,5 +1,13 @@
 import type Decimal from 'decimal.js'
 
+// Re-export synergy types
+export type {
+  AuraEffectType,
+  BuildingAura,
+  ComboBoulangerie,
+  SynergyBonuses,
+} from './synergies'
+
 // ─── Branded string types ──────────────────────────────────────
 declare const __brand: unique symbol
 type Brand<T, B extends string> = T & { readonly [__brand]: B }
@@ -21,8 +29,6 @@ export type EntityScope = ProductId | 'global'
 
 // ─── Special IDs ───────────────────────────────────────────────
 export const PANTINS_COINS_ID = resourceId('pantins_coins')
-export const REPUTATION_ID = resourceId('reputation')
-export const ETOILES_ID = resourceId('etoiles')
 
 // ─── Resource category ─────────────────────────────────────────
 export type ResourceCategory = 'ingredient' | 'intermediaire' | 'produit_fini' | 'monnaie' | 'meta'
@@ -60,6 +66,8 @@ export interface BuildingData {
   producedResource: ResourceId
   pipelineRole: PipelineRole
   scope: EntityScope
+  /** Optional synergy aura emitted by this building */
+  aura?: import('./synergies').BuildingAura
 }
 
 // ─── Pipeline stage config (data-driven) ───────────────────────
@@ -130,6 +138,9 @@ export type UpgradeEffectType =
   | 'cost_reduction'
   | 'synergy'
   | 'unlock'
+  | 'specialization'
+  | 'cross_product_synergy'
+  | 'scaling'
 
 export interface UpgradeEffect {
   type: UpgradeEffectType
@@ -138,6 +149,30 @@ export interface UpgradeEffect {
   targetRecipe?: CraftingRecipeId
   synergyBuildings?: [BuildingId, BuildingId]
   multiplier: Decimal
+  /** For 'specialization': scaling bonus based on building count */
+  scalingBonus?: {
+    bonusType: 'global' | 'production' | 'sell'
+    bonusPerUnit: Decimal
+    scalingBuildingId?: BuildingId
+    scalingDivisor?: number
+  }
+  /** For 'cross_product_synergy': cross-product interaction */
+  crossProductEffect?: {
+    sourceProduct: ProductId
+    sourceResource?: string
+    targetProduct: ProductId
+    bonusType: 'sell' | 'production'
+    bonusPerUnit: Decimal
+    scalingDivisor?: number
+  }
+  /** For 'scaling': bonus that scales with total buildings/upgrades */
+  scalingEffect?: {
+    source: 'total_buildings' | 'total_upgrades' | 'building_count'
+    sourceBuildingId?: BuildingId
+    bonusType: 'global_production' | 'sell'
+    bonusPerUnit: Decimal
+    scalingDivisor?: number
+  }
 }
 
 export type UnlockConditionType = 'resource_threshold' | 'building_count' | 'upgrade_purchased'
@@ -160,6 +195,7 @@ export interface UpgradeData {
   effect: UpgradeEffect
   unlockCondition: UnlockCondition
   scope: EntityScope
+  category?: 'specialization' | 'synergy' | 'scaling'
 }
 
 // ─── Runtime state types ───────────────────────────────────────
@@ -199,15 +235,7 @@ export interface Upgrade {
   effect: UpgradeEffect
   unlockCondition: UnlockCondition
   scope: EntityScope
-}
-
-// ─── Prestige ────────────────────────────────────────────────────
-
-export interface PrestigeState {
-  etoiles: Decimal
-  etoilesCettePartie: Decimal
-  totalPrestiges: number
-  bonusMultiplier: Decimal
+  category?: 'specialization' | 'synergy' | 'scaling'
 }
 
 // ─── Stats ───────────────────────────────────────────────────────
@@ -226,7 +254,6 @@ export interface GameState {
   resources: Record<string, Resource>
   buildings: Record<string, Building>
   upgrades: Record<string, Upgrade>
-  prestige: PrestigeState
   stats: GameStats
   version: number
   lastSave: number

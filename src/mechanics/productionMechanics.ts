@@ -6,8 +6,9 @@ import type {
   ProductBundle,
   PipelineStageConfig,
   BuildingData,
+  SynergyBonuses,
 } from '@/types'
-import { ETOILES_ID } from '@/types'
+import { getDefaultSynergyBonuses } from './synergyMechanics'
 
 // ─── Building rates (for display) ──────────────────────────────
 
@@ -164,10 +165,11 @@ export function calcProductionForProduct(
   bundle: ProductBundle,
   buildings: Record<string, Building>,
   upgrades: Record<string, Upgrade>,
-  prestigeMultiplier: Decimal,
+  synergyBonuses?: SynergyBonuses,
 ): ProductionResult {
+  const synergy = synergyBonuses ?? getDefaultSynergyBonuses()
+  const productId = bundle.definition.id
   const freeProduction: Record<string, Decimal> = {}
-  const etoilesId = ETOILES_ID as string
 
   // Initialize to zero for all known resources in this product + global
   // (We'll accumulate into these)
@@ -210,6 +212,18 @@ export function calcProductionForProduct(
 
   const sellMultiplier = calcSellMultiplier(upgrades, bundle.baseSellRate)
 
+  // ── Synergy multipliers ─────────────────────────────────────
+  // Apply global production multiplier from synergies
+  globalMultiplier = globalMultiplier.mul(synergy.globalProductionMultiplier)
+  // Apply per-product production multiplier from synergies
+  const productSynergyMult = synergy.productionMultipliers[productId] ?? new Decimal(1)
+  globalMultiplier = globalMultiplier.mul(productSynergyMult)
+  // Compute sell synergy multiplier for this product
+  const sellSynergyMult = (synergy.sellMultipliers[productId] ?? new Decimal(1))
+    .mul(synergy.globalSellMultiplier)
+  // Compute ingredient synergy multiplier (global)
+  const ingredientGlobalMult = synergy.ingredientMultipliers['_global'] ?? new Decimal(1)
+
   // ── Passive regen -> free ──────────────────────────────────
   for (const [resId, regen] of Object.entries(bundle.passiveRegen)) {
     addTo(freeProduction, resId, regen)
@@ -246,12 +260,15 @@ export function calcProductionForProduct(
           }
         }
       }
-      // Primary resource gets base production
-      addTo(freeProduction, buildingData.producedResource as string, baseProd)
-      // Other base ingredients get 1.5x
+      // Primary resource gets base production, with per-resource ingredient synergy
+      const primaryResId = buildingData.producedResource as string
+      const primaryIngMult = synergy.ingredientMultipliers[primaryResId] ?? new Decimal(1)
+      addTo(freeProduction, primaryResId, baseProd.mul(ingredientGlobalMult).mul(primaryIngMult))
+      // Other base ingredients get 1.5x, also with ingredient synergy
       for (const resId of baseIngredients) {
-        if (resId !== (buildingData.producedResource as string)) {
-          addTo(freeProduction, resId, baseProd.mul(1.5))
+        if (resId !== primaryResId) {
+          const resIngMult = synergy.ingredientMultipliers[resId] ?? new Decimal(1)
+          addTo(freeProduction, resId, baseProd.mul(1.5).mul(ingredientGlobalMult).mul(resIngMult))
         }
       }
     } else if (buildingData.pipelineRole === 'full_pipeline') {
@@ -262,8 +279,6 @@ export function calcProductionForProduct(
       } else {
         addTo(freeProduction, buildingData.producedResource as string, baseProd)
       }
-      // Also generate a bit of reputation
-      addTo(freeProduction, 'reputation', baseProd.mul(0.05))
     } else if (stageIndex >= 0) {
       const stageConfig = bundle.pipelineConfig.stages[stageIndex]
       const accumulator = stageAccumulators[stageIndex]
@@ -278,12 +293,12 @@ export function calcProductionForProduct(
 
       // Special case for vente: the "sells" use the sell multiplier on coins production
       if (buildingData.pipelineRole === 'vente') {
-        // Override the coins production with sell multiplier
+        // Override the coins production with sell multiplier + synergy sell multiplier
         const coinsKey = 'pantins_coins'
         if (accumulator.produces[coinsKey]) {
-          // Remove the base production and re-add with sell multiplier
+          // Remove the base production and re-add with sell multiplier * synergy sell
           const baseCoins = baseProd.mul(stageConfig.produces.find(p => (p.resource as string) === coinsKey)?.ratio ?? new Decimal(1))
-          accumulator.produces[coinsKey] = (accumulator.produces[coinsKey] ?? new Decimal(0)).sub(baseCoins).add(baseCoins.mul(sellMultiplier).div(bundle.baseSellRate))
+          accumulator.produces[coinsKey] = (accumulator.produces[coinsKey] ?? new Decimal(0)).sub(baseCoins).add(baseCoins.mul(sellMultiplier).div(bundle.baseSellRate).mul(sellSynergyMult))
         }
         // Free produces (like reputation from vente)
         if (stageConfig.freeProduces) {
@@ -304,22 +319,6 @@ export function calcProductionForProduct(
       if (stage.produces[resId]) {
         stage.produces[resId] = stage.produces[resId].mul(mult)
       }
-    }
-  }
-
-  // ── Prestige multiplier ────────────────────────────────────
-  for (const key of Object.keys(freeProduction)) {
-    if (key === etoilesId) continue
-    freeProduction[key] = freeProduction[key].mul(prestigeMultiplier)
-  }
-  for (const stage of stageAccumulators) {
-    for (const key of Object.keys(stage.produces)) {
-      if (key === etoilesId) continue
-      stage.produces[key] = stage.produces[key].mul(prestigeMultiplier)
-    }
-    for (const key of Object.keys(stage.consumes)) {
-      if (key === etoilesId) continue
-      stage.consumes[key] = stage.consumes[key].mul(prestigeMultiplier)
     }
   }
 
@@ -361,7 +360,7 @@ export function calcTotalProduction(
   bundles: Record<string, ProductBundle>,
   allBuildings: Record<string, Record<string, Building>>,
   allUpgrades: Record<string, Upgrade>,
-  prestigeMultiplier: Decimal,
+  synergyBonuses?: SynergyBonuses,
 ): TotalProductionResult {
   const perProduct: Record<string, ProductionResult> = {}
   const totalNet: Record<string, Decimal> = {}
@@ -382,7 +381,7 @@ export function calcTotalProduction(
       }
     }
 
-    const result = calcProductionForProduct(bundle, buildings, scopedUpgrades, prestigeMultiplier)
+    const result = calcProductionForProduct(bundle, buildings, scopedUpgrades, synergyBonuses)
     perProduct[productId] = result
 
     // Aggregate nets
@@ -466,13 +465,3 @@ export function calcClampedDelta(
   return deltas
 }
 
-// ─── Prestige ────────────────────────────────────────────────────
-
-export function calcEtoilesGagnees(totalCroissants: Decimal): Decimal {
-  if (totalCroissants.lte(0)) return new Decimal(0)
-  return Decimal.max(totalCroissants.div(1e6).sqrt().floor(), 0)
-}
-
-export function calcBonusPrestige(etoiles: Decimal): Decimal {
-  return etoiles.mul(0.1).add(1)
-}

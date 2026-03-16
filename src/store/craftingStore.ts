@@ -20,7 +20,7 @@ interface CraftingStore {
   /** Get active task for a product */
   getActiveTask: (productId: ProductId) => CraftingTask | null
 
-  /** Reset (prestige) */
+  /** Reset crafting tasks to initial state */
   resetCrafting: () => void
 }
 

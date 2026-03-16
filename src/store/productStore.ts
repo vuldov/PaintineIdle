@@ -3,14 +3,18 @@ import type { ProductId } from '@/types'
 
 // ─── Interface ───────────────────────────────────────────────────
 
+type ViewMode = 'product' | 'synergies'
+
 interface ProductStoreState {
   unlockedProducts: ProductId[]
   activeProduct: ProductId
+  viewMode: ViewMode
 }
 
 interface ProductStoreActions {
   unlockProduct: (id: ProductId) => void
   setActiveProduct: (id: ProductId) => void
+  setViewMode: (mode: ViewMode) => void
   isUnlocked: (id: ProductId) => boolean
 }
 
@@ -21,6 +25,7 @@ type ProductStore = ProductStoreState & ProductStoreActions
 export const useProductStore = create<ProductStore>((set, get) => ({
   unlockedProducts: ['croissants'],
   activeProduct: 'croissants',
+  viewMode: 'product',
 
   unlockProduct: (id) => {
     set((state) => {
@@ -33,8 +38,12 @@ export const useProductStore = create<ProductStore>((set, get) => ({
 
   setActiveProduct: (id) => {
     if (get().unlockedProducts.includes(id)) {
-      set({ activeProduct: id })
+      set({ activeProduct: id, viewMode: 'product' })
     }
+  },
+
+  setViewMode: (mode) => {
+    set({ viewMode: mode })
   },
 
   isUnlocked: (id) => {

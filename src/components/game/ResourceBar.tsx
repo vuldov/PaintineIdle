@@ -23,16 +23,12 @@ export function ResourceBar() {
   const unlockedProducts = useProductStore((s) => s.unlockedProducts)
   const activeProduct = useProductStore((s) => s.activeProduct)
   const setActiveProduct = useProductStore((s) => s.setActiveProduct)
+  const viewMode = useProductStore((s) => s.viewMode)
+  const setViewMode = useProductStore((s) => s.setViewMode)
 
   // Paintines Coins
   const coinsResource = globalResources[PANTINS_COINS_ID as string]
   const coinsData = SHARED_RESOURCES[PANTINS_COINS_ID as string]
-
-  // Reputation & etoiles
-  const reputationResource = globalResources['reputation']
-  const reputationData = SHARED_RESOURCES['reputation']
-  const etoilesResource = globalResources['etoiles']
-  const etoilesData = SHARED_RESOURCES['etoiles']
 
   // Unlocked products in order
   const visibleProducts = PRODUCT_ORDER.filter((id) => unlockedProducts.includes(id))
@@ -101,41 +97,29 @@ export function ResourceBar() {
           )
         })}
 
-        {/* Separator before meta resources */}
-        {(reputationResource?.unlocked || etoilesResource?.unlocked) && (
-          <div className="w-px h-8 bg-amber-300" />
+        {/* Synergy button */}
+        {visibleProducts.length > 0 && (
+          <>
+            <div className="w-px h-8 bg-amber-300" />
+            <button
+              onClick={() => setViewMode(viewMode === 'synergies' ? 'product' : 'synergies')}
+              title="Synergies & Bonus"
+              className={`
+                flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer
+                ${viewMode === 'synergies'
+                  ? 'ring-2 ring-purple-400 bg-purple-50 shadow-sm'
+                  : 'hover:bg-white/40 text-amber-900'
+                }
+              `}
+            >
+              <span className="text-xl">✨</span>
+              <span className="text-sm font-semibold hidden sm:inline">
+                Synergies
+              </span>
+            </button>
+          </>
         )}
 
-        {/* Reputation if unlocked */}
-        {reputationResource?.unlocked && reputationData && (
-          <div className="flex items-center gap-2 text-amber-900">
-            <span className="text-2xl" role="img" aria-label={reputationData.name}>
-              {reputationData.emoji}
-            </span>
-            <div className="flex flex-col items-start leading-tight">
-              <span className="font-bold text-lg">
-                <NumberDisplay value={reputationResource.amount} />
-              </span>
-              <span className="text-xs text-amber-700">
-                <NumberDisplay value={reputationResource.perSecond} />/s
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Etoiles if unlocked */}
-        {etoilesResource?.unlocked && etoilesData && (
-          <div className="flex items-center gap-2 text-amber-900">
-            <span className="text-2xl" role="img" aria-label={etoilesData.name}>
-              {etoilesData.emoji}
-            </span>
-            <div className="flex flex-col items-start leading-tight">
-              <span className="font-bold text-lg">
-                <NumberDisplay value={etoilesResource.amount} />
-              </span>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   )

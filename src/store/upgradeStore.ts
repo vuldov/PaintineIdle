@@ -19,6 +19,7 @@ function createInitialUpgrades(): Record<string, Upgrade> {
       effect: data.effect,
       unlockCondition: data.unlockCondition,
       scope: data.scope,
+      category: data.category,
     }
   }
   return upgrades
@@ -32,7 +33,7 @@ interface UpgradeStore {
   /** Buy an upgrade. Returns true if successful. */
   buyUpgrade: (upgradeId: UpgradeId) => boolean
 
-  /** Reset upgrades (prestige) */
+  /** Reset upgrades to initial state */
   resetUpgrades: () => void
 }
 

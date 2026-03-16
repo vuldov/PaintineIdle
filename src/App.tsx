@@ -1,11 +1,15 @@
 import { useGameLoop } from '@/hooks/useGameLoop'
 import { useAutoSave } from '@/hooks/useAutoSave'
+import { useProductStore } from '@/store/productStore'
 import { ResourceBar } from '@/components/game/ResourceBar'
 import { ProductPage } from '@/components/game/ProductPage'
+import { SynergyPanel } from '@/components/game/SynergyPanel'
 
 function App() {
   useGameLoop()
   useAutoSave()
+
+  const viewMode = useProductStore((s) => s.viewMode)
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -26,7 +30,8 @@ function App() {
           </p>
         </div>
 
-        <ProductPage />
+        {viewMode === 'product' && <ProductPage />}
+        {viewMode === 'synergies' && <SynergyPanel />}
       </main>
 
       <footer className="text-center py-6 text-amber-600 text-sm border-t border-amber-200 mt-8">

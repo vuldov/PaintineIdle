@@ -50,6 +50,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(1_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.25),
     producedResource: PIZZAS, pipelineRole: 'cuisson', scope: 'pizzas',
+    aura: {
+      effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.05),
+      description: '+5% génération ingrédients globale par potager',
+    },
   },
   [PETRIN_PIZZA as string]: {
     id: PETRIN_PIZZA, name: 'Pétrin à pizza', emoji: '⚙️',
@@ -57,6 +61,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(2_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.35),
     producedResource: PATE_A_PIZZA, pipelineRole: 'petrissage', scope: 'pizzas',
+    aura: {
+      effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.03),
+      description: '+3% vitesse pétrissage globale par pétrin pizza',
+    },
   },
   [FOUR_A_BOIS as string]: {
     id: FOUR_A_BOIS, name: 'Four à bois', emoji: '🔥',
@@ -64,6 +72,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(12_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.2),
     producedResource: PIZZAS, pipelineRole: 'cuisson', scope: 'pizzas',
+    aura: {
+      effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.03),
+      targetProduct: 'pizzas', description: '+3% prix de vente pizzas par four à bois',
+    },
   },
   [PIZZERIA as string]: {
     id: PIZZERIA, name: 'Pizzeria', emoji: '🏪',
@@ -71,6 +83,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(35_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.7),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pizzas',
+    aura: {
+      effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
+      description: '+1% prix de vente tous produits par pizzeria',
+    },
   },
   [LABO_RECETTES as string]: {
     id: LABO_RECETTES, name: 'Labo recettes', emoji: '🔬',
@@ -78,6 +94,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(100_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.2),
     producedResource: SAUCE_TOMATE, pipelineRole: 'ingredients', scope: 'pizzas',
+    aura: {
+      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.05),
+      description: '+5% production globale par labo recettes',
+    },
   },
   [USINE_PIZZA as string]: {
     id: USINE_PIZZA, name: 'Usine à pizza', emoji: '🏭',
@@ -85,6 +105,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(750_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(3.5),
     producedResource: PIZZAS, pipelineRole: 'full_pipeline', scope: 'pizzas',
+    aura: {
+      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.02),
+      description: '+2% production globale par usine pizza',
+    },
   },
   [CHAINE_PIZZERIAS as string]: {
     id: CHAINE_PIZZERIAS, name: 'Chaîne pizzerias', emoji: '🗺️',
@@ -92,6 +116,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(4_000_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(7),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pizzas',
+    aura: {
+      effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.02),
+      description: '+2% prix de vente tous produits par chaîne pizzerias',
+    },
   },
   [EMPIRE_PIZZA as string]: {
     id: EMPIRE_PIZZA, name: 'Empire pizza', emoji: '🌍',
@@ -99,6 +127,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(40_000_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(35),
     producedResource: PIZZAS, pipelineRole: 'full_pipeline', scope: 'pizzas',
+    aura: {
+      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.01),
+      description: '+1% production globale par empire pizza',
+    },
   },
 }
 
@@ -131,9 +163,6 @@ const pipelineConfig: { stages: PipelineStageConfig[] } = {
       ],
       produces: [
         { resource: PANTINS_COINS_ID, ratio: new Decimal(1) },
-      ],
-      freeProduces: [
-        { resource: resourceId('reputation'), ratio: new Decimal(0.2) },
       ],
     },
   ],
@@ -277,5 +306,5 @@ export const PIZZAS_BUNDLE: ProductBundle = {
     [MOZZARELLA as string]: new Decimal(0.18),
   },
   finishedProductId: PIZZAS,
-  baseSellRate: new Decimal(5),
+  baseSellRate: new Decimal(50),
 }

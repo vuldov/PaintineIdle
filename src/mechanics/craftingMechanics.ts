@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js'
-import type { Resource, Upgrade, CraftingRecipeData } from '@/types'
+import type { Resource, Upgrade, CraftingRecipeData, SynergyBonuses } from '@/types'
 
 /**
  * Check if the player has enough resources to start a crafting recipe.
@@ -18,11 +18,12 @@ export function canStartCrafting(
 }
 
 /**
- * Calculate the effective duration of a recipe taking into account upgrades.
+ * Calculate the effective duration of a recipe taking into account upgrades and synergies.
  */
 export function calcCraftingDuration(
   recipe: CraftingRecipeData,
   upgrades: Record<string, Upgrade>,
+  synergyBonuses?: SynergyBonuses,
 ): number {
   let speedMultiplier = new Decimal(1)
 
@@ -36,6 +37,21 @@ export function calcCraftingDuration(
     }
   }
 
+  // Apply synergy crafting speed bonuses
+  if (synergyBonuses) {
+    const recipeId = recipe.id as string
+    // Per-recipe bonus
+    const recipeMult = synergyBonuses.craftingSpeedMultipliers[recipeId]
+    if (recipeMult) {
+      speedMultiplier = speedMultiplier.mul(recipeMult)
+    }
+    // Global crafting speed bonus
+    const globalMult = synergyBonuses.craftingSpeedMultipliers['_global']
+    if (globalMult) {
+      speedMultiplier = speedMultiplier.mul(globalMult)
+    }
+  }
+
   return new Decimal(recipe.durationSeconds).div(speedMultiplier).toNumber()
 }
 
@@ -46,8 +62,9 @@ export function calcCraftingDuration(
 export function calcSellValue(
   amount: Decimal,
   upgrades: Record<string, Upgrade>,
-  prestigeMultiplier: Decimal,
   baseSellRate: Decimal,
+  synergyBonuses?: SynergyBonuses,
+  productId?: string,
 ): Decimal {
   let sellRate = baseSellRate
 
@@ -58,5 +75,16 @@ export function calcSellValue(
     }
   }
 
-  return amount.mul(sellRate).mul(prestigeMultiplier)
+  let synergyMult = new Decimal(1)
+  if (synergyBonuses) {
+    synergyMult = synergyMult.mul(synergyBonuses.globalSellMultiplier)
+    if (productId) {
+      const productSellMult = synergyBonuses.sellMultipliers[productId]
+      if (productSellMult) {
+        synergyMult = synergyMult.mul(productSellMult)
+      }
+    }
+  }
+
+  return amount.mul(sellRate).mul(synergyMult)
 }

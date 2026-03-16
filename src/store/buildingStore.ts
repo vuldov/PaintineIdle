@@ -48,7 +48,7 @@ interface BuildingStore {
   /** Unlock a building */
   unlockBuilding: (id: BuildingId) => void
 
-  /** Reset building counts (prestige) */
+  /** Reset building counts to initial state */
   resetBuildings: () => void
 }
 

@@ -103,7 +103,7 @@ function SellButton() {
 
   const hasProduct = productAmount.gte(1)
   const sellAmount = hasProduct ? productAmount.floor() : new Decimal(0)
-  const sellValue = calcSellValue(sellAmount, scopedUpgrades, new Decimal(1), bundle.baseSellRate)
+  const sellValue = calcSellValue(sellAmount, scopedUpgrades, bundle.baseSellRate)
 
   const finishedEmoji = ALL_RESOURCES[finishedRid]?.emoji ?? bundle.definition.emoji
 
@@ -116,7 +116,7 @@ function SellButton() {
     const currentScopedUpgrades = Object.fromEntries(
       Object.entries(currentUpgrades).filter(([, u]) => u.scope === productId || u.scope === 'global')
     )
-    const value = calcSellValue(current, currentScopedUpgrades, new Decimal(1), bundle.baseSellRate)
+    const value = calcSellValue(current, currentScopedUpgrades, bundle.baseSellRate)
     sellProduct(finishedId, current, value)
   }
 

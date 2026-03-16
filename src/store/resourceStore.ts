@@ -71,7 +71,7 @@ interface ResourceStore {
   /** Get all resources flattened */
   getAllResources: () => Record<string, Resource>
 
-  /** Reset for prestige */
+  /** Reset all resources to initial state */
   resetResources: () => void
 }
 

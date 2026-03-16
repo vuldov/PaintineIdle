@@ -138,7 +138,7 @@ function migrateV2ToV3(data: SaveDataV2): SaveDataV3 {
   const croissantResources: Record<string, SerializedResource> = {}
 
   for (const [id, resource] of Object.entries(data.resources)) {
-    if (id === 'pantins_coins' || id === 'reputation' || id === 'etoiles') {
+    if (id === 'pantins_coins') {
       globalResources[id] = { ...resource, id }
     } else if (oldToCroissantResources[id]) {
       const newId = oldToCroissantResources[id]
@@ -312,15 +312,11 @@ function loadGame() {
       const { upgrades } = useUpgradeStore.getState()
       const resourceStoreState = useResourceStore.getState()
 
-      const etoilesAmount = resourceStoreState.globalResources['etoiles']?.amount ?? new Decimal(0)
-      const prestigeMultiplier = etoilesAmount.mul(0.1).add(1)
-
       const totalResult = calcTotalProduction(
         unlockedProducts,
         PRODUCT_REGISTRY,
         buildingStoreState.buildings,
         upgrades,
-        prestigeMultiplier,
       )
 
       const allResources = resourceStoreState.getAllResources()

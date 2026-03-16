@@ -50,6 +50,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(15), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.4),
     producedResource: CROISSANTS, pipelineRole: 'cuisson', scope: 'croissants',
+    aura: {
+      effectType: 'production_bonus', bonusPerBuilding: new Decimal(0.01),
+      targetProduct: 'croissants', description: '+1% production croissants par fournil',
+    },
   },
   [PETRIN as string]: {
     id: PETRIN, name: 'Pétrin mécanique', emoji: '⚙️',
@@ -57,6 +61,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(30), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.5),
     producedResource: PATE_FEUILLETEE, pipelineRole: 'petrissage', scope: 'croissants',
+    aura: {
+      effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.02),
+      targetRecipe: 'petrissage_croissant', description: '+2% vitesse pétrissage croissant par pétrin',
+    },
   },
   [FOUR_PRO as string]: {
     id: FOUR_PRO, name: 'Four professionnel', emoji: '🔥',
@@ -64,6 +72,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(200), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(2),
     producedResource: CROISSANTS, pipelineRole: 'cuisson', scope: 'croissants',
+    aura: {
+      effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.03),
+      targetRecipe: 'cuisson_croissant', description: '+3% vitesse cuisson croissant par four pro',
+    },
   },
   [BOUTIQUE as string]: {
     id: BOUTIQUE, name: 'Boutique', emoji: '🏪',
@@ -71,6 +83,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(500), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'croissants',
+    aura: {
+      effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.05),
+      targetProduct: 'croissants', description: '+5% prix de vente croissants par boutique',
+    },
   },
   [LABORATOIRE as string]: {
     id: LABORATOIRE, name: 'Laboratoire pâtissier', emoji: '🔬',
@@ -78,6 +94,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(1_500), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(2),
     producedResource: BEURRE, pipelineRole: 'ingredients', scope: 'croissants',
+    aura: {
+      effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.02),
+      description: '+2% génération ingrédients par laboratoire',
+    },
   },
   [USINE as string]: {
     id: USINE, name: 'Usine viennoiserie', emoji: '🏭',
@@ -85,6 +105,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(10_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(5),
     producedResource: CROISSANTS, pipelineRole: 'full_pipeline', scope: 'croissants',
+    aura: {
+      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.01),
+      description: '+1% production globale par usine',
+    },
   },
   [FRANCHISE as string]: {
     id: FRANCHISE, name: 'Franchise nationale', emoji: '🗺️',
@@ -92,6 +116,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(50_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(10),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'croissants',
+    aura: {
+      effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
+      description: '+1% prix de vente tous produits par franchise',
+    },
   },
   [EMPIRE as string]: {
     id: EMPIRE, name: 'Empire mondial', emoji: '🌍',
@@ -99,6 +127,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(500_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(50),
     producedResource: CROISSANTS, pipelineRole: 'full_pipeline', scope: 'croissants',
+    aura: {
+      effectType: 'all_speed_bonus', bonusPerBuilding: new Decimal(0.005),
+      description: '+0,5% vitesse globale par empire mondial',
+    },
   },
 }
 
@@ -131,9 +163,6 @@ const pipelineConfig: { stages: PipelineStageConfig[] } = {
       ],
       produces: [
         { resource: PANTINS_COINS_ID, ratio: new Decimal(1) },
-      ],
-      freeProduces: [
-        { resource: resourceId('reputation'), ratio: new Decimal(0.1) },
       ],
     },
   ],
@@ -265,14 +294,6 @@ const upgrades: Record<string, UpgradeData> = {
     unlockCondition: { type: 'building_count', buildingId: LABORATOIRE, threshold: new Decimal(5) },
     scope: 'croissants',
   },
-  formation_mof: {
-    id: upgradeId('formation_mof'), name: 'Formation MOF',
-    description: 'x3 réputation générée', emoji: '🎓',
-    cost: new Decimal(20_000), costResource: PANTINS_COINS_ID,
-    effect: { type: 'resource_multiplier', targetResource: resourceId('reputation'), multiplier: new Decimal(3) },
-    unlockCondition: { type: 'resource_threshold', resourceId: resourceId('reputation'), threshold: new Decimal(20) },
-    scope: 'croissants',
-  },
 }
 
 // ─── Bundle ────────────────────────────────────────────────────
@@ -314,7 +335,6 @@ export const CROISSANTS_BUNDLE: ProductBundle = {
     upgradeId('vitrine_refrigeree'),
     upgradeId('negociation_fournisseurs'),
     upgradeId('recette_secrete'),
-    upgradeId('formation_mof'),
   ],
   pipelineConfig,
   passiveRegen: {

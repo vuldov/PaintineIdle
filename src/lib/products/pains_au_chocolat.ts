@@ -63,6 +63,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(50), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.45),
     producedResource: PATE_LEVEE_FEUILLETEE, pipelineRole: 'petrissage', scope: 'pains_au_chocolat',
+    aura: {
+      effectType: 'cross_product_bonus', bonusPerBuilding: new Decimal(0.02),
+      crossProductTarget: 'croissants', description: '+2% production croissants par malaxeur',
+    },
   },
   [GARNISSEUR as string]: {
     id: GARNISSEUR, name: 'Garnisseur', emoji: '🤲',
@@ -70,6 +74,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(80), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.35),
     producedResource: PATON_CHOCOLAT, pipelineRole: 'garnissage', scope: 'pains_au_chocolat',
+    aura: {
+      effectType: 'production_bonus', bonusPerBuilding: new Decimal(0.03),
+      targetProduct: 'pains_au_chocolat', description: '+3% production pains au chocolat par garnisseur',
+    },
   },
   [ATELIER_CHOCOLAT as string]: {
     id: ATELIER_CHOCOLAT, name: 'Atelier chocolat', emoji: '🍫',
@@ -77,6 +85,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(500), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.5),
     producedResource: PATON_CHOCOLAT, pipelineRole: 'garnissage', scope: 'pains_au_chocolat',
+    aura: {
+      effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.05),
+      targetResource: 'chocolat_patissier', description: '+5% génération chocolat par atelier chocolat',
+    },
   },
   [FOUR_VENTILE as string]: {
     id: FOUR_VENTILE, name: 'Four ventile', emoji: '🔥',
@@ -84,6 +96,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(600), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.8),
     producedResource: PAINS_AU_CHOCOLAT, pipelineRole: 'cuisson', scope: 'pains_au_chocolat',
+    aura: {
+      effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.02),
+      description: '+2% vitesse cuisson globale par four ventilé',
+    },
   },
   [CHOCOLATERIE as string]: {
     id: CHOCOLATERIE, name: 'Chocolaterie', emoji: '🏪',
@@ -91,6 +107,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(1_500), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.9),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pains_au_chocolat',
+    aura: {
+      effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
+      description: '+1% prix de vente tous produits par chocolaterie',
+    },
   },
   [LABO_CACAO as string]: {
     id: LABO_CACAO, name: 'Labo cacao', emoji: '🔬',
@@ -98,6 +118,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(5_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.8),
     producedResource: CHOCOLAT_PATISSIER, pipelineRole: 'ingredients', scope: 'pains_au_chocolat',
+    aura: {
+      effectType: 'cross_product_bonus', bonusPerBuilding: new Decimal(0.02),
+      crossProductTarget: 'croissants', description: '+2% production croissants par labo cacao',
+    },
   },
   [MANUFACTURE as string]: {
     id: MANUFACTURE, name: 'Manufacture', emoji: '🏭',
@@ -105,6 +129,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(30_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(4.5),
     producedResource: PAINS_AU_CHOCOLAT, pipelineRole: 'full_pipeline', scope: 'pains_au_chocolat',
+    aura: {
+      effectType: 'cross_product_bonus', bonusPerBuilding: new Decimal(0.01),
+      crossProductTarget: 'croissants', description: '+1% production croissants par manufacture',
+    },
   },
   [CHAINE_BOULANGERE as string]: {
     id: CHAINE_BOULANGERE, name: 'Chaine boulangere', emoji: '🗺️',
@@ -119,6 +147,10 @@ const buildings: Record<string, BuildingData> = {
     baseCost: new Decimal(1_500_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(45),
     producedResource: PAINS_AU_CHOCOLAT, pipelineRole: 'full_pipeline', scope: 'pains_au_chocolat',
+    aura: {
+      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.005),
+      description: '+0,5% production globale par consortium chocolat',
+    },
   },
 }
 
@@ -126,7 +158,7 @@ const buildings: Record<string, BuildingData> = {
 //  Petrissage: beurre + farine -> pate feuilletee
 //  Garnissage: pate + chocolat -> paton au chocolat
 //  Cuisson:    paton -> pains au chocolat
-//  Vente:      pains au chocolat -> coins + reputation
+//  Vente:      pains au chocolat -> coins
 const pipelineConfig: { stages: PipelineStageConfig[] } = {
   stages: [
     {
@@ -165,9 +197,6 @@ const pipelineConfig: { stages: PipelineStageConfig[] } = {
       ],
       produces: [
         { resource: PANTINS_COINS_ID, ratio: new Decimal(1) },
-      ],
-      freeProduces: [
-        { resource: resourceId('reputation'), ratio: new Decimal(0.12) },
       ],
     },
   ],
@@ -343,5 +372,5 @@ export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
     [CHOCOLAT_PATISSIER as string]: new Decimal(0.15),
   },
   finishedProductId: PAINS_AU_CHOCOLAT,
-  baseSellRate: new Decimal(1.5),
+  baseSellRate: new Decimal(4),
 }

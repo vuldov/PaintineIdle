@@ -36,14 +36,6 @@ function makeResources(overrides: Record<string, Partial<Resource>> = {}): Recor
     totalEarned: new Decimal(0),
     unlocked: false,
   }
-  defaults['etoiles'] = {
-    id: resourceId('etoiles'),
-    amount: new Decimal(0),
-    perSecond: new Decimal(0),
-    totalEarned: new Decimal(0),
-    unlocked: false,
-  }
-
   for (const [key, value] of Object.entries(overrides)) {
     if (defaults[key]) {
       defaults[key] = { ...defaults[key], ...value }
@@ -198,8 +190,8 @@ describe('calcCraftingDuration', () => {
 describe('calcSellValue', () => {
   const baseSellRate = CROISSANTS_BUNDLE.baseSellRate
 
-  it('returns base value with no upgrades and no prestige bonus', () => {
-    const value = calcSellValue(new Decimal(10), {}, new Decimal(1), baseSellRate)
+  it('returns base value with no upgrades', () => {
+    const value = calcSellValue(new Decimal(10), {}, baseSellRate)
     expect(value.eq(10)).toBe(true)
   })
 
@@ -211,16 +203,11 @@ describe('calcSellValue', () => {
         effect: { type: 'sell_multiplier', multiplier: new Decimal(2) },
       }),
     }
-    const value = calcSellValue(new Decimal(10), upgrades, new Decimal(1), baseSellRate)
+    const value = calcSellValue(new Decimal(10), upgrades, baseSellRate)
     expect(value.eq(20)).toBe(true)
   })
 
-  it('applies prestige multiplier', () => {
-    const value = calcSellValue(new Decimal(10), {}, new Decimal(3), baseSellRate)
-    expect(value.eq(30)).toBe(true)
-  })
-
-  it('stacks sell upgrades and prestige', () => {
+  it('stacks multiple sell upgrades', () => {
     const upgrades: Record<string, Upgrade> = {
       s1: makeUpgrade({
         id: 's1' as Upgrade['id'],
@@ -233,25 +220,25 @@ describe('calcSellValue', () => {
         effect: { type: 'sell_multiplier', multiplier: new Decimal(1.5) },
       }),
     }
-    const value = calcSellValue(new Decimal(10), upgrades, new Decimal(2), baseSellRate)
-    // 10 * (1 * 2 * 1.5) * 2 = 60
-    expect(value.eq(60)).toBe(true)
+    const value = calcSellValue(new Decimal(10), upgrades, baseSellRate)
+    // 10 * (1 * 2 * 1.5) = 30
+    expect(value.eq(30)).toBe(true)
   })
 
   it('returns 0 for 0 amount', () => {
-    const value = calcSellValue(new Decimal(0), {}, new Decimal(1), baseSellRate)
+    const value = calcSellValue(new Decimal(0), {}, baseSellRate)
     expect(value.eq(0)).toBe(true)
   })
 
   it('handles very large amounts', () => {
-    const value = calcSellValue(new Decimal('1e100'), {}, new Decimal(1), baseSellRate)
+    const value = calcSellValue(new Decimal('1e100'), {}, baseSellRate)
     expect(value.isFinite()).toBe(true)
     expect(value.eq(new Decimal('1e100'))).toBe(true)
   })
 
   it('uses different baseSellRate for different products', () => {
     const higherRate = new Decimal(5)
-    const value = calcSellValue(new Decimal(10), {}, new Decimal(1), higherRate)
+    const value = calcSellValue(new Decimal(10), {}, higherRate)
     expect(value.eq(50)).toBe(true)
   })
 })

@@ -7,8 +7,6 @@ import {
   calcBulkCost,
   calcCostReduction,
   calcBuildingRates,
-  calcEtoilesGagnees,
-  calcBonusPrestige,
   calcProductionForProduct,
   calcClampedDelta,
 } from './productionMechanics'
@@ -76,7 +74,6 @@ function makeResourceAmounts(): Record<string, { amount: Decimal }> {
   }
   result['pantins_coins'] = { amount: new Decimal(0) }
   result['reputation'] = { amount: new Decimal(0) }
-  result['etoiles'] = { amount: new Decimal(0) }
   return result
 }
 
@@ -259,66 +256,12 @@ describe('calcBuildingRates', () => {
   })
 })
 
-// ─── calcEtoilesGagnees ───────────────────────────────────────────────
-
-describe('calcEtoilesGagnees', () => {
-  it('returns 0 for 0 croissants', () => {
-    expect(calcEtoilesGagnees(new Decimal(0)).eq(0)).toBe(true)
-  })
-
-  it('returns 0 for negative croissants', () => {
-    expect(calcEtoilesGagnees(new Decimal(-100)).eq(0)).toBe(true)
-  })
-
-  it('returns 0 for less than 1M croissants', () => {
-    expect(calcEtoilesGagnees(new Decimal(999_999)).eq(0)).toBe(true)
-  })
-
-  it('returns 1 for exactly 1M croissants', () => {
-    expect(calcEtoilesGagnees(new Decimal(1_000_000)).eq(1)).toBe(true)
-  })
-
-  it('returns 3 for 10M croissants', () => {
-    expect(calcEtoilesGagnees(new Decimal(10_000_000)).eq(3)).toBe(true)
-  })
-
-  it('returns 10 for 100M croissants', () => {
-    expect(calcEtoilesGagnees(new Decimal(100_000_000)).eq(10)).toBe(true)
-  })
-
-  it('handles very large numbers', () => {
-    const result = calcEtoilesGagnees(new Decimal('1e30'))
-    expect(result.gt(0)).toBe(true)
-    expect(result.isFinite()).toBe(true)
-  })
-})
-
-// ─── calcBonusPrestige ────────────────────────────────────────────────
-
-describe('calcBonusPrestige', () => {
-  it('returns 1 for 0 etoiles (no bonus)', () => {
-    expect(calcBonusPrestige(new Decimal(0)).eq(1)).toBe(true)
-  })
-
-  it('returns 1.1 for 1 etoile (+10%)', () => {
-    expect(calcBonusPrestige(new Decimal(1)).eq(1.1)).toBe(true)
-  })
-
-  it('returns 2 for 10 etoiles (+100%)', () => {
-    expect(calcBonusPrestige(new Decimal(10)).eq(2)).toBe(true)
-  })
-
-  it('returns 11 for 100 etoiles (+1000%)', () => {
-    expect(calcBonusPrestige(new Decimal(100)).eq(11)).toBe(true)
-  })
-})
-
 // ─── calcProductionForProduct ─────────────────────────────────────────
 
 describe('calcProductionForProduct', () => {
   it('returns passive regen with no buildings', () => {
     const buildings = makeCroissantBuildings()
-    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {}, new Decimal(1))
+    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {})
     expect(result.freeProduction['beurre']?.eq(0.2)).toBe(true)
     expect(result.freeProduction['farine']?.eq(0.3)).toBe(true)
   })
@@ -326,23 +269,8 @@ describe('calcProductionForProduct', () => {
   it('produces stages from buildings', () => {
     const buildings = makeCroissantBuildings()
     buildings['fournil'].count = 1
-    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {}, new Decimal(1))
+    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {})
     expect(result.stages.length).toBe(3) // petrissage, cuisson, vente
-  })
-
-  it('applies prestige multiplier to production', () => {
-    const buildings = makeCroissantBuildings()
-    buildings['fournil'].count = 1
-
-    const resultNoPres = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {}, new Decimal(1))
-    const resultPres = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {}, new Decimal(2))
-
-    const netCroissantsNoPres = resultNoPres.net['croissants'] ?? new Decimal(0)
-    const netCroissantsPres = resultPres.net['croissants'] ?? new Decimal(0)
-
-    if (!netCroissantsNoPres.isZero()) {
-      expect(netCroissantsPres.div(netCroissantsNoPres).toFixed(1)).toBe('2.0')
-    }
   })
 })
 
@@ -351,7 +279,7 @@ describe('calcProductionForProduct', () => {
 describe('calcClampedDelta', () => {
   it('applies free production even with empty resources', () => {
     const buildings = makeCroissantBuildings()
-    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {}, new Decimal(1))
+    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {})
 
     const totalResult = {
       perProduct: { croissants: result },
@@ -374,7 +302,7 @@ describe('calcClampedDelta', () => {
     const buildings = makeCroissantBuildings()
     buildings['fournil'].count = 10
 
-    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {}, new Decimal(1))
+    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {})
     const totalResult = {
       perProduct: { croissants: result },
       totalNet: result.net,
@@ -393,7 +321,7 @@ describe('calcClampedDelta', () => {
 
   it('scales linearly with delta', () => {
     const buildings = makeCroissantBuildings()
-    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {}, new Decimal(1))
+    const result = calcProductionForProduct(CROISSANTS_BUNDLE, buildings, {})
     const totalResult = {
       perProduct: { croissants: result },
       totalNet: result.net,

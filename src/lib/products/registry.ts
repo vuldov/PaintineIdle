@@ -4,6 +4,7 @@ import { CROISSANTS_BUNDLE } from './croissants'
 import { PAINS_AU_CHOCOLAT_BUNDLE } from './pains_au_chocolat'
 import { CHOCOLATINES_BUNDLE } from './chocolatines'
 import { PIZZAS_BUNDLE } from './pizzas'
+import { SYNERGY_UPGRADES } from '@/lib/synergies/synergyUpgrades'
 import type Decimal from 'decimal.js'
 import type { ResourceId } from '@/types'
 
@@ -63,6 +64,14 @@ for (const bundle of Object.values(PRODUCT_REGISTRY)) {
     }
     ALL_CRAFTING[key] = value
   }
+}
+
+// Merge synergy upgrades into ALL_UPGRADES
+for (const [key, value] of Object.entries(SYNERGY_UPGRADES)) {
+  if (ALL_UPGRADES[key]) {
+    throw new Error(`Duplicate upgrade ID (synergy): ${key}`)
+  }
+  ALL_UPGRADES[key] = value
 }
 
 // ─── Re-exports ────────────────────────────────────────────────
