@@ -6,8 +6,9 @@ import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useProductStore } from '@/store/productStore'
 import { useCraftingStore } from '@/store/craftingStore'
-import { SAVE_KEY, AUTOSAVE_INTERVAL_MS, MAX_OFFLINE_SECONDS, GAME_VERSION, PRODUCT_REGISTRY } from '@/lib/constants'
+import { AUTOSAVE_INTERVAL_MS, MAX_OFFLINE_SECONDS, GAME_VERSION, PRODUCT_REGISTRY } from '@/lib/constants'
 import { calcTotalProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
+import { loadSaveData, writeSaveData, deleteSaveData } from '@/lib/storage'
 
 // ─── Serialization types ────────────────────────────────────────
 
@@ -119,30 +120,90 @@ function serializeSave(): SaveDataV3 {
   }
 }
 
-export function saveGame() {
-  const data = serializeSave()
-  localStorage.setItem(SAVE_KEY, JSON.stringify(data))
+// ─── Save state tracking ────────────────────────────────────────
+
+let _lastSaveTimestamp = 0
+
+export function getLastSaveTimestamp(): number {
+  return _lastSaveTimestamp
+}
+
+export function saveGame(): boolean {
+  try {
+    const data = serializeSave()
+    const json = JSON.stringify(data)
+    // Fire-and-forget async write — serialization is the expensive part
+    // and is already done synchronously above
+    writeSaveData(json).catch((err) =>
+      console.error('[AutoSave] Erreur ecriture IndexedDB:', err),
+    )
+    _lastSaveTimestamp = Date.now()
+    return true
+  } catch (err) {
+    console.error('[AutoSave] Erreur lors de la sauvegarde:', err)
+    return false
+  }
+}
+
+function toBase64(str: string): string {
+  const bytes = new TextEncoder().encode(str)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
+
+function fromBase64(b64: string): string {
+  const binary = atob(b64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return new TextDecoder().decode(bytes)
 }
 
 export function exportSave(): string {
   const data = serializeSave()
-  return btoa(JSON.stringify(data))
+  return toBase64(JSON.stringify(data))
 }
 
-export function importSave(base64: string): boolean {
+export async function importSave(base64: string): Promise<boolean> {
   try {
-    const json = atob(base64)
-    JSON.parse(json) // validate JSON
-    localStorage.setItem(SAVE_KEY, json)
-    window.location.reload()
+    const json = fromBase64(base64)
+    const rawData = JSON.parse(json) as { version?: number }
+
+    if (!rawData.version || rawData.version < 2) return false
+
+    let data: SaveDataV3
+    if (rawData.version === 2) {
+      data = migrateV2ToV3(rawData as SaveDataV2)
+    } else {
+      data = rawData as SaveDataV3
+    }
+
+    // Reset stores first, then restore from imported data
+    useResourceStore.getState().resetResources()
+    useBuildingStore.getState().resetBuildings()
+    useUpgradeStore.getState().resetUpgrades()
+    useCraftingStore.getState().resetCrafting()
+    useProductStore.setState({
+      unlockedProducts: ['croissants'] as ProductId[],
+      activeProduct: 'croissants' as ProductId,
+      viewMode: 'product',
+    })
+
+    restoreFromSaveData(data)
+
+    // Persist the imported state
+    await writeSaveData(JSON.stringify(serializeSave()))
     return true
   } catch {
     return false
   }
 }
 
-export function hardResetGame() {
-  localStorage.removeItem(SAVE_KEY)
+export async function hardResetGame() {
   useResourceStore.getState().resetResources()
   useBuildingStore.getState().resetBuildings()
   useUpgradeStore.getState().resetUpgrades()
@@ -152,6 +213,9 @@ export function hardResetGame() {
     activeProduct: 'croissants' as ProductId,
     viewMode: 'product',
   })
+  await deleteSaveData()
+  // Persist the clean state immediately
+  saveGame()
 }
 
 // ─── Migration v2 -> v3 ─────────────────────────────────────────
@@ -224,16 +288,128 @@ function migrateV2ToV3(data: SaveDataV2): SaveDataV3 {
 
 // ─── Load ───────────────────────────────────────────────────────
 
-function loadGame() {
-  const raw = localStorage.getItem(SAVE_KEY)
-  if (!raw) return
+function restoreFromSaveData(data: SaveDataV3) {
+  // Restore global resources
+  const resourceState = useResourceStore.getState()
+  const restoredGlobal = { ...resourceState.globalResources }
+  for (const [id, serialized] of Object.entries(data.globalResources)) {
+    if (restoredGlobal[id]) {
+      restoredGlobal[id] = {
+        id: restoredGlobal[id].id,
+        amount: new Decimal(serialized.amount),
+        perSecond: new Decimal(serialized.perSecond),
+        totalEarned: new Decimal(serialized.totalEarned),
+        unlocked: serialized.unlocked,
+      }
+    }
+  }
 
+  // Restore product resources
+  const restoredProducts = { ...resourceState.productResources }
+  for (const [productId, resources] of Object.entries(data.productResources ?? {})) {
+    const pid = productId as ProductId
+    if (!restoredProducts[pid]) continue
+    restoredProducts[pid] = { ...restoredProducts[pid] }
+    for (const [id, serialized] of Object.entries(resources)) {
+      if (restoredProducts[pid][id]) {
+        restoredProducts[pid][id] = {
+          id: restoredProducts[pid][id].id,
+          amount: new Decimal(serialized.amount),
+          perSecond: new Decimal(serialized.perSecond),
+          totalEarned: new Decimal(serialized.totalEarned),
+          unlocked: serialized.unlocked,
+        }
+      }
+    }
+  }
+
+  useResourceStore.setState({
+    globalResources: restoredGlobal,
+    productResources: restoredProducts,
+  })
+
+  // Restore buildings
+  const buildingState = useBuildingStore.getState()
+  const restoredBuildings = { ...buildingState.buildings }
+  for (const [productId, buildings] of Object.entries(data.buildings ?? {})) {
+    const pid = productId as ProductId
+    if (!restoredBuildings[pid]) continue
+    restoredBuildings[pid] = { ...restoredBuildings[pid] }
+    for (const [id, serialized] of Object.entries(buildings)) {
+      if (restoredBuildings[pid][id]) {
+        restoredBuildings[pid][id] = {
+          id: restoredBuildings[pid][id].id,
+          count: serialized.count,
+          baseCost: new Decimal(serialized.baseCost),
+          costResource: restoredBuildings[pid][id].costResource,
+          costMultiplier: serialized.costMultiplier,
+          baseProduction: new Decimal(serialized.baseProduction),
+          producedResource: restoredBuildings[pid][id].producedResource,
+          unlocked: serialized.unlocked,
+        }
+      }
+    }
+  }
+  useBuildingStore.setState({ buildings: restoredBuildings })
+
+  // Restore upgrades
+  if (data.upgrades) {
+    const upgradeState = useUpgradeStore.getState()
+    const restoredUpgrades = { ...upgradeState.upgrades }
+    for (const [id, serialized] of Object.entries(data.upgrades)) {
+      if (restoredUpgrades[id]) {
+        restoredUpgrades[id] = {
+          ...restoredUpgrades[id],
+          purchased: serialized.purchased,
+        }
+      }
+    }
+    useUpgradeStore.setState({ upgrades: restoredUpgrades })
+  }
+
+  // Restore product store
+  if (data.unlockedProducts) {
+    useProductStore.setState({
+      unlockedProducts: data.unlockedProducts as ProductId[],
+      activeProduct: (data.activeProduct as ProductId) ?? 'croissants',
+    })
+  }
+
+  // Offline progress
+  const offlineSeconds = Math.min(
+    (Date.now() - data.lastSave) / 1000,
+    MAX_OFFLINE_SECONDS,
+  )
+
+  if (offlineSeconds > 1) {
+    const { unlockedProducts } = useProductStore.getState()
+    const buildingStoreState = useBuildingStore.getState()
+    const { upgrades } = useUpgradeStore.getState()
+    const resourceStoreState = useResourceStore.getState()
+
+    const totalResult = calcTotalProduction(
+      unlockedProducts,
+      PRODUCT_REGISTRY,
+      buildingStoreState.buildings,
+      upgrades,
+    )
+
+    const allResources = resourceStoreState.getAllResources()
+    const deltas = calcClampedDelta(totalResult, allResources, offlineSeconds)
+    useResourceStore.getState().applyDeltas(deltas)
+  }
+}
+
+async function loadGame() {
   try {
+    const raw = await loadSaveData()
+    if (!raw) return
+
     const rawData = JSON.parse(raw) as { version?: number }
 
     // Handle v1 -- too old, discard
     if (!rawData.version || rawData.version < 2) {
-      localStorage.removeItem(SAVE_KEY)
+      await deleteSaveData()
       return
     }
 
@@ -245,115 +421,8 @@ function loadGame() {
       data = rawData as SaveDataV3
     }
 
-    // Restore global resources
-    const resourceState = useResourceStore.getState()
-    const restoredGlobal = { ...resourceState.globalResources }
-    for (const [id, serialized] of Object.entries(data.globalResources)) {
-      if (restoredGlobal[id]) {
-        restoredGlobal[id] = {
-          id: restoredGlobal[id].id,
-          amount: new Decimal(serialized.amount),
-          perSecond: new Decimal(serialized.perSecond),
-          totalEarned: new Decimal(serialized.totalEarned),
-          unlocked: serialized.unlocked,
-        }
-      }
-    }
-
-    // Restore product resources
-    const restoredProducts = { ...resourceState.productResources }
-    for (const [productId, resources] of Object.entries(data.productResources ?? {})) {
-      const pid = productId as ProductId
-      if (!restoredProducts[pid]) continue
-      restoredProducts[pid] = { ...restoredProducts[pid] }
-      for (const [id, serialized] of Object.entries(resources)) {
-        if (restoredProducts[pid][id]) {
-          restoredProducts[pid][id] = {
-            id: restoredProducts[pid][id].id,
-            amount: new Decimal(serialized.amount),
-            perSecond: new Decimal(serialized.perSecond),
-            totalEarned: new Decimal(serialized.totalEarned),
-            unlocked: serialized.unlocked,
-          }
-        }
-      }
-    }
-
-    useResourceStore.setState({
-      globalResources: restoredGlobal,
-      productResources: restoredProducts,
-    })
-
-    // Restore buildings
-    const buildingState = useBuildingStore.getState()
-    const restoredBuildings = { ...buildingState.buildings }
-    for (const [productId, buildings] of Object.entries(data.buildings ?? {})) {
-      const pid = productId as ProductId
-      if (!restoredBuildings[pid]) continue
-      restoredBuildings[pid] = { ...restoredBuildings[pid] }
-      for (const [id, serialized] of Object.entries(buildings)) {
-        if (restoredBuildings[pid][id]) {
-          restoredBuildings[pid][id] = {
-            id: restoredBuildings[pid][id].id,
-            count: serialized.count,
-            baseCost: new Decimal(serialized.baseCost),
-            costResource: restoredBuildings[pid][id].costResource,
-            costMultiplier: serialized.costMultiplier,
-            baseProduction: new Decimal(serialized.baseProduction),
-            producedResource: restoredBuildings[pid][id].producedResource,
-            unlocked: serialized.unlocked,
-          }
-        }
-      }
-    }
-    useBuildingStore.setState({ buildings: restoredBuildings })
-
-    // Restore upgrades
-    if (data.upgrades) {
-      const upgradeState = useUpgradeStore.getState()
-      const restoredUpgrades = { ...upgradeState.upgrades }
-      for (const [id, serialized] of Object.entries(data.upgrades)) {
-        if (restoredUpgrades[id]) {
-          restoredUpgrades[id] = {
-            ...restoredUpgrades[id],
-            purchased: serialized.purchased,
-          }
-        }
-      }
-      useUpgradeStore.setState({ upgrades: restoredUpgrades })
-    }
-
-    // Restore product store
-    if (data.unlockedProducts) {
-      useProductStore.setState({
-        unlockedProducts: data.unlockedProducts as ProductId[],
-        activeProduct: (data.activeProduct as ProductId) ?? 'croissants',
-      })
-    }
-
-    // Offline progress
-    const offlineSeconds = Math.min(
-      (Date.now() - data.lastSave) / 1000,
-      MAX_OFFLINE_SECONDS,
-    )
-
-    if (offlineSeconds > 1) {
-      const { unlockedProducts } = useProductStore.getState()
-      const buildingStoreState = useBuildingStore.getState()
-      const { upgrades } = useUpgradeStore.getState()
-      const resourceStoreState = useResourceStore.getState()
-
-      const totalResult = calcTotalProduction(
-        unlockedProducts,
-        PRODUCT_REGISTRY,
-        buildingStoreState.buildings,
-        upgrades,
-      )
-
-      const allResources = resourceStoreState.getAllResources()
-      const deltas = calcClampedDelta(totalResult, allResources, offlineSeconds)
-      useResourceStore.getState().applyDeltas(deltas)
-    }
+    restoreFromSaveData(data)
+    _lastSaveTimestamp = data.lastSave || Date.now()
   } catch {
     console.warn('Impossible de charger la sauvegarde, elle sera ignoree.')
   }
@@ -361,21 +430,29 @@ function loadGame() {
 
 // ─── Hook ────────────────────────────────────────────────────────
 
+let _gameLoaded = false
+
 export function useAutoSave() {
   useEffect(() => {
-    loadGame()
+    loadGame().then(() => {
+      _gameLoaded = true
+    })
   }, [])
 
   useEffect(() => {
-    const interval = setInterval(saveGame, AUTOSAVE_INTERVAL_MS)
+    const interval = setInterval(() => {
+      if (_gameLoaded) saveGame()
+    }, AUTOSAVE_INTERVAL_MS)
 
-    const handleBeforeUnload = () => saveGame()
+    const handleBeforeUnload = () => {
+      if (_gameLoaded) saveGame()
+    }
     window.addEventListener('beforeunload', handleBeforeUnload)
 
     return () => {
       clearInterval(interval)
       window.removeEventListener('beforeunload', handleBeforeUnload)
-      saveGame()
+      if (_gameLoaded) saveGame()
     }
   }, [])
 }

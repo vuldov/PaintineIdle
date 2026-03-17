@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Decimal from 'decimal.js'
-import { saveGame, exportSave, importSave, hardResetGame } from '@/hooks/useAutoSave'
+import { saveGame, exportSave, importSave, hardResetGame, getLastSaveTimestamp } from '@/hooks/useAutoSave'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
@@ -11,6 +11,13 @@ import type { ResourceId, BuildingId, ProductId } from '@/types'
 // ─── Types ─────────────────────────────────────────────────────
 
 type Tab = 'sauvegarde' | 'cheats' | 'langue'
+
+function formatSaveAgo(ts: number): string {
+  const seconds = Math.floor((Date.now() - ts) / 1000)
+  if (seconds < 5) return 'a l\'instant'
+  if (seconds < 60) return `il y a ${seconds} s`
+  return `il y a ${Math.floor(seconds / 60)} min`
+}
 
 interface SettingsModalProps {
   open: boolean
@@ -42,9 +49,16 @@ function SaveTab({ onClose }: { onClose: () => void }) {
   const [confirmReset, setConfirmReset] = useState(false)
   const importRef = useRef<HTMLTextAreaElement>(null)
 
+  const [, forceUpdate] = useState(0)
+  const lastSave = getLastSaveTimestamp()
+
+  useEffect(() => {
+    const id = setInterval(() => forceUpdate((n) => n + 1), 1000)
+    return () => clearInterval(id)
+  }, [])
+
   const handleSave = () => {
     saveGame()
-    // small visual feedback could be added
   }
 
   const handleExport = () => {
@@ -55,24 +69,24 @@ function SaveTab({ onClose }: { onClose: () => void }) {
     })
   }
 
-  const handleImport = () => {
+  const handleImport = async () => {
     const value = importRef.current?.value?.trim()
     if (!value) {
       setImportError('Collez votre sauvegarde ici.')
       return
     }
-    const ok = importSave(value)
+    const ok = await importSave(value)
     if (!ok) {
       setImportError('Sauvegarde invalide.')
     }
   }
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (!confirmReset) {
       setConfirmReset(true)
       return
     }
-    hardResetGame()
+    await hardResetGame()
     onClose()
   }
 
@@ -81,12 +95,19 @@ function SaveTab({ onClose }: { onClose: () => void }) {
       {/* Manual save */}
       <div>
         <h3 className="text-sm font-semibold text-amber-800 mb-2">Sauvegarde manuelle</h3>
-        <button
-          onClick={handleSave}
-          className="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
-        >
-          Sauvegarder maintenant
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSave}
+            className="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
+          >
+            Sauvegarder maintenant
+          </button>
+          {lastSave > 0 && (
+            <span className="text-xs text-amber-600">
+              Derniere sauvegarde : {formatSaveAgo(lastSave)}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Export */}
