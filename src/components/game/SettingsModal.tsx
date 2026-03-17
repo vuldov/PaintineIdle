@@ -5,7 +5,6 @@ import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useProductStore } from '@/store/productStore'
-import { useCraftingStore } from '@/store/craftingStore'
 import { ALL_RESOURCES, ALL_BUILDINGS } from '@/lib/constants'
 import type { ResourceId, BuildingId, ProductId } from '@/types'
 
