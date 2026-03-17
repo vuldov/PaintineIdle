@@ -5,6 +5,7 @@ import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useProductStore } from '@/store/productStore'
+import { useCraftingStore } from '@/store/craftingStore'
 import { SAVE_KEY, AUTOSAVE_INTERVAL_MS, MAX_OFFLINE_SECONDS, GAME_VERSION, PRODUCT_REGISTRY } from '@/lib/constants'
 import { calcTotalProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
 
@@ -118,9 +119,39 @@ function serializeSave(): SaveDataV3 {
   }
 }
 
-function saveGame() {
+export function saveGame() {
   const data = serializeSave()
   localStorage.setItem(SAVE_KEY, JSON.stringify(data))
+}
+
+export function exportSave(): string {
+  const data = serializeSave()
+  return btoa(JSON.stringify(data))
+}
+
+export function importSave(base64: string): boolean {
+  try {
+    const json = atob(base64)
+    JSON.parse(json) // validate JSON
+    localStorage.setItem(SAVE_KEY, json)
+    window.location.reload()
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function hardResetGame() {
+  localStorage.removeItem(SAVE_KEY)
+  useResourceStore.getState().resetResources()
+  useBuildingStore.getState().resetBuildings()
+  useUpgradeStore.getState().resetUpgrades()
+  useCraftingStore.getState().resetCrafting()
+  useProductStore.setState({
+    unlockedProducts: ['croissants'] as ProductId[],
+    activeProduct: 'croissants' as ProductId,
+    viewMode: 'product',
+  })
 }
 
 // ─── Migration v2 -> v3 ─────────────────────────────────────────

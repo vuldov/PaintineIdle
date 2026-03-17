@@ -1,15 +1,18 @@
+import { useState } from 'react'
 import { useGameLoop } from '@/hooks/useGameLoop'
 import { useAutoSave } from '@/hooks/useAutoSave'
 import { useProductStore } from '@/store/productStore'
 import { ResourceBar } from '@/components/game/ResourceBar'
 import { ProductPage } from '@/components/game/ProductPage'
 import { SynergyPanel } from '@/components/game/SynergyPanel'
+import { SettingsModal } from '@/components/game/SettingsModal'
 
 function App() {
   useGameLoop()
   useAutoSave()
 
   const viewMode = useProductStore((s) => s.viewMode)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -18,7 +21,8 @@ function App() {
         Version alpha -- Jeu en cours de developpement
       </div>
 
-      <ResourceBar />
+      <ResourceBar onOpenSettings={() => setSettingsOpen(true)} />
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <div className="text-center">

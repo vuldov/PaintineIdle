@@ -17,7 +17,7 @@ const RING_CLASSES: Record<string, string> = {
 
 // ─── Component ──────────────────────────────────────────────────
 
-export function ResourceBar() {
+export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const globalResources = useResourceStore((state) => state.globalResources)
   const productResources = useResourceStore((state) => state.productResources)
   const unlockedProducts = useProductStore((s) => s.unlockedProducts)
@@ -119,6 +119,17 @@ export function ResourceBar() {
             </button>
           </>
         )}
+
+        {/* Settings button */}
+        <div className="w-px h-8 bg-amber-300" />
+        <button
+          onClick={onOpenSettings}
+          title="Options"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:bg-white/40 text-amber-900"
+        >
+          <span className="text-xl">&#9881;</span>
+          <span className="text-sm font-semibold hidden sm:inline">Options</span>
+        </button>
 
       </div>
     </header>
