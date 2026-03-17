@@ -3,14 +3,22 @@ import { resourceId, buildingId, craftingRecipeId, upgradeId, PANTINS_COINS_ID }
 import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig } from '@/types'
 
 // ─── Resource IDs ──────────────────────────────────────────────
-const SAUCE_TOMATE = resourceId('sauce_tomate')
+const TOMATES_FRAICHES = resourceId('tomates_fraiches')
+const BASILIC = resourceId('basilic')
+const FARINE_PIZZA = resourceId('farine_pizza')
+const LEVURE = resourceId('levure')
 const MOZZARELLA = resourceId('mozzarella')
+const SAUCE_TOMATE = resourceId('sauce_tomate')
 const PATE_A_PIZZA = resourceId('pate_a_pizza')
+const PATE_ETALEE = resourceId('pate_etalee')
+const PIZZA_GARNIE = resourceId('pizza_garnie')
 const PIZZAS = resourceId('pizzas')
 
 // ─── Building IDs ──────────────────────────────────────────────
 const POTAGER = buildingId('potager')
 const PETRIN_PIZZA = buildingId('petrin_pizza')
+const PLAN_DE_TRAVAIL = buildingId('plan_de_travail')
+const TABLE_GARNITURE = buildingId('table_garniture')
 const FOUR_A_BOIS = buildingId('four_a_bois')
 const PIZZERIA = buildingId('pizzeria')
 const LABO_RECETTES = buildingId('labo_recettes')
@@ -20,18 +28,48 @@ const EMPIRE_PIZZA = buildingId('empire_pizza')
 
 // ─── Resources ─────────────────────────────────────────────────
 const resources: Record<string, ResourceData> = {
-  [SAUCE_TOMATE as string]: {
-    id: SAUCE_TOMATE, name: 'Sauce tomate', emoji: '🍅',
+  [TOMATES_FRAICHES as string]: {
+    id: TOMATES_FRAICHES, name: 'Tomates fraîches', emoji: '🍅',
+    category: 'ingredient', initiallyUnlocked: true,
+    initialAmount: new Decimal(8), scope: 'pizzas',
+  },
+  [BASILIC as string]: {
+    id: BASILIC, name: 'Basilic', emoji: '🌿',
     category: 'ingredient', initiallyUnlocked: true,
     initialAmount: new Decimal(6), scope: 'pizzas',
+  },
+  [FARINE_PIZZA as string]: {
+    id: FARINE_PIZZA, name: 'Farine pizza', emoji: '🌾',
+    category: 'ingredient', initiallyUnlocked: true,
+    initialAmount: new Decimal(10), scope: 'pizzas',
+  },
+  [LEVURE as string]: {
+    id: LEVURE, name: 'Levure', emoji: '🧫',
+    category: 'ingredient', initiallyUnlocked: true,
+    initialAmount: new Decimal(8), scope: 'pizzas',
   },
   [MOZZARELLA as string]: {
     id: MOZZARELLA, name: 'Mozzarella', emoji: '🧀',
     category: 'ingredient', initiallyUnlocked: true,
-    initialAmount: new Decimal(8), scope: 'pizzas',
+    initialAmount: new Decimal(6), scope: 'pizzas',
+  },
+  [SAUCE_TOMATE as string]: {
+    id: SAUCE_TOMATE, name: 'Sauce tomate', emoji: '🫕',
+    category: 'intermediaire', initiallyUnlocked: true,
+    initialAmount: new Decimal(0), scope: 'pizzas',
   },
   [PATE_A_PIZZA as string]: {
     id: PATE_A_PIZZA, name: 'Pâte à pizza', emoji: '🫓',
+    category: 'intermediaire', initiallyUnlocked: true,
+    initialAmount: new Decimal(0), scope: 'pizzas',
+  },
+  [PATE_ETALEE as string]: {
+    id: PATE_ETALEE, name: 'Pâte étalée', emoji: '🔵',
+    category: 'intermediaire', initiallyUnlocked: true,
+    initialAmount: new Decimal(0), scope: 'pizzas',
+  },
+  [PIZZA_GARNIE as string]: {
+    id: PIZZA_GARNIE, name: 'Pizza garnie', emoji: '🍕',
     category: 'intermediaire', initiallyUnlocked: true,
     initialAmount: new Decimal(0), scope: 'pizzas',
   },
@@ -46,10 +84,10 @@ const resources: Record<string, ResourceData> = {
 const buildings: Record<string, BuildingData> = {
   [POTAGER as string]: {
     id: POTAGER, name: 'Potager', emoji: '🍅',
-    description: 'Cuit la pâte à pizza en pizzas',
+    description: 'Prépare la sauce tomate maison avec tomates et basilic',
     baseCost: new Decimal(1_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.25),
-    producedResource: PIZZAS, pipelineRole: 'cuisson', scope: 'pizzas',
+    producedResource: SAUCE_TOMATE, pipelineRole: 'preparation_sauce', scope: 'pizzas',
     aura: {
       effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.05),
       description: '+5% génération ingrédients globale par potager',
@@ -57,7 +95,7 @@ const buildings: Record<string, BuildingData> = {
   },
   [PETRIN_PIZZA as string]: {
     id: PETRIN_PIZZA, name: 'Pétrin à pizza', emoji: '⚙️',
-    description: 'Mélange sauce tomate et mozzarella en pâte',
+    description: 'Mélange farine et levure en pâte à pizza',
     baseCost: new Decimal(2_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.35),
     producedResource: PATE_A_PIZZA, pipelineRole: 'petrissage', scope: 'pizzas',
@@ -66,10 +104,32 @@ const buildings: Record<string, BuildingData> = {
       description: '+3% vitesse pétrissage globale par pétrin pizza',
     },
   },
+  [PLAN_DE_TRAVAIL as string]: {
+    id: PLAN_DE_TRAVAIL, name: 'Plan de travail', emoji: '🪵',
+    description: 'Étale la pâte à pizza à la bonne épaisseur',
+    baseCost: new Decimal(5_000), costResource: PANTINS_COINS_ID,
+    costMultiplier: 1.15, baseProduction: new Decimal(0.5),
+    producedResource: PATE_ETALEE, pipelineRole: 'etalage', scope: 'pizzas',
+    aura: {
+      effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.02),
+      description: '+2% vitesse étalage globale par plan de travail',
+    },
+  },
+  [TABLE_GARNITURE as string]: {
+    id: TABLE_GARNITURE, name: 'Table de garniture', emoji: '🤲',
+    description: 'Garni la pizza avec sauce, mozzarella et garnitures',
+    baseCost: new Decimal(8_000), costResource: PANTINS_COINS_ID,
+    costMultiplier: 1.15, baseProduction: new Decimal(0.4),
+    producedResource: PIZZA_GARNIE, pipelineRole: 'garnissage', scope: 'pizzas',
+    aura: {
+      effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.03),
+      targetResource: 'mozzarella', description: '+3% génération mozzarella par table de garniture',
+    },
+  },
   [FOUR_A_BOIS as string]: {
     id: FOUR_A_BOIS, name: 'Four à bois', emoji: '🔥',
     description: 'Cuisson authentique au feu de bois',
-    baseCost: new Decimal(12_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(15_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.2),
     producedResource: PIZZAS, pipelineRole: 'cuisson', scope: 'pizzas',
     aura: {
@@ -80,7 +140,7 @@ const buildings: Record<string, BuildingData> = {
   [PIZZERIA as string]: {
     id: PIZZERIA, name: 'Pizzeria', emoji: '🏪',
     description: 'Vend automatiquement les pizzas',
-    baseCost: new Decimal(35_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(40_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.7),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pizzas',
     aura: {
@@ -90,10 +150,10 @@ const buildings: Record<string, BuildingData> = {
   },
   [LABO_RECETTES as string]: {
     id: LABO_RECETTES, name: 'Labo recettes', emoji: '🔬',
-    description: 'Génère de la sauce tomate et de la mozzarella',
+    description: 'Génère tous les ingrédients de base',
     baseCost: new Decimal(100_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.2),
-    producedResource: SAUCE_TOMATE, pipelineRole: 'ingredients', scope: 'pizzas',
+    producedResource: TOMATES_FRAICHES, pipelineRole: 'ingredients', scope: 'pizzas',
     aura: {
       effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.05),
       description: '+5% production globale par labo recettes',
@@ -135,22 +195,58 @@ const buildings: Record<string, BuildingData> = {
 }
 
 // ─── Pipeline config ───────────────────────────────────────────
+//  Préparation sauce: tomates fraîches + basilic → sauce tomate
+//  Pétrissage:        farine pizza + levure → pâte à pizza
+//  Étalage:           pâte à pizza → pâte étalée
+//  Garnissage:        pâte étalée + sauce tomate + mozzarella → pizza garnie
+//  Cuisson:           pizza garnie → pizzas
+//  Vente:             pizzas → coins
 const pipelineConfig: { stages: PipelineStageConfig[] } = {
   stages: [
     {
+      role: 'preparation_sauce',
+      consumes: [
+        { resource: TOMATES_FRAICHES, ratio: new Decimal(1) },
+        { resource: BASILIC, ratio: new Decimal(0.7) },
+      ],
+      produces: [
+        { resource: SAUCE_TOMATE, ratio: new Decimal(1) },
+      ],
+    },
+    {
       role: 'petrissage',
       consumes: [
-        { resource: SAUCE_TOMATE, ratio: new Decimal(1) },
-        { resource: MOZZARELLA, ratio: new Decimal(1.3) },
+        { resource: FARINE_PIZZA, ratio: new Decimal(1) },
+        { resource: LEVURE, ratio: new Decimal(0.6) },
       ],
       produces: [
         { resource: PATE_A_PIZZA, ratio: new Decimal(1) },
       ],
     },
     {
-      role: 'cuisson',
+      role: 'etalage',
       consumes: [
         { resource: PATE_A_PIZZA, ratio: new Decimal(0.9) },
+      ],
+      produces: [
+        { resource: PATE_ETALEE, ratio: new Decimal(1) },
+      ],
+    },
+    {
+      role: 'garnissage',
+      consumes: [
+        { resource: PATE_ETALEE, ratio: new Decimal(0.8) },
+        { resource: SAUCE_TOMATE, ratio: new Decimal(0.8) },
+        { resource: MOZZARELLA, ratio: new Decimal(1) },
+      ],
+      produces: [
+        { resource: PIZZA_GARNIE, ratio: new Decimal(1) },
+      ],
+    },
+    {
+      role: 'cuisson',
+      consumes: [
+        { resource: PIZZA_GARNIE, ratio: new Decimal(0.9) },
       ],
       produces: [
         { resource: PIZZAS, ratio: new Decimal(1) },
@@ -169,26 +265,62 @@ const pipelineConfig: { stages: PipelineStageConfig[] } = {
 }
 
 // ─── Crafting recipes ──────────────────────────────────────────
+const PREPARATION_SAUCE_PIZZA = craftingRecipeId('preparation_sauce_pizza')
 const PETRISSAGE_PIZZA = craftingRecipeId('petrissage_pizza')
+const ETALAGE_PIZZA = craftingRecipeId('etalage_pizza')
+const GARNISSAGE_PIZZA = craftingRecipeId('garnissage_pizza')
 const CUISSON_PIZZA = craftingRecipeId('cuisson_pizza')
 
 const craftingRecipes: Record<string, CraftingRecipeData> = {
+  [PREPARATION_SAUCE_PIZZA as string]: {
+    id: PREPARATION_SAUCE_PIZZA, name: 'Préparer la sauce', emoji: '🍅',
+    verb: 'Préparer',
+    inputs: [
+      { resource: TOMATES_FRAICHES, amount: new Decimal(3) },
+      { resource: BASILIC, amount: new Decimal(2) },
+    ],
+    output: { resource: SAUCE_TOMATE, amount: new Decimal(2) },
+    durationSeconds: 4,
+    scope: 'pizzas',
+  },
   [PETRISSAGE_PIZZA as string]: {
     id: PETRISSAGE_PIZZA, name: 'Pétrissage', emoji: '🤲',
     verb: 'Pétrir',
     inputs: [
-      { resource: SAUCE_TOMATE, amount: new Decimal(5) },
-      { resource: MOZZARELLA, amount: new Decimal(4) },
+      { resource: FARINE_PIZZA, amount: new Decimal(3) },
+      { resource: LEVURE, amount: new Decimal(2) },
     ],
     output: { resource: PATE_A_PIZZA, amount: new Decimal(2) },
-    durationSeconds: 6,
+    durationSeconds: 5,
+    scope: 'pizzas',
+  },
+  [ETALAGE_PIZZA as string]: {
+    id: ETALAGE_PIZZA, name: 'Étalage', emoji: '🪵',
+    verb: 'Étaler',
+    inputs: [
+      { resource: PATE_A_PIZZA, amount: new Decimal(2) },
+    ],
+    output: { resource: PATE_ETALEE, amount: new Decimal(2) },
+    durationSeconds: 3,
+    scope: 'pizzas',
+  },
+  [GARNISSAGE_PIZZA as string]: {
+    id: GARNISSAGE_PIZZA, name: 'Garnissage', emoji: '🧀',
+    verb: 'Garnir',
+    inputs: [
+      { resource: PATE_ETALEE, amount: new Decimal(2) },
+      { resource: SAUCE_TOMATE, amount: new Decimal(2) },
+      { resource: MOZZARELLA, amount: new Decimal(3) },
+    ],
+    output: { resource: PIZZA_GARNIE, amount: new Decimal(2) },
+    durationSeconds: 5,
     scope: 'pizzas',
   },
   [CUISSON_PIZZA as string]: {
     id: CUISSON_PIZZA, name: 'Cuisson', emoji: '🔥',
     verb: 'Cuire',
     inputs: [
-      { resource: PATE_A_PIZZA, amount: new Decimal(2) },
+      { resource: PIZZA_GARNIE, amount: new Decimal(2) },
     ],
     output: { resource: PIZZAS, amount: new Decimal(3) },
     durationSeconds: 8,
@@ -198,12 +330,36 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
 
 // ─── Upgrades ──────────────────────────────────────────────────
 const upgrades: Record<string, UpgradeData> = {
+  pizza_sauce_rapide: {
+    id: upgradeId('pizza_sauce_rapide'), name: 'Sauce express',
+    description: 'Préparation sauce 2x plus rapide', emoji: '⚡',
+    cost: new Decimal(30_000), costResource: PANTINS_COINS_ID,
+    effect: { type: 'crafting_speed', targetRecipe: PREPARATION_SAUCE_PIZZA, multiplier: new Decimal(2) },
+    unlockCondition: { type: 'resource_threshold', resourceId: SAUCE_TOMATE, threshold: new Decimal(5) },
+    scope: 'pizzas',
+  },
   pizza_petrissage_rapide: {
     id: upgradeId('pizza_petrissage_rapide'), name: 'Pétrissage rapide (Pizza)',
     description: 'Pétrissage 2x plus rapide', emoji: '⚡',
     cost: new Decimal(50_000), costResource: PANTINS_COINS_ID,
     effect: { type: 'crafting_speed', targetRecipe: PETRISSAGE_PIZZA, multiplier: new Decimal(2) },
     unlockCondition: { type: 'resource_threshold', resourceId: PATE_A_PIZZA, threshold: new Decimal(5) },
+    scope: 'pizzas',
+  },
+  pizza_etalage_rapide: {
+    id: upgradeId('pizza_etalage_rapide'), name: 'Étalage rapide',
+    description: 'Étalage 2x plus rapide', emoji: '⚡',
+    cost: new Decimal(60_000), costResource: PANTINS_COINS_ID,
+    effect: { type: 'crafting_speed', targetRecipe: ETALAGE_PIZZA, multiplier: new Decimal(2) },
+    unlockCondition: { type: 'resource_threshold', resourceId: PATE_ETALEE, threshold: new Decimal(5) },
+    scope: 'pizzas',
+  },
+  pizza_garnissage_rapide: {
+    id: upgradeId('pizza_garnissage_rapide'), name: 'Garnissage rapide (Pizza)',
+    description: 'Garnissage 2x plus rapide', emoji: '⚡',
+    cost: new Decimal(70_000), costResource: PANTINS_COINS_ID,
+    effect: { type: 'crafting_speed', targetRecipe: GARNISSAGE_PIZZA, multiplier: new Decimal(2) },
+    unlockCondition: { type: 'resource_threshold', resourceId: PIZZA_GARNIE, threshold: new Decimal(5) },
     scope: 'pizzas',
   },
   pizza_cuisson_rapide: {
@@ -236,6 +392,14 @@ const upgrades: Record<string, UpgradeData> = {
     cost: new Decimal(100_000), costResource: PANTINS_COINS_ID,
     effect: { type: 'building_multiplier', targetBuilding: PETRIN_PIZZA, multiplier: new Decimal(2) },
     unlockCondition: { type: 'building_count', buildingId: PETRIN_PIZZA, threshold: new Decimal(5) },
+    scope: 'pizzas',
+  },
+  pizza_plan_travail_boost: {
+    id: upgradeId('pizza_plan_travail_boost'), name: 'Plan de travail en marbre',
+    description: 'x2 production du plan de travail', emoji: '🪵',
+    cost: new Decimal(200_000), costResource: PANTINS_COINS_ID,
+    effect: { type: 'building_multiplier', targetBuilding: PLAN_DE_TRAVAIL, multiplier: new Decimal(2) },
+    unlockCondition: { type: 'building_count', buildingId: PLAN_DE_TRAVAIL, threshold: new Decimal(5) },
     scope: 'pizzas',
   },
   pizza_four_bois_boost: {
@@ -276,11 +440,13 @@ export const PIZZAS_BUNDLE: ProductBundle = {
   },
   resources,
   buildings,
-  buildingOrder: [PETRIN_PIZZA, POTAGER, FOUR_A_BOIS, PIZZERIA, LABO_RECETTES, USINE_PIZZA, CHAINE_PIZZERIAS, EMPIRE_PIZZA],
+  buildingOrder: [POTAGER, PETRIN_PIZZA, PLAN_DE_TRAVAIL, TABLE_GARNITURE, FOUR_A_BOIS, PIZZERIA, LABO_RECETTES, USINE_PIZZA, CHAINE_PIZZERIAS, EMPIRE_PIZZA],
   buildingUnlockThresholds: {
-    [PETRIN_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(500) },
     [POTAGER as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(500) },
-    [FOUR_A_BOIS as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(5_000) },
+    [PETRIN_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(500) },
+    [PLAN_DE_TRAVAIL as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(2_000) },
+    [TABLE_GARNITURE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(3_500) },
+    [FOUR_A_BOIS as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(6_000) },
     [PIZZERIA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15_000) },
     [LABO_RECETTES as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(40_000) },
     [USINE_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(300_000) },
@@ -288,21 +454,28 @@ export const PIZZAS_BUNDLE: ProductBundle = {
     [EMPIRE_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15_000_000) },
   },
   craftingRecipes,
-  craftingOrder: [PETRISSAGE_PIZZA, CUISSON_PIZZA],
+  craftingOrder: [PREPARATION_SAUCE_PIZZA, PETRISSAGE_PIZZA, ETALAGE_PIZZA, GARNISSAGE_PIZZA, CUISSON_PIZZA],
   upgrades,
   upgradeOrder: [
+    upgradeId('pizza_sauce_rapide'),
     upgradeId('pizza_petrissage_rapide'),
+    upgradeId('pizza_etalage_rapide'),
+    upgradeId('pizza_garnissage_rapide'),
     upgradeId('pizza_cuisson_rapide'),
     upgradeId('pizza_meilleur_prix'),
     upgradeId('pizza_potager_boost'),
     upgradeId('pizza_petrin_boost'),
-    upgradeId('pizza_global'),
+    upgradeId('pizza_plan_travail_boost'),
     upgradeId('pizza_four_bois_boost'),
+    upgradeId('pizza_global'),
     upgradeId('pizza_achat_en_gros'),
   ],
   pipelineConfig,
   passiveRegen: {
-    [SAUCE_TOMATE as string]: new Decimal(0.12),
+    [TOMATES_FRAICHES as string]: new Decimal(0.12),
+    [BASILIC as string]: new Decimal(0.10),
+    [FARINE_PIZZA as string]: new Decimal(0.15),
+    [LEVURE as string]: new Decimal(0.12),
     [MOZZARELLA as string]: new Decimal(0.18),
   },
   finishedProductId: PIZZAS,

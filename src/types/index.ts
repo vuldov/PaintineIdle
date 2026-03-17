@@ -37,6 +37,9 @@ export type ResourceCategory = 'ingredient' | 'intermediaire' | 'produit_fini' |
 export type PipelineRole =
   | 'petrissage'
   | 'garnissage'
+  | 'dorure'
+  | 'preparation_sauce'
+  | 'etalage'
   | 'cuisson'
   | 'vente'
   | 'ingredients'
