@@ -95,6 +95,7 @@ export function UpgradePanel() {
   const totalBuildingCount = useSynergyStore((s) => s.totalBuildingCount)
   const totalUpgradeCount = useSynergyStore((s) => s.totalUpgradeCount)
   const supplierUpgradeStates = useSupplierStore((s) => s.supplierUpgrades)
+  const supplierStates = useSupplierStore((s) => s.suppliers)
   const buySupplierUpgrade = useSupplierStore((s) => s.buySupplierUpgrade)
 
   // Merge resources
@@ -142,6 +143,9 @@ export function UpgradePanel() {
     if (!data || !state) continue
     const sid = data.targetSupplier as string
     const supplierData = ALL_SUPPLIERS[sid]
+
+    // Hide upgrades for suppliers whose contract hasn't been bought yet
+    if (!supplierStates[sid]?.unlocked) continue
 
     if (state.purchased) {
       purchasedSupplierItems.push({
