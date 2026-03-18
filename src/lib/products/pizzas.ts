@@ -21,7 +21,7 @@ const PLAN_DE_TRAVAIL = buildingId('plan_de_travail')
 const TABLE_GARNITURE = buildingId('table_garniture')
 const FOUR_A_BOIS = buildingId('four_a_bois')
 const PIZZERIA = buildingId('pizzeria')
-const LABO_RECETTES = buildingId('labo_recettes')
+
 const USINE_PIZZA = buildingId('usine_pizza')
 const CHAINE_PIZZERIAS = buildingId('chaine_pizzerias')
 const EMPIRE_PIZZA = buildingId('empire_pizza')
@@ -148,18 +148,7 @@ const buildings: Record<string, BuildingData> = {
       description: '+1% prix de vente tous produits par pizzeria',
     },
   },
-  [LABO_RECETTES as string]: {
-    id: LABO_RECETTES, name: 'Labo recettes', emoji: '🔬',
-    description: 'Génère tous les ingrédients de base',
-    baseCost: new Decimal(100_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(1.2),
-    producedResource: TOMATES_FRAICHES, pipelineRole: 'ingredients', scope: 'pizzas',
-    aura: {
-      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.05),
-      description: '+5% production globale par labo recettes',
-    },
-  },
-  [USINE_PIZZA as string]: {
+[USINE_PIZZA as string]: {
     id: USINE_PIZZA, name: 'Usine à pizza', emoji: '🏭',
     description: 'Production industrielle complète',
     baseCost: new Decimal(750_000), costResource: PANTINS_COINS_ID,
@@ -440,7 +429,7 @@ export const PIZZAS_BUNDLE: ProductBundle = {
   },
   resources,
   buildings,
-  buildingOrder: [POTAGER, PETRIN_PIZZA, PLAN_DE_TRAVAIL, TABLE_GARNITURE, FOUR_A_BOIS, PIZZERIA, LABO_RECETTES, USINE_PIZZA, CHAINE_PIZZERIAS, EMPIRE_PIZZA],
+  buildingOrder: [POTAGER, PETRIN_PIZZA, PLAN_DE_TRAVAIL, TABLE_GARNITURE, FOUR_A_BOIS, PIZZERIA, USINE_PIZZA, CHAINE_PIZZERIAS, EMPIRE_PIZZA],
   buildingUnlockThresholds: {
     [POTAGER as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(500) },
     [PETRIN_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(500) },
@@ -448,8 +437,7 @@ export const PIZZAS_BUNDLE: ProductBundle = {
     [TABLE_GARNITURE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(3_500) },
     [FOUR_A_BOIS as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(6_000) },
     [PIZZERIA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15_000) },
-    [LABO_RECETTES as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(40_000) },
-    [USINE_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(300_000) },
+[USINE_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(300_000) },
     [CHAINE_PIZZERIAS as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(1_500_000) },
     [EMPIRE_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15_000_000) },
   },

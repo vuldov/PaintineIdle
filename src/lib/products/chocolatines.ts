@@ -19,7 +19,7 @@ const GARNISSEUR_CHOCO = buildingId('garnisseur_choco')
 const DOREUSE = buildingId('doreuse')
 const FOUR_A_SOLE = buildingId('four_a_sole')
 const PATISSERIE = buildingId('patisserie')
-const LABO_SAVEURS = buildingId('labo_saveurs')
+
 const LIGNE_PRODUCTION = buildingId('ligne_production')
 const RESEAU_PATISSERIES = buildingId('reseau_patisseries')
 const EMPIRE_CHOCOLATINE = buildingId('empire_chocolatine')
@@ -136,18 +136,7 @@ const buildings: Record<string, BuildingData> = {
       description: '+1% prix de vente tous produits par pâtisserie',
     },
   },
-  [LABO_SAVEURS as string]: {
-    id: LABO_SAVEURS, name: 'Labo saveurs', emoji: '🔬',
-    description: 'Génère tous les ingrédients de base',
-    baseCost: new Decimal(30_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(1.5),
-    producedResource: CHOCOLAT_NOIR, pipelineRole: 'ingredients', scope: 'chocolatines',
-    aura: {
-      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.03),
-      description: '+3% production globale par labo saveurs',
-    },
-  },
-  [LIGNE_PRODUCTION as string]: {
+[LIGNE_PRODUCTION as string]: {
     id: LIGNE_PRODUCTION, name: 'Ligne de production', emoji: '🏭',
     description: 'Production automatisée complète',
     baseCost: new Decimal(150_000), costResource: PANTINS_COINS_ID,
@@ -389,7 +378,7 @@ export const CHOCOLATINES_BUNDLE: ProductBundle = {
   },
   resources,
   buildings,
-  buildingOrder: [BATTEUR_PRO, FONDOIR, GARNISSEUR_CHOCO, DOREUSE, FOUR_A_SOLE, PATISSERIE, LABO_SAVEURS, LIGNE_PRODUCTION, RESEAU_PATISSERIES, EMPIRE_CHOCOLATINE],
+  buildingOrder: [BATTEUR_PRO, FONDOIR, GARNISSEUR_CHOCO, DOREUSE, FOUR_A_SOLE, PATISSERIE, LIGNE_PRODUCTION, RESEAU_PATISSERIES, EMPIRE_CHOCOLATINE],
   buildingUnlockThresholds: {
     [BATTEUR_PRO as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(100) },
     [FONDOIR as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(100) },
@@ -397,8 +386,7 @@ export const CHOCOLATINES_BUNDLE: ProductBundle = {
     [DOREUSE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(1_000) },
     [FOUR_A_SOLE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(2_000) },
     [PATISSERIE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(4_000) },
-    [LABO_SAVEURS as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(12_000) },
-    [LIGNE_PRODUCTION as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(60_000) },
+[LIGNE_PRODUCTION as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(60_000) },
     [RESEAU_PATISSERIES as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(300_000) },
     [EMPIRE_CHOCOLATINE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(3_000_000) },
   },

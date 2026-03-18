@@ -16,7 +16,7 @@ const GARNISSEUR = buildingId('garnisseur')
 const ATELIER_CHOCOLAT = buildingId('atelier_chocolat')
 const FOUR_VENTILE = buildingId('four_ventile')
 const CHOCOLATERIE = buildingId('chocolaterie')
-const LABO_CACAO = buildingId('labo_cacao')
+
 const MANUFACTURE = buildingId('manufacture')
 const CHAINE_BOULANGERE = buildingId('chaine_boulangere')
 const CONSORTIUM_CHOCOLAT = buildingId('consortium_chocolat')
@@ -112,18 +112,7 @@ const buildings: Record<string, BuildingData> = {
       description: '+1% prix de vente tous produits par chocolaterie',
     },
   },
-  [LABO_CACAO as string]: {
-    id: LABO_CACAO, name: 'Labo cacao', emoji: '🔬',
-    description: 'Genere du beurre, de la farine et du chocolat',
-    baseCost: new Decimal(5_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(1.8),
-    producedResource: CHOCOLAT_PATISSIER, pipelineRole: 'ingredients', scope: 'pains_au_chocolat',
-    aura: {
-      effectType: 'cross_product_bonus', bonusPerBuilding: new Decimal(0.02),
-      crossProductTarget: 'croissants', description: '+2% production croissants par labo cacao',
-    },
-  },
-  [MANUFACTURE as string]: {
+[MANUFACTURE as string]: {
     id: MANUFACTURE, name: 'Manufacture', emoji: '🏭',
     description: 'Ligne complete : petrit, garnit, cuit et vend',
     baseCost: new Decimal(30_000), costResource: PANTINS_COINS_ID,
@@ -338,15 +327,14 @@ export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
   },
   resources,
   buildings,
-  buildingOrder: [MALAXEUR, GARNISSEUR, ATELIER_CHOCOLAT, FOUR_VENTILE, CHOCOLATERIE, LABO_CACAO, MANUFACTURE, CHAINE_BOULANGERE, CONSORTIUM_CHOCOLAT],
+  buildingOrder: [MALAXEUR, GARNISSEUR, ATELIER_CHOCOLAT, FOUR_VENTILE, CHOCOLATERIE, MANUFACTURE, CHAINE_BOULANGERE, CONSORTIUM_CHOCOLAT],
   buildingUnlockThresholds: {
     [MALAXEUR as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15) },
     [GARNISSEUR as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15) },
     [ATELIER_CHOCOLAT as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(200) },
     [FOUR_VENTILE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(250) },
     [CHOCOLATERIE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(600) },
-    [LABO_CACAO as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(2_000) },
-    [MANUFACTURE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(12_000) },
+[MANUFACTURE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(12_000) },
     [CHAINE_BOULANGERE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(60_000) },
     [CONSORTIUM_CHOCOLAT as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(600_000) },
   },

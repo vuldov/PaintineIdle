@@ -13,7 +13,7 @@ const FOURNIL = buildingId('fournil')
 const PETRIN = buildingId('petrin')
 const FOUR_PRO = buildingId('four_pro')
 const BOUTIQUE = buildingId('boutique')
-const LABORATOIRE = buildingId('laboratoire')
+
 const USINE = buildingId('usine')
 const FRANCHISE = buildingId('franchise')
 const EMPIRE = buildingId('empire')
@@ -88,18 +88,7 @@ const buildings: Record<string, BuildingData> = {
       targetProduct: 'croissants', description: '+5% prix de vente croissants par boutique',
     },
   },
-  [LABORATOIRE as string]: {
-    id: LABORATOIRE, name: 'Laboratoire pâtissier', emoji: '🔬',
-    description: 'Génère du beurre et de la farine',
-    baseCost: new Decimal(1_500), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(2),
-    producedResource: BEURRE, pipelineRole: 'ingredients', scope: 'croissants',
-    aura: {
-      effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.02),
-      description: '+2% génération ingrédients par laboratoire',
-    },
-  },
-  [USINE as string]: {
+[USINE as string]: {
     id: USINE, name: 'Usine viennoiserie', emoji: '🏭',
     description: 'Production industrielle : pétrit, cuit et vend',
     baseCost: new Decimal(10_000), costResource: PANTINS_COINS_ID,
@@ -286,14 +275,6 @@ const upgrades: Record<string, UpgradeData> = {
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(5_000) },
     scope: 'croissants',
   },
-  recette_secrete: {
-    id: upgradeId('recette_secrete'), name: 'Recette secrète',
-    description: 'x3 production du laboratoire', emoji: '📜',
-    cost: new Decimal(15_000), costResource: PANTINS_COINS_ID,
-    effect: { type: 'building_multiplier', targetBuilding: LABORATOIRE, multiplier: new Decimal(3) },
-    unlockCondition: { type: 'building_count', buildingId: LABORATOIRE, threshold: new Decimal(5) },
-    scope: 'croissants',
-  },
 }
 
 // ─── Bundle ────────────────────────────────────────────────────
@@ -308,14 +289,13 @@ export const CROISSANTS_BUNDLE: ProductBundle = {
   },
   resources,
   buildings,
-  buildingOrder: [PETRIN, FOURNIL, FOUR_PRO, BOUTIQUE, LABORATOIRE, USINE, FRANCHISE, EMPIRE],
+  buildingOrder: [PETRIN, FOURNIL, FOUR_PRO, BOUTIQUE, USINE, FRANCHISE, EMPIRE],
   buildingUnlockThresholds: {
     [PETRIN as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(5) },
     [FOURNIL as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(5) },
     [FOUR_PRO as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(80) },
     [BOUTIQUE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(200) },
-    [LABORATOIRE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(600) },
-    [USINE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(4_000) },
+[USINE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(4_000) },
     [FRANCHISE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(20_000) },
     [EMPIRE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(200_000) },
   },
@@ -334,8 +314,7 @@ export const CROISSANTS_BUNDLE: ProductBundle = {
     upgradeId('four_turbo'),
     upgradeId('vitrine_refrigeree'),
     upgradeId('negociation_fournisseurs'),
-    upgradeId('recette_secrete'),
-  ],
+],
   pipelineConfig,
   passiveRegen: {
     [BEURRE as string]: new Decimal(0.2),
