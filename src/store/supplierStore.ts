@@ -101,7 +101,7 @@ export const useSupplierStore = create<SupplierStore>((set, get) => ({
 
   setRate: (id, percent) => {
     const sid = id as string
-    const clamped = Math.max(0, Math.min(100, Math.round(percent)))
+    const clamped = Math.max(0, Math.min(100, Math.round(percent / 10) * 10))
 
     set((s) => {
       if (!s.suppliers[sid]) return s

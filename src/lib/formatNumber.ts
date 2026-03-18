@@ -48,9 +48,12 @@ export function formatNumber(n: Decimal): string {
     return n.toFixed(2).replace('.', ',')
   }
 
-  // Nombres < 1 000 : affichage entier avec espaces
+  // Nombres < 1 000 : affichage avec 2 décimales si non entier, entier sinon
   if (n.lt(1_000)) {
-    return n.floor().toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F')
+    if (n.eq(n.floor())) {
+      return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F')
+    }
+    return n.toFixed(2).replace('.', ',').replace(/0+$/, '').replace(/,$/, '')
   }
 
   // Trouver le bon suffixe

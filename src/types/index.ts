@@ -233,7 +233,7 @@ export interface SupplierData {
 export type SupplierUpgradeId = Brand<string, 'SupplierUpgradeId'>
 export const supplierUpgradeId = (id: string): SupplierUpgradeId => id as SupplierUpgradeId
 
-export type SupplierUpgradeEffectType = 'max_rate_bonus' | 'cost_reduction'
+export type SupplierUpgradeEffectType = 'max_rate_bonus' | 'cost_reduction' | 'set_max_rate'
 
 export interface SupplierUpgradeData {
   id: SupplierUpgradeId

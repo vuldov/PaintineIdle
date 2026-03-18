@@ -112,7 +112,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
             type="range"
             min={0}
             max={100}
-            step={1}
+            step={10}
             value={state.ratePercent}
             onChange={(e) => setRate(data.id, Number(e.target.value))}
             className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500"

@@ -10,14 +10,17 @@ export function calcEffectiveMaxRate(
   upgradeStates: Record<string, SupplierUpgradeState>,
 ): Decimal {
   let rate = data.baseMaxRate
+  let override: Decimal | null = null
   for (const [id, upData] of Object.entries(upgrades)) {
     if (upData.targetSupplier !== data.id) continue
     if (!upgradeStates[id]?.purchased) continue
     if (upData.effectType === 'max_rate_bonus') {
       rate = rate.mul(upData.effectValue)
+    } else if (upData.effectType === 'set_max_rate') {
+      override = upData.effectValue
     }
   }
-  return rate
+  return override ?? rate
 }
 
 /** Compute the effective cost/sec at full rate for a supplier after all purchased upgrades. */

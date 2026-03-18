@@ -34,9 +34,9 @@ const SPECIALIZATION_UPGRADES: Record<string, UpgradeData> = {
     scope: 'global',
     category: 'specialization',
   },
-  chocolat_belge_specialise: {
-    id: upgradeId('chocolat_belge_specialise'),
-    name: 'Chocolat belge spécialisé',
+  chocolat_suisse_specialise: {
+    id: upgradeId('chocolat_suisse_specialise'),
+    name: 'Chocolat suisse spécialisé',
     description: 'x2 production PAC + 1% prix chocolatines par tranche de 50 malaxeurs',
     emoji: '🍫',
     cost: new Decimal(100_000),
@@ -239,7 +239,7 @@ export const SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 export const SYNERGY_UPGRADE_ORDER = [
   // Specialization
   upgradeId('beurre_aop_specialise'),
-  upgradeId('chocolat_belge_specialise'),
+  upgradeId('chocolat_suisse_specialise'),
   upgradeId('recette_napolitaine_specialise'),
   // Cross-product
   upgradeId('petit_dejeuner_francais'),

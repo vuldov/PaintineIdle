@@ -130,27 +130,44 @@ export function UpgradePanel() {
     }
   }).filter((x): x is UpgradeItem => x !== null)
 
-  // ── 2. Supplier upgrades ──
-  const supplierItems: UpgradeItem[] = (bundle.supplierUpgradeOrder ?? []).map((id): UpgradeItem | null => {
+  // ── 2. Supplier upgrades (show only next unpurchased per supplier) ──
+  const supplierItems: UpgradeItem[] = []
+  const shownSuppliers = new Set<string>()
+  const purchasedSupplierItems: UpgradeItem[] = []
+
+  for (const id of (bundle.supplierUpgradeOrder ?? [])) {
     const uid = id as string
     const data = ALL_SUPPLIER_UPGRADES[uid]
     const state = supplierUpgradeStates[uid]
-    if (!data || !state) return null
-    const supplierData = ALL_SUPPLIERS[data.targetSupplier as string]
-    return {
-      key: uid,
-      emoji: data.emoji,
-      name: data.name,
-      description: data.description,
-      subtitle: supplierData?.name,
-      cost: data.cost,
+    if (!data || !state) continue
+    const sid = data.targetSupplier as string
+    const supplierData = ALL_SUPPLIERS[sid]
+
+    if (state.purchased) {
+      purchasedSupplierItems.push({
+        key: uid, emoji: data.emoji, name: data.name, description: data.description,
+        subtitle: supplierData?.name, cost: data.cost,
+        costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '',
+        badge: CATEGORY_BADGE.supplier, affordable: false, purchased: true,
+        onBuy: () => {},
+      })
+      continue
+    }
+
+    // Only show the first unpurchased upgrade for each supplier
+    if (shownSuppliers.has(sid)) continue
+    shownSuppliers.add(sid)
+
+    supplierItems.push({
+      key: uid, emoji: data.emoji, name: data.name, description: data.description,
+      subtitle: supplierData?.name, cost: data.cost,
       costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '',
       badge: CATEGORY_BADGE.supplier,
       affordable: canAfford(data.costResource, data.cost),
-      purchased: state.purchased,
+      purchased: false,
       onBuy: () => buySupplierUpgrade(data.id as SupplierUpgradeId),
-    }
-  }).filter((x): x is UpgradeItem => x !== null)
+    })
+  }
 
   // ── 3. Synergy upgrades ──
   const synergyItems: UpgradeItem[] = SYNERGY_UPGRADE_ORDER.map((id): UpgradeItem | null => {
@@ -177,9 +194,9 @@ export function UpgradePanel() {
   }).filter((x): x is UpgradeItem => x !== null)
 
   // ── Merge all ──
-  const allItems = [...productItems, ...supplierItems, ...synergyItems]
-  const available = allItems.filter((i) => !i.purchased)
-  const purchased = allItems.filter((i) => i.purchased)
+  const allAvailable = [...productItems.filter(i => !i.purchased), ...supplierItems, ...synergyItems.filter(i => !i.purchased)]
+  const available = allAvailable
+  const purchased = [...productItems.filter(i => i.purchased), ...purchasedSupplierItems, ...synergyItems.filter(i => i.purchased)]
 
   if (available.length === 0 && purchased.length === 0) return null
 
