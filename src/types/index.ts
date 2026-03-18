@@ -17,12 +17,14 @@ export type ResourceId = Brand<string, 'ResourceId'>
 export type BuildingId = Brand<string, 'BuildingId'>
 export type CraftingRecipeId = Brand<string, 'CraftingRecipeId'>
 export type UpgradeId = Brand<string, 'UpgradeId'>
+export type SupplierId = Brand<string, 'SupplierId'>
 
 // Helpers — cast raw strings into branded IDs
 export const resourceId = (id: string): ResourceId => id as ResourceId
 export const buildingId = (id: string): BuildingId => id as BuildingId
 export const craftingRecipeId = (id: string): CraftingRecipeId => id as CraftingRecipeId
 export const upgradeId = (id: string): UpgradeId => id as UpgradeId
+export const supplierId = (id: string): SupplierId => id as SupplierId
 
 // ─── Entity scope ──────────────────────────────────────────────
 export type EntityScope = ProductId | 'global'
@@ -126,6 +128,12 @@ export interface ProductBundle {
   upgradeOrder: UpgradeId[]
   pipelineConfig: { stages: PipelineStageConfig[] }
   passiveRegen: Record<string, Decimal>
+  /** Supplier definitions (one per ingredient) */
+  suppliers: Record<string, SupplierData>
+  supplierOrder: SupplierId[]
+  /** Supplier upgrade definitions */
+  supplierUpgrades: Record<string, SupplierUpgradeData>
+  supplierUpgradeOrder: SupplierUpgradeId[]
   /** The resource ID of the finished product (e.g., croissants, pains_au_chocolat) */
   finishedProductId: ResourceId
   baseSellRate: Decimal
@@ -199,6 +207,67 @@ export interface UpgradeData {
   unlockCondition: UnlockCondition
   scope: EntityScope
   category?: 'specialization' | 'synergy' | 'scaling'
+}
+
+// ─── Supplier data (definition, not state) ──────────────────────
+
+export interface SupplierData {
+  id: SupplierId
+  name: string
+  emoji: string
+  description: string
+  /** The ingredient this supplier produces */
+  producedResource: ResourceId
+  /** Base maximum units produced per second (before upgrades) */
+  baseMaxRate: Decimal
+  /** Base cost in paintine coins per second at full rate (before upgrades) */
+  baseCostPerSecond: Decimal
+  /** One-time cost in paintine coins to unlock this supplier */
+  contractCost: Decimal
+  /** Which product this supplier belongs to */
+  scope: ProductId
+}
+
+// ─── Supplier upgrade data ───────────────────────────────────────
+
+export type SupplierUpgradeId = Brand<string, 'SupplierUpgradeId'>
+export const supplierUpgradeId = (id: string): SupplierUpgradeId => id as SupplierUpgradeId
+
+export type SupplierUpgradeEffectType = 'max_rate_bonus' | 'cost_reduction'
+
+export interface SupplierUpgradeData {
+  id: SupplierUpgradeId
+  name: string
+  emoji: string
+  description: string
+  /** Which supplier this upgrade targets */
+  targetSupplier: SupplierId
+  /** Cost to purchase this upgrade */
+  cost: Decimal
+  /** Resource spent (typically an intermediate resource like pate_feuilletee) */
+  costResource: ResourceId
+  /** What this upgrade does */
+  effectType: SupplierUpgradeEffectType
+  /** Multiplicative value: e.g. 1.5 = +50% maxRate, or 0.8 = -20% cost */
+  effectValue: Decimal
+  scope: ProductId
+}
+
+// ─── Supplier runtime state ──────────────────────────────────────
+
+export interface SupplierState {
+  id: SupplierId
+  /** Has the contract been purchased? */
+  unlocked: boolean
+  /** Is this supplier currently active (producing)? */
+  active: boolean
+  /** Production rate as percentage of effective max (0–100) */
+  ratePercent: number
+}
+
+export interface SupplierUpgradeState {
+  id: SupplierUpgradeId
+  purchased: boolean
 }
 
 // ─── Runtime state types ───────────────────────────────────────

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import type Decimal from 'decimal.js'
+import Decimal from 'decimal.js'
 import type { ResourceId, ProductId, Upgrade } from '@/types'
 import { PANTINS_COINS_ID } from '@/types'
 import { calcTotalProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
@@ -12,6 +12,9 @@ import { useUpgradeStore } from '@/store/upgradeStore'
 import { useCraftingStore } from '@/store/craftingStore'
 import { useProductStore } from '@/store/productStore'
 import { useSynergyStore } from '@/store/synergyStore'
+import { useSupplierStore } from '@/store/supplierStore'
+import { calcSupplierTick } from '@/mechanics/supplierMechanics'
+import { ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES } from '@/lib/products/registry'
 import {
   PRODUCT_REGISTRY,
   PRODUCT_ORDER,
@@ -172,9 +175,35 @@ export function useGameLoop() {
     const deltas = calcClampedDelta(totalResult, allResources, delta)
 
     resourceStore.applyDeltas(deltas)
-    resourceStore.updatePerSecond(totalResult.totalNet)
 
-    // 4. Check unlocks
+    // 4. Supplier tick — runs after production so coins earned this tick are available
+    const { suppliers, supplierUpgrades: supplierUpgradeStates } = useSupplierStore.getState()
+    const coinsAfterProduction = useResourceStore.getState().globalResources['pantins_coins']
+    const availableCoins = coinsAfterProduction ? coinsAfterProduction.amount : new Decimal(0)
+
+    const supplierResult = calcSupplierTick(suppliers, ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES, supplierUpgradeStates, availableCoins, delta)
+    if (Object.keys(supplierResult.resourceDeltas).length > 0) {
+      useResourceStore.getState().applyDeltas(supplierResult.resourceDeltas)
+    }
+
+    // Merge supplier per-second rates into display
+    const netWithSuppliers = { ...totalResult.totalNet }
+    for (const entry of supplierResult.entries) {
+      const effRate = supplierResult.effectiveRates[entry.supplierId]
+      const state = suppliers[entry.supplierId]
+      if (!effRate || !state) continue
+      const ratePerSec = effRate.maxRate.mul(state.ratePercent).div(100)
+      const resId = entry.producedResource
+      netWithSuppliers[resId] = (netWithSuppliers[resId] ?? new Decimal(0)).add(ratePerSec)
+    }
+    if (supplierResult.totalCostPerSecond.gt(0)) {
+      const coinsId = 'pantins_coins'
+      netWithSuppliers[coinsId] = (netWithSuppliers[coinsId] ?? new Decimal(0)).sub(supplierResult.totalCostPerSecond)
+    }
+
+    resourceStore.updatePerSecond(netWithSuppliers)
+
+    // 5. Check unlocks
     checkUnlocks()
     checkProductUnlocks()
 

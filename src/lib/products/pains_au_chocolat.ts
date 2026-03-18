@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js'
-import { resourceId, buildingId, craftingRecipeId, upgradeId, PANTINS_COINS_ID } from '@/types'
-import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig } from '@/types'
+import { resourceId, buildingId, craftingRecipeId, upgradeId, supplierId, supplierUpgradeId, PANTINS_COINS_ID } from '@/types'
+import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig, SupplierData, SupplierUpgradeData } from '@/types'
 
 // ─── Resource IDs ──────────────────────────────────────────────
 const BEURRE_DOUX = resourceId('beurre_doux')
@@ -315,6 +315,94 @@ const upgrades: Record<string, UpgradeData> = {
   },
 }
 
+// ─── Suppliers (1 per ingredient) ────────────────────────────
+const CREMERIE_NORMANDE = supplierId('cremerie_normande')
+const MINOTERIE = supplierId('minoterie')
+const CHOCOLATIER_BELGE = supplierId('chocolatier_belge')
+
+const suppliers: Record<string, SupplierData> = {
+  [CREMERIE_NORMANDE as string]: {
+    id: CREMERIE_NORMANDE, name: 'Cremerie normande', emoji: '🧈',
+    description: 'Beurre doux de Normandie, onctueux et frais',
+    producedResource: BEURRE_DOUX,
+    baseMaxRate: new Decimal(2.5), baseCostPerSecond: new Decimal(1.5),
+    contractCost: new Decimal(500), scope: 'pains_au_chocolat',
+  },
+  [MINOTERIE as string]: {
+    id: MINOTERIE, name: 'Minoterie', emoji: '🌾',
+    description: 'Farine de qualite superieure moulue sur pierre',
+    producedResource: FARINE_QUALITE,
+    baseMaxRate: new Decimal(3.5), baseCostPerSecond: new Decimal(2),
+    contractCost: new Decimal(600), scope: 'pains_au_chocolat',
+  },
+  [CHOCOLATIER_BELGE as string]: {
+    id: CHOCOLATIER_BELGE, name: 'Chocolatier belge', emoji: '🍫',
+    description: 'Chocolat patissier fin importe de Belgique',
+    producedResource: CHOCOLAT_PATISSIER,
+    baseMaxRate: new Decimal(2), baseCostPerSecond: new Decimal(2.5),
+    contractCost: new Decimal(800), scope: 'pains_au_chocolat',
+  },
+}
+
+// ─── Supplier upgrades ───────────────────────────────────────
+const PAC_BEURRE_BOOST = supplierUpgradeId('pac_beurre_boost')
+const PAC_FARINE_BOOST = supplierUpgradeId('pac_farine_boost')
+const PAC_CHOCO_BOOST = supplierUpgradeId('pac_choco_boost')
+const PAC_BEURRE_NEGO = supplierUpgradeId('pac_beurre_nego')
+const PAC_FARINE_NEGO = supplierUpgradeId('pac_farine_nego')
+const PAC_CHOCO_NEGO = supplierUpgradeId('pac_choco_nego')
+
+const supplierUpgrades: Record<string, SupplierUpgradeData> = {
+  [PAC_BEURRE_BOOST as string]: {
+    id: PAC_BEURRE_BOOST, name: 'Livraison express beurre', emoji: '🧈',
+    description: 'x1,5 debit max de la cremerie',
+    targetSupplier: CREMERIE_NORMANDE,
+    cost: new Decimal(15), costResource: PATE_LEVEE_FEUILLETEE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'pains_au_chocolat',
+  },
+  [PAC_FARINE_BOOST as string]: {
+    id: PAC_FARINE_BOOST, name: 'Mouture fine', emoji: '🌾',
+    description: 'x1,5 debit max de la minoterie',
+    targetSupplier: MINOTERIE,
+    cost: new Decimal(15), costResource: PATE_LEVEE_FEUILLETEE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'pains_au_chocolat',
+  },
+  [PAC_CHOCO_BOOST as string]: {
+    id: PAC_CHOCO_BOOST, name: 'Cacao grand cru', emoji: '🍫',
+    description: 'x1,5 debit max du chocolatier',
+    targetSupplier: CHOCOLATIER_BELGE,
+    cost: new Decimal(10), costResource: PATON_CHOCOLAT,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'pains_au_chocolat',
+  },
+  [PAC_BEURRE_NEGO as string]: {
+    id: PAC_BEURRE_NEGO, name: 'Contrat cremerie', emoji: '🤝',
+    description: '-20% cout de la cremerie',
+    targetSupplier: CREMERIE_NORMANDE,
+    cost: new Decimal(20), costResource: PATE_LEVEE_FEUILLETEE,
+    effectType: 'cost_reduction', effectValue: new Decimal(0.8),
+    scope: 'pains_au_chocolat',
+  },
+  [PAC_FARINE_NEGO as string]: {
+    id: PAC_FARINE_NEGO, name: 'Contrat minoterie', emoji: '🤝',
+    description: '-20% cout de la minoterie',
+    targetSupplier: MINOTERIE,
+    cost: new Decimal(20), costResource: PATE_LEVEE_FEUILLETEE,
+    effectType: 'cost_reduction', effectValue: new Decimal(0.8),
+    scope: 'pains_au_chocolat',
+  },
+  [PAC_CHOCO_NEGO as string]: {
+    id: PAC_CHOCO_NEGO, name: 'Contrat chocolatier', emoji: '🤝',
+    description: '-20% cout du chocolatier',
+    targetSupplier: CHOCOLATIER_BELGE,
+    cost: new Decimal(15), costResource: PATON_CHOCOLAT,
+    effectType: 'cost_reduction', effectValue: new Decimal(0.8),
+    scope: 'pains_au_chocolat',
+  },
+}
+
 // ─── Bundle ────────────────────────────────────────────────────
 
 export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
@@ -353,6 +441,10 @@ export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
     upgradeId('pac_farine_premium'),
     upgradeId('pac_achat_en_gros'),
   ],
+  suppliers,
+  supplierOrder: [CREMERIE_NORMANDE, MINOTERIE, CHOCOLATIER_BELGE],
+  supplierUpgrades,
+  supplierUpgradeOrder: [PAC_BEURRE_BOOST, PAC_FARINE_BOOST, PAC_CHOCO_BOOST, PAC_BEURRE_NEGO, PAC_FARINE_NEGO, PAC_CHOCO_NEGO],
   pipelineConfig,
   passiveRegen: {
     [BEURRE_DOUX as string]: new Decimal(0.2),

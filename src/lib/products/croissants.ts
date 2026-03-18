@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js'
-import { resourceId, buildingId, craftingRecipeId, upgradeId, PANTINS_COINS_ID } from '@/types'
-import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig } from '@/types'
+import { resourceId, buildingId, craftingRecipeId, upgradeId, supplierId, supplierUpgradeId, PANTINS_COINS_ID } from '@/types'
+import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig, SupplierData, SupplierUpgradeData } from '@/types'
 
 // ─── Resource IDs ──────────────────────────────────────────────
 const BEURRE = resourceId('beurre')
@@ -277,6 +277,68 @@ const upgrades: Record<string, UpgradeData> = {
   },
 }
 
+// ─── Suppliers (1 per ingredient) ────────────────────────────
+const BEURRIER_ARTISANAL = supplierId('beurrier_artisanal')
+const MOULIN_A_FARINE = supplierId('moulin_a_farine')
+
+const suppliers: Record<string, SupplierData> = {
+  [BEURRIER_ARTISANAL as string]: {
+    id: BEURRIER_ARTISANAL, name: 'Beurrier artisanal', emoji: '🧈',
+    description: 'Petit producteur local de beurre frais',
+    producedResource: BEURRE,
+    baseMaxRate: new Decimal(2), baseCostPerSecond: new Decimal(0.5),
+    contractCost: new Decimal(50), scope: 'croissants',
+  },
+  [MOULIN_A_FARINE as string]: {
+    id: MOULIN_A_FARINE, name: 'Moulin a farine', emoji: '🌾',
+    description: 'Moulin traditionnel produisant de la farine de qualite',
+    producedResource: FARINE,
+    baseMaxRate: new Decimal(3), baseCostPerSecond: new Decimal(0.8),
+    contractCost: new Decimal(80), scope: 'croissants',
+  },
+}
+
+// ─── Supplier upgrades ───────────────────────────────────────
+const BEURRE_PREMIUM = supplierUpgradeId('beurre_premium')
+const MOULIN_AMELIORE = supplierUpgradeId('moulin_ameliore')
+const CONTRAT_BEURRE_NEGO = supplierUpgradeId('contrat_beurre_nego')
+const CONTRAT_FARINE_NEGO = supplierUpgradeId('contrat_farine_nego')
+
+const supplierUpgrades: Record<string, SupplierUpgradeData> = {
+  [BEURRE_PREMIUM as string]: {
+    id: BEURRE_PREMIUM, name: 'Beurre premium', emoji: '🧈',
+    description: 'x1,5 debit max du beurrier',
+    targetSupplier: BEURRIER_ARTISANAL,
+    cost: new Decimal(10), costResource: PATE_FEUILLETEE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'croissants',
+  },
+  [MOULIN_AMELIORE as string]: {
+    id: MOULIN_AMELIORE, name: 'Moulin ameliore', emoji: '🌾',
+    description: 'x1,5 debit max du moulin',
+    targetSupplier: MOULIN_A_FARINE,
+    cost: new Decimal(10), costResource: PATE_FEUILLETEE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'croissants',
+  },
+  [CONTRAT_BEURRE_NEGO as string]: {
+    id: CONTRAT_BEURRE_NEGO, name: 'Negociation beurre', emoji: '🤝',
+    description: '-20% cout du beurrier',
+    targetSupplier: BEURRIER_ARTISANAL,
+    cost: new Decimal(15), costResource: PATE_FEUILLETEE,
+    effectType: 'cost_reduction', effectValue: new Decimal(0.8),
+    scope: 'croissants',
+  },
+  [CONTRAT_FARINE_NEGO as string]: {
+    id: CONTRAT_FARINE_NEGO, name: 'Negociation farine', emoji: '🤝',
+    description: '-20% cout du moulin',
+    targetSupplier: MOULIN_A_FARINE,
+    cost: new Decimal(15), costResource: PATE_FEUILLETEE,
+    effectType: 'cost_reduction', effectValue: new Decimal(0.8),
+    scope: 'croissants',
+  },
+}
+
 // ─── Bundle ────────────────────────────────────────────────────
 
 export const CROISSANTS_BUNDLE: ProductBundle = {
@@ -315,6 +377,10 @@ export const CROISSANTS_BUNDLE: ProductBundle = {
     upgradeId('vitrine_refrigeree'),
     upgradeId('negociation_fournisseurs'),
 ],
+  suppliers,
+  supplierOrder: [BEURRIER_ARTISANAL, MOULIN_A_FARINE],
+  supplierUpgrades,
+  supplierUpgradeOrder: [BEURRE_PREMIUM, MOULIN_AMELIORE, CONTRAT_BEURRE_NEGO, CONTRAT_FARINE_NEGO],
   pipelineConfig,
   passiveRegen: {
     [BEURRE as string]: new Decimal(0.2),

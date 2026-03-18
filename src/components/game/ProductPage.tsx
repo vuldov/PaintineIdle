@@ -2,6 +2,7 @@ import { useProductStore } from '@/store/productStore'
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import { ProductProvider } from './ProductContext'
 import { IngredientPanel } from './IngredientPanel'
+import { SupplierPanel } from './SupplierPanel'
 import { CraftingPanel } from './CraftingPanel'
 import { UpgradePanel } from './UpgradePanel'
 import { BatimentCard } from './BatimentCard'
@@ -15,6 +16,8 @@ export function ProductPage() {
   return (
     <ProductProvider productId={activeProduct} bundle={bundle}>
       <IngredientPanel />
+
+      <SupplierPanel />
 
       <CraftingPanel />
 

@@ -2,12 +2,13 @@ import { useUpgradeStore, isUpgradeVisible } from '@/store/upgradeStore'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useSynergyStore } from '@/store/synergyStore'
+import { useSupplierStore } from '@/store/supplierStore'
 import { useProduct } from './ProductContext'
-import { ALL_RESOURCES } from '@/lib/products/registry'
+import { ALL_RESOURCES, ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES } from '@/lib/products/registry'
 import { SYNERGY_UPGRADES, SYNERGY_UPGRADE_ORDER } from '@/lib/synergies/synergyUpgrades'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { formatNumber } from '@/lib/formatNumber'
-import type { UpgradeId, Resource, UpgradeData } from '@/types'
+import type { UpgradeId, SupplierUpgradeId, Resource, UpgradeData } from '@/types'
 
 // ─── Category badge styles ──────────────────────────────────────
 
@@ -306,6 +307,98 @@ function GlobalSynergyUpgrades() {
   )
 }
 
+// ─── Supplier upgrades section ──────────────────────────────────
+
+function SupplierUpgradesSection() {
+  const { bundle } = useProduct()
+  const upgradeStates = useSupplierStore((s) => s.supplierUpgrades)
+  const buyUpgrade = useSupplierStore((s) => s.buySupplierUpgrade)
+  const canAfford = useResourceStore((s) => s.canAfford)
+
+  if (!bundle.supplierUpgradeOrder || bundle.supplierUpgradeOrder.length === 0) return null
+
+  const available = bundle.supplierUpgradeOrder.filter((id) => {
+    const state = upgradeStates[id as string]
+    return state && !state.purchased
+  })
+
+  const purchased = bundle.supplierUpgradeOrder.filter((id) => {
+    return upgradeStates[id as string]?.purchased
+  })
+
+  if (available.length === 0 && purchased.length === 0) return null
+
+  return (
+    <div className="mt-4 pt-4 border-t border-amber-200">
+      <h3 className="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-1.5">
+        <span>🚚</span> Ameliorations fournisseurs
+      </h3>
+
+      {available.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          {available.map((id) => {
+            const uid = id as string
+            const data = ALL_SUPPLIER_UPGRADES[uid]
+            if (!data) return null
+            const affordable = canAfford(data.costResource, data.cost)
+            const costRes = ALL_RESOURCES[data.costResource as string]
+            const costEmoji = costRes?.emoji ?? ''
+            const supplierData = ALL_SUPPLIERS[data.targetSupplier as string]
+            const supplierName = supplierData?.name ?? data.targetSupplier
+
+            return (
+              <button
+                key={uid}
+                onClick={() => buyUpgrade(data.id as SupplierUpgradeId)}
+                disabled={!affordable}
+                className={`
+                  flex items-start gap-3 p-3 rounded-lg border text-left transition-all
+                  ${affordable
+                    ? 'border-amber-300 bg-amber-50 hover:bg-amber-100 hover:border-amber-400 cursor-pointer'
+                    : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                  }
+                `}
+              >
+                <span className="text-2xl shrink-0 mt-0.5">{data.emoji}</span>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-amber-900 text-sm">{data.name}</h3>
+                  <p className="text-xs text-amber-600">{data.description}</p>
+                  <p className="text-[10px] text-amber-400">Cible : {supplierName}</p>
+                  <p className="text-xs text-amber-800 font-medium mt-1">
+                    <NumberDisplay value={data.cost} /> {costEmoji}
+                  </p>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {purchased.length > 0 && (
+        <div className="border-t border-amber-100 pt-3">
+          <p className="text-xs text-amber-500 mb-2">Achetees</p>
+          <div className="flex flex-wrap gap-2">
+            {purchased.map((id) => {
+              const uid = id as string
+              const data = ALL_SUPPLIER_UPGRADES[uid]
+              if (!data) return null
+              return (
+                <span
+                  key={uid}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs"
+                  title={`${data.name} -- ${data.description}`}
+                >
+                  {data.emoji} {data.name}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main panel ─────────────────────────────────────────────────
 
 export function UpgradePanel() {
@@ -316,6 +409,7 @@ export function UpgradePanel() {
       </h2>
 
       <ProductUpgrades />
+      <SupplierUpgradesSection />
       <GlobalSynergyUpgrades />
     </div>
   )

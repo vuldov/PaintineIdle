@@ -6,6 +6,7 @@ import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useProductStore } from '@/store/productStore'
 import { useCraftingStore } from '@/store/craftingStore'
+import { useSupplierStore } from '@/store/supplierStore'
 import { AUTOSAVE_INTERVAL_MS, MAX_OFFLINE_SECONDS, GAME_VERSION, PRODUCT_REGISTRY } from '@/lib/constants'
 import { calcTotalProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
 import { loadSaveData, writeSaveData, deleteSaveData } from '@/lib/storage'
@@ -31,11 +32,20 @@ interface SerializedBuilding {
   unlocked: boolean
 }
 
+interface SerializedSupplier {
+  id: string
+  unlocked: boolean
+  active: boolean
+  ratePercent: number
+}
+
 interface SaveDataV3 {
   globalResources: Record<string, SerializedResource>
   productResources: Record<string, Record<string, SerializedResource>>
   buildings: Record<string, Record<string, SerializedBuilding>>
   upgrades: Record<string, { purchased: boolean }>
+  suppliers?: Record<string, SerializedSupplier>
+  supplierUpgrades?: Record<string, { purchased: boolean }>
   unlockedProducts: string[]
   activeProduct: string
   version: number
@@ -108,11 +118,29 @@ function serializeSave(): SaveDataV3 {
     serializedUpgrades[id] = { purchased: upgrade.purchased }
   }
 
+  const { suppliers, supplierUpgrades } = useSupplierStore.getState()
+  const serializedSuppliers: Record<string, SerializedSupplier> = {}
+  for (const [id, supplier] of Object.entries(suppliers)) {
+    serializedSuppliers[id] = {
+      id: supplier.id as string,
+      unlocked: supplier.unlocked,
+      active: supplier.active,
+      ratePercent: supplier.ratePercent,
+    }
+  }
+
+  const serializedSupplierUpgrades: Record<string, { purchased: boolean }> = {}
+  for (const [id, upState] of Object.entries(supplierUpgrades)) {
+    serializedSupplierUpgrades[id] = { purchased: upState.purchased }
+  }
+
   return {
     globalResources: serializedGlobal,
     productResources: serializedProductResources,
     buildings: serializedBuildings,
     upgrades: serializedUpgrades,
+    suppliers: serializedSuppliers,
+    supplierUpgrades: serializedSupplierUpgrades,
     unlockedProducts: [...unlockedProducts],
     activeProduct,
     version: GAME_VERSION,
@@ -208,6 +236,7 @@ export async function hardResetGame() {
   useBuildingStore.getState().resetBuildings()
   useUpgradeStore.getState().resetUpgrades()
   useCraftingStore.getState().resetCrafting()
+  useSupplierStore.getState().resetSuppliers()
   useProductStore.setState({
     unlockedProducts: ['croissants'] as ProductId[],
     activeProduct: 'croissants' as ProductId,
@@ -365,6 +394,38 @@ function restoreFromSaveData(data: SaveDataV3) {
       }
     }
     useUpgradeStore.setState({ upgrades: restoredUpgrades })
+  }
+
+  // Restore suppliers
+  if (data.suppliers) {
+    const supplierState = useSupplierStore.getState()
+    const restoredSuppliers = { ...supplierState.suppliers }
+    for (const [id, serialized] of Object.entries(data.suppliers)) {
+      if (restoredSuppliers[id]) {
+        restoredSuppliers[id] = {
+          ...restoredSuppliers[id],
+          unlocked: serialized.unlocked,
+          active: serialized.active,
+          ratePercent: serialized.ratePercent,
+        }
+      }
+    }
+    useSupplierStore.setState({ suppliers: restoredSuppliers })
+  }
+
+  // Restore supplier upgrades
+  if (data.supplierUpgrades) {
+    const supplierState = useSupplierStore.getState()
+    const restoredUpgrades = { ...supplierState.supplierUpgrades }
+    for (const [id, serialized] of Object.entries(data.supplierUpgrades)) {
+      if (restoredUpgrades[id]) {
+        restoredUpgrades[id] = {
+          ...restoredUpgrades[id],
+          purchased: serialized.purchased,
+        }
+      }
+    }
+    useSupplierStore.setState({ supplierUpgrades: restoredUpgrades })
   }
 
   // Restore product store

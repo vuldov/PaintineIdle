@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js'
-import { resourceId, buildingId, craftingRecipeId, upgradeId, PANTINS_COINS_ID } from '@/types'
-import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig } from '@/types'
+import { resourceId, buildingId, craftingRecipeId, upgradeId, supplierId, supplierUpgradeId, PANTINS_COINS_ID } from '@/types'
+import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig, SupplierData, SupplierUpgradeData } from '@/types'
 
 // ─── Resource IDs ──────────────────────────────────────────────
 const CHOCOLAT_NOIR = resourceId('chocolat_noir')
@@ -366,6 +366,84 @@ const upgrades: Record<string, UpgradeData> = {
   },
 }
 
+// ─── Suppliers (1 per ingredient) ────────────────────────────
+const MAITRE_CHOCOLATIER = supplierId('maitre_chocolatier')
+const FERME_LAITIERE = supplierId('ferme_laitiere')
+const PLANTATION_VANILLE = supplierId('plantation_vanille')
+const ELEVAGE_POULES = supplierId('elevage_poules')
+
+const suppliers: Record<string, SupplierData> = {
+  [MAITRE_CHOCOLATIER as string]: {
+    id: MAITRE_CHOCOLATIER, name: 'Maitre chocolatier', emoji: '🍫',
+    description: 'Chocolat noir grand cru d\'un artisan renomme',
+    producedResource: CHOCOLAT_NOIR,
+    baseMaxRate: new Decimal(2), baseCostPerSecond: new Decimal(5),
+    contractCost: new Decimal(5_000), scope: 'chocolatines',
+  },
+  [FERME_LAITIERE as string]: {
+    id: FERME_LAITIERE, name: 'Ferme laitiere', emoji: '🥛',
+    description: 'Creme fraiche bio directement de la ferme',
+    producedResource: CREME_FRAICHE,
+    baseMaxRate: new Decimal(3), baseCostPerSecond: new Decimal(4),
+    contractCost: new Decimal(4_000), scope: 'chocolatines',
+  },
+  [PLANTATION_VANILLE as string]: {
+    id: PLANTATION_VANILLE, name: 'Plantation vanille', emoji: '🌱',
+    description: 'Sucre vanille de Madagascar, qualite exceptionnelle',
+    producedResource: SUCRE_VANILLE,
+    baseMaxRate: new Decimal(2.5), baseCostPerSecond: new Decimal(4.5),
+    contractCost: new Decimal(4_500), scope: 'chocolatines',
+  },
+  [ELEVAGE_POULES as string]: {
+    id: ELEVAGE_POULES, name: 'Elevage de poules', emoji: '🥚',
+    description: 'Oeufs frais de plein air pour la dorure',
+    producedResource: OEUF_DORE,
+    baseMaxRate: new Decimal(1.5), baseCostPerSecond: new Decimal(3.5),
+    contractCost: new Decimal(3_500), scope: 'chocolatines',
+  },
+}
+
+// ─── Supplier upgrades ───────────────────────────────────────
+const CHOCO_FOURNISSEUR_CHOCOLAT_BOOST = supplierUpgradeId('choco_fournisseur_chocolat_boost')
+const CHOCO_FOURNISSEUR_CREME_BOOST = supplierUpgradeId('choco_fournisseur_creme_boost')
+const CHOCO_FOURNISSEUR_VANILLE_BOOST = supplierUpgradeId('choco_fournisseur_vanille_boost')
+const CHOCO_FOURNISSEUR_OEUF_BOOST = supplierUpgradeId('choco_fournisseur_oeuf_boost')
+
+const supplierUpgrades: Record<string, SupplierUpgradeData> = {
+  [CHOCO_FOURNISSEUR_CHOCOLAT_BOOST as string]: {
+    id: CHOCO_FOURNISSEUR_CHOCOLAT_BOOST, name: 'Plantation cacao', emoji: '🍫',
+    description: 'x1,5 debit max du maitre chocolatier',
+    targetSupplier: MAITRE_CHOCOLATIER,
+    cost: new Decimal(10), costResource: PATON_CHOCOLATINE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'chocolatines',
+  },
+  [CHOCO_FOURNISSEUR_CREME_BOOST as string]: {
+    id: CHOCO_FOURNISSEUR_CREME_BOOST, name: 'Paturages bio', emoji: '🥛',
+    description: 'x1,5 debit max de la ferme laitiere',
+    targetSupplier: FERME_LAITIERE,
+    cost: new Decimal(12), costResource: PATE_BRIOCHEE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'chocolatines',
+  },
+  [CHOCO_FOURNISSEUR_VANILLE_BOOST as string]: {
+    id: CHOCO_FOURNISSEUR_VANILLE_BOOST, name: 'Vanille bourbon', emoji: '🌱',
+    description: 'x1,5 debit max de la plantation',
+    targetSupplier: PLANTATION_VANILLE,
+    cost: new Decimal(12), costResource: PATE_BRIOCHEE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'chocolatines',
+  },
+  [CHOCO_FOURNISSEUR_OEUF_BOOST as string]: {
+    id: CHOCO_FOURNISSEUR_OEUF_BOOST, name: 'Poules selectionnees', emoji: '🥚',
+    description: 'x1,5 debit max de l\'elevage',
+    targetSupplier: ELEVAGE_POULES,
+    cost: new Decimal(8), costResource: CHOCOLATINE_DOREE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'chocolatines',
+  },
+}
+
 // ─── Bundle ────────────────────────────────────────────────────
 
 export const CHOCOLATINES_BUNDLE: ProductBundle = {
@@ -405,6 +483,10 @@ export const CHOCOLATINES_BUNDLE: ProductBundle = {
     upgradeId('choco_global'),
     upgradeId('choco_achat_en_gros'),
   ],
+  suppliers,
+  supplierOrder: [MAITRE_CHOCOLATIER, FERME_LAITIERE, PLANTATION_VANILLE, ELEVAGE_POULES],
+  supplierUpgrades,
+  supplierUpgradeOrder: [CHOCO_FOURNISSEUR_CHOCOLAT_BOOST, CHOCO_FOURNISSEUR_CREME_BOOST, CHOCO_FOURNISSEUR_VANILLE_BOOST, CHOCO_FOURNISSEUR_OEUF_BOOST],
   pipelineConfig,
   passiveRegen: {
     [CHOCOLAT_NOIR as string]: new Decimal(0.15),

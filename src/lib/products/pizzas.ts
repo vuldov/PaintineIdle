@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js'
-import { resourceId, buildingId, craftingRecipeId, upgradeId, PANTINS_COINS_ID } from '@/types'
-import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig } from '@/types'
+import { resourceId, buildingId, craftingRecipeId, upgradeId, supplierId, supplierUpgradeId, PANTINS_COINS_ID } from '@/types'
+import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig, SupplierData, SupplierUpgradeData } from '@/types'
 
 // ─── Resource IDs ──────────────────────────────────────────────
 const TOMATES_FRAICHES = resourceId('tomates_fraiches')
@@ -417,6 +417,101 @@ const upgrades: Record<string, UpgradeData> = {
   },
 }
 
+// ─── Suppliers (1 per ingredient) ────────────────────────────
+const MARAICHER_ITALIEN = supplierId('maraicher_italien')
+const FROMAGERIE_NAPOLITAINE = supplierId('fromagerie_napolitaine')
+const MOULIN_SICILIEN = supplierId('moulin_sicilien')
+const HERBORISTE = supplierId('herboriste')
+const LEVURERIE = supplierId('levurerie')
+
+const suppliers: Record<string, SupplierData> = {
+  [MARAICHER_ITALIEN as string]: {
+    id: MARAICHER_ITALIEN, name: 'Maraicher italien', emoji: '🍅',
+    description: 'Tomates San Marzano fraiches du Vesuve',
+    producedResource: TOMATES_FRAICHES,
+    baseMaxRate: new Decimal(2), baseCostPerSecond: new Decimal(10),
+    contractCost: new Decimal(50_000), scope: 'pizzas',
+  },
+  [FROMAGERIE_NAPOLITAINE as string]: {
+    id: FROMAGERIE_NAPOLITAINE, name: 'Fromagerie napolitaine', emoji: '🧀',
+    description: 'Mozzarella di bufala fraiche du jour',
+    producedResource: MOZZARELLA,
+    baseMaxRate: new Decimal(2.5), baseCostPerSecond: new Decimal(15),
+    contractCost: new Decimal(80_000), scope: 'pizzas',
+  },
+  [MOULIN_SICILIEN as string]: {
+    id: MOULIN_SICILIEN, name: 'Moulin sicilien', emoji: '🌾',
+    description: 'Farine Tipo 00 moulue a la meule de pierre',
+    producedResource: FARINE_PIZZA,
+    baseMaxRate: new Decimal(3), baseCostPerSecond: new Decimal(12),
+    contractCost: new Decimal(60_000), scope: 'pizzas',
+  },
+  [HERBORISTE as string]: {
+    id: HERBORISTE, name: 'Herboriste', emoji: '🌿',
+    description: 'Basilic frais cultive en serre',
+    producedResource: BASILIC,
+    baseMaxRate: new Decimal(1.5), baseCostPerSecond: new Decimal(8),
+    contractCost: new Decimal(40_000), scope: 'pizzas',
+  },
+  [LEVURERIE as string]: {
+    id: LEVURERIE, name: 'Levurerie', emoji: '🧫',
+    description: 'Levure de boulanger fraiche livree quotidiennement',
+    producedResource: LEVURE,
+    baseMaxRate: new Decimal(2), baseCostPerSecond: new Decimal(8),
+    contractCost: new Decimal(40_000), scope: 'pizzas',
+  },
+}
+
+// ─── Supplier upgrades ───────────────────────────────────────
+const PIZZA_TOMATES_BOOST = supplierUpgradeId('pizza_tomates_boost')
+const PIZZA_MOZZA_BOOST = supplierUpgradeId('pizza_mozza_boost')
+const PIZZA_FARINE_BOOST = supplierUpgradeId('pizza_farine_boost')
+const PIZZA_BASILIC_BOOST = supplierUpgradeId('pizza_basilic_boost')
+const PIZZA_LEVURE_BOOST = supplierUpgradeId('pizza_levure_boost')
+
+const supplierUpgrades: Record<string, SupplierUpgradeData> = {
+  [PIZZA_TOMATES_BOOST as string]: {
+    id: PIZZA_TOMATES_BOOST, name: 'Serres du Vesuve', emoji: '🍅',
+    description: 'x1,5 debit max du maraicher',
+    targetSupplier: MARAICHER_ITALIEN,
+    cost: new Decimal(20), costResource: SAUCE_TOMATE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'pizzas',
+  },
+  [PIZZA_MOZZA_BOOST as string]: {
+    id: PIZZA_MOZZA_BOOST, name: 'Bufflonnes selectionnees', emoji: '🧀',
+    description: 'x1,5 debit max de la fromagerie',
+    targetSupplier: FROMAGERIE_NAPOLITAINE,
+    cost: new Decimal(25), costResource: PIZZA_GARNIE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'pizzas',
+  },
+  [PIZZA_FARINE_BOOST as string]: {
+    id: PIZZA_FARINE_BOOST, name: 'Ble ancien sicilien', emoji: '🌾',
+    description: 'x1,5 debit max du moulin',
+    targetSupplier: MOULIN_SICILIEN,
+    cost: new Decimal(20), costResource: PATE_A_PIZZA,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'pizzas',
+  },
+  [PIZZA_BASILIC_BOOST as string]: {
+    id: PIZZA_BASILIC_BOOST, name: 'Serre hydroponique', emoji: '🌿',
+    description: 'x1,5 debit max de l\'herboriste',
+    targetSupplier: HERBORISTE,
+    cost: new Decimal(15), costResource: SAUCE_TOMATE,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'pizzas',
+  },
+  [PIZZA_LEVURE_BOOST as string]: {
+    id: PIZZA_LEVURE_BOOST, name: 'Culture optimisee', emoji: '🧫',
+    description: 'x1,5 debit max de la levurerie',
+    targetSupplier: LEVURERIE,
+    cost: new Decimal(15), costResource: PATE_A_PIZZA,
+    effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
+    scope: 'pizzas',
+  },
+}
+
 // ─── Bundle ────────────────────────────────────────────────────
 
 export const PIZZAS_BUNDLE: ProductBundle = {
@@ -458,6 +553,10 @@ export const PIZZAS_BUNDLE: ProductBundle = {
     upgradeId('pizza_global'),
     upgradeId('pizza_achat_en_gros'),
   ],
+  suppliers,
+  supplierOrder: [MARAICHER_ITALIEN, FROMAGERIE_NAPOLITAINE, MOULIN_SICILIEN, HERBORISTE, LEVURERIE],
+  supplierUpgrades,
+  supplierUpgradeOrder: [PIZZA_TOMATES_BOOST, PIZZA_MOZZA_BOOST, PIZZA_FARINE_BOOST, PIZZA_BASILIC_BOOST, PIZZA_LEVURE_BOOST],
   pipelineConfig,
   passiveRegen: {
     [TOMATES_FRAICHES as string]: new Decimal(0.12),

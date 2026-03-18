@@ -1,4 +1,4 @@
-import type { ProductId, ProductBundle, ResourceData, BuildingData, UpgradeData, CraftingRecipeData } from '@/types'
+import type { ProductId, ProductBundle, ResourceData, BuildingData, UpgradeData, CraftingRecipeData, SupplierData, SupplierUpgradeData } from '@/types'
 import { SHARED_RESOURCES, SHARED_RESOURCE_UNLOCK_THRESHOLDS } from './shared'
 import { CROISSANTS_BUNDLE } from './croissants'
 import { PAINS_AU_CHOCOLAT_BUNDLE } from './pains_au_chocolat'
@@ -38,6 +38,12 @@ export const ALL_UPGRADES: Record<string, UpgradeData> = {}
 /** All crafting recipe definitions, keyed by CraftingRecipeId string */
 export const ALL_CRAFTING: Record<string, CraftingRecipeData> = {}
 
+/** All supplier definitions, keyed by SupplierId string */
+export const ALL_SUPPLIERS: Record<string, SupplierData> = {}
+
+/** All supplier upgrade definitions, keyed by SupplierUpgradeId string */
+export const ALL_SUPPLIER_UPGRADES: Record<string, SupplierUpgradeData> = {}
+
 // Populate from products
 for (const bundle of Object.values(PRODUCT_REGISTRY)) {
   for (const [key, value] of Object.entries(bundle.resources)) {
@@ -63,6 +69,18 @@ for (const bundle of Object.values(PRODUCT_REGISTRY)) {
       throw new Error(`Duplicate crafting recipe ID: ${key}`)
     }
     ALL_CRAFTING[key] = value
+  }
+  for (const [key, value] of Object.entries(bundle.suppliers)) {
+    if (ALL_SUPPLIERS[key]) {
+      throw new Error(`Duplicate supplier ID: ${key}`)
+    }
+    ALL_SUPPLIERS[key] = value
+  }
+  for (const [key, value] of Object.entries(bundle.supplierUpgrades)) {
+    if (ALL_SUPPLIER_UPGRADES[key]) {
+      throw new Error(`Duplicate supplier upgrade ID: ${key}`)
+    }
+    ALL_SUPPLIER_UPGRADES[key] = value
   }
 }
 
@@ -107,6 +125,14 @@ export function getUpgradeScope(upId: string): ProductId | 'global' {
   const upgrade = ALL_UPGRADES[upId]
   if (!upgrade) return 'global'
   return upgrade.scope
+}
+
+/** Find which product a supplier belongs to */
+export function getSupplierProduct(sId: string): ProductId | undefined {
+  for (const [productId, bundle] of Object.entries(PRODUCT_REGISTRY)) {
+    if (bundle.suppliers[sId]) return productId as ProductId
+  }
+  return undefined
 }
 
 /** All building unlock thresholds across products, merged */
