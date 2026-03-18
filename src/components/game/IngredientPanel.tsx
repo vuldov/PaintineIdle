@@ -18,25 +18,25 @@ export function IngredientPanel() {
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
       <h2 className="text-sm font-semibold text-amber-800 mb-3">Ingredients</h2>
-      <div className="flex flex-wrap gap-x-6 gap-y-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
         {visible.map(([id, data]) => {
           const resource = productResources[id]
           if (!resource) return null
           const isNegative = resource.perSecond.lt(0)
           return (
-            <div key={id} className="flex items-center gap-2 text-amber-900">
-              <span className="text-lg" role="img" aria-label={data.name}>
+            <div key={id} className="flex items-center gap-2 bg-amber-50 rounded-lg px-3 py-2">
+              <span className="text-xl shrink-0" role="img" aria-label={data.name}>
                 {data.emoji}
               </span>
-              <div className="flex flex-col items-start leading-tight">
-                <span className="text-sm font-semibold">
+              <div className="min-w-0">
+                <div className="text-xs text-amber-700 truncate">{data.name}</div>
+                <div className="text-sm font-bold text-amber-900">
                   <NumberDisplay value={resource.amount} />
-                  <span className="ml-1 font-normal text-amber-700">{data.name}</span>
-                </span>
-                <span className={`text-xs ${isNegative ? 'text-red-500' : 'text-amber-500'}`}>
+                </div>
+                <div className={`text-xs ${isNegative ? 'text-red-500' : 'text-green-600'}`}>
                   {isNegative ? '' : '+'}
                   <NumberDisplay value={resource.perSecond} />/s
-                </span>
+                </div>
               </div>
             </div>
           )

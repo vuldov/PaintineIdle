@@ -7,5 +7,5 @@ interface NumberDisplayProps {
 }
 
 export function NumberDisplay({ value, className = '' }: NumberDisplayProps) {
-  return <span className={className}>{formatNumber(value)}</span>
+  return <span className={`tabular-nums ${className}`}>{formatNumber(value)}</span>
 }
