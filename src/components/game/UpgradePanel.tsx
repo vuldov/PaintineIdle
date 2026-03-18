@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js'
 import { useUpgradeStore, isUpgradeVisible } from '@/store/upgradeStore'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
@@ -12,16 +13,11 @@ import type { UpgradeId, SupplierUpgradeId, Resource, UpgradeData } from '@/type
 
 // ─── Category badge styles ──────────────────────────────────────
 
-const CATEGORY_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  specialization: { bg: 'bg-amber-100 border-amber-400', text: 'text-amber-800', label: 'Specialisation' },
-  synergy: { bg: 'bg-purple-100 border-purple-400', text: 'text-purple-800', label: 'Synergie' },
-  scaling: { bg: 'bg-blue-100 border-blue-400', text: 'text-blue-800', label: 'Escalade' },
-}
-
-const CATEGORY_BORDER: Record<string, string> = {
-  specialization: 'border-amber-400',
-  synergy: 'border-purple-400',
-  scaling: 'border-blue-400',
+const CATEGORY_BADGE: Record<string, { bg: string; text: string; label: string; border: string }> = {
+  specialization: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Specialisation', border: 'border-amber-400' },
+  synergy:        { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Synergie', border: 'border-purple-400' },
+  scaling:        { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Combo', border: 'border-blue-400' },
+  supplier:       { bg: 'bg-teal-100', text: 'text-teal-800', label: 'Fournisseur', border: 'border-teal-400' },
 }
 
 // ─── Dynamic value computation ──────────────────────────────────
@@ -69,121 +65,37 @@ function computeDynamicLabel(
   return null
 }
 
-// ─── Product-scoped upgrade panel ───────────────────────────────
+// ─── Unified upgrade item type ──────────────────────────────────
 
-function ProductUpgrades() {
-  const { bundle } = useProduct()
-  const upgrades = useUpgradeStore((state) => state.upgrades)
-  const buyUpgrade = useUpgradeStore((state) => state.buyUpgrade)
-  const globalResources = useResourceStore((state) => state.globalResources)
-  const productResources = useResourceStore((state) => state.productResources)
-  const buildings = useBuildingStore((state) => state.buildings)
-  const canAfford = useResourceStore((state) => state.canAfford)
-
-  // Merge resources inline
-  const allResources: Record<string, Resource> = { ...globalResources }
-  for (const res of Object.values(productResources)) {
-    Object.assign(allResources, res)
-  }
-
-  // Merge buildings inline
-  const allBuildings: Record<string, { count: number }> = {}
-  for (const productBuildings of Object.values(buildings)) {
-    Object.assign(allBuildings, productBuildings)
-  }
-
-  const productUpgradeOrder = bundle.upgradeOrder
-
-  // Available: visible + not purchased
-  const available = productUpgradeOrder.filter((id) => {
-    const uid = id as string
-    const upgrade = upgrades[uid]
-    if (!upgrade || upgrade.purchased) return false
-    return isUpgradeVisible(uid, allResources, allBuildings, upgrades)
-  })
-
-  // Purchased
-  const purchased = productUpgradeOrder.filter((id) => {
-    const uid = id as string
-    return upgrades[uid]?.purchased
-  })
-
-  if (available.length === 0 && purchased.length === 0) return null
-
-  return (
-    <>
-      {available.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-          {available.map((id) => {
-            const uid = id as string
-            const data = bundle.upgrades[uid]
-            if (!data) return null
-            const affordable = canAfford(data.costResource, data.cost)
-            const costEmoji = ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙'
-
-            return (
-              <button
-                key={uid}
-                onClick={() => buyUpgrade(id as UpgradeId)}
-                disabled={!affordable}
-                className={`
-                  flex items-start gap-3 p-3 rounded-lg border text-left transition-all
-                  ${affordable
-                    ? 'border-amber-300 bg-amber-50 hover:bg-amber-100 hover:border-amber-400 cursor-pointer'
-                    : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                  }
-                `}
-              >
-                <span className="text-2xl shrink-0 mt-0.5">{data.emoji}</span>
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-amber-900 text-sm">{data.name}</h3>
-                  <p className="text-xs text-amber-600">{data.description}</p>
-                  <p className="text-xs text-amber-800 font-medium mt-1">
-                    <NumberDisplay value={data.cost} /> {costEmoji}
-                  </p>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {purchased.length > 0 && (
-        <div className="border-t border-amber-100 pt-3">
-          <p className="text-xs text-amber-500 mb-2">Achetees</p>
-          <div className="flex flex-wrap gap-2">
-            {purchased.map((id) => {
-              const uid = id as string
-              const data = bundle.upgrades[uid]
-              if (!data) return null
-              return (
-                <span
-                  key={uid}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs"
-                  title={`${data.name} -- ${data.description}`}
-                >
-                  {data.emoji} {data.name}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </>
-  )
+interface UpgradeItem {
+  key: string
+  emoji: string
+  name: string
+  description: string
+  subtitle?: string
+  cost: Decimal
+  costEmoji: string
+  badge?: typeof CATEGORY_BADGE[string]
+  dynamicLabel?: string | null
+  affordable: boolean
+  purchased: boolean
+  onBuy: () => unknown
 }
 
-// ─── Global synergy upgrades section ────────────────────────────
+// ─── Main panel ─────────────────────────────────────────────────
 
-function GlobalSynergyUpgrades() {
-  const upgrades = useUpgradeStore((state) => state.upgrades)
-  const buyUpgrade = useUpgradeStore((state) => state.buyUpgrade)
-  const globalResources = useResourceStore((state) => state.globalResources)
-  const productResources = useResourceStore((state) => state.productResources)
-  const buildings = useBuildingStore((state) => state.buildings)
-  const canAfford = useResourceStore((state) => state.canAfford)
+export function UpgradePanel() {
+  const { bundle } = useProduct()
+  const upgrades = useUpgradeStore((s) => s.upgrades)
+  const buyUpgrade = useUpgradeStore((s) => s.buyUpgrade)
+  const globalResources = useResourceStore((s) => s.globalResources)
+  const productResources = useResourceStore((s) => s.productResources)
+  const buildings = useBuildingStore((s) => s.buildings)
+  const canAfford = useResourceStore((s) => s.canAfford)
   const totalBuildingCount = useSynergyStore((s) => s.totalBuildingCount)
   const totalUpgradeCount = useSynergyStore((s) => s.totalUpgradeCount)
+  const supplierUpgradeStates = useSupplierStore((s) => s.supplierUpgrades)
+  const buySupplierUpgrade = useSupplierStore((s) => s.buySupplierUpgrade)
 
   // Merge resources
   const allResources: Record<string, Resource> = { ...globalResources }
@@ -197,220 +109,158 @@ function GlobalSynergyUpgrades() {
     Object.assign(allBuildings, productBuildings)
   }
 
-  // Available synergy upgrades (visible + not purchased)
-  const available = SYNERGY_UPGRADE_ORDER.filter((id) => {
+  // ── 1. Product upgrades ──
+  const productItems: UpgradeItem[] = bundle.upgradeOrder.map((id): UpgradeItem | null => {
     const uid = id as string
-    const upgrade = upgrades[uid]
-    if (!upgrade || upgrade.purchased) return false
-    return isUpgradeVisible(uid, allResources, allBuildings, upgrades)
-  })
+    const data = bundle.upgrades[uid]
+    const state = upgrades[uid]
+    if (!data || !state) return null
+    const visible = state.purchased || isUpgradeVisible(uid, allResources, allBuildings, upgrades)
+    if (!visible) return null
+    return {
+      key: uid,
+      emoji: data.emoji,
+      name: data.name,
+      description: data.description,
+      cost: data.cost,
+      costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
+      affordable: canAfford(data.costResource, data.cost),
+      purchased: state.purchased,
+      onBuy: () => buyUpgrade(id as UpgradeId),
+    }
+  }).filter((x): x is UpgradeItem => x !== null)
 
-  // Purchased synergy upgrades
-  const purchased = SYNERGY_UPGRADE_ORDER.filter((id) => {
+  // ── 2. Supplier upgrades ──
+  const supplierItems: UpgradeItem[] = (bundle.supplierUpgradeOrder ?? []).map((id): UpgradeItem | null => {
     const uid = id as string
-    return upgrades[uid]?.purchased
-  })
+    const data = ALL_SUPPLIER_UPGRADES[uid]
+    const state = supplierUpgradeStates[uid]
+    if (!data || !state) return null
+    const supplierData = ALL_SUPPLIERS[data.targetSupplier as string]
+    return {
+      key: uid,
+      emoji: data.emoji,
+      name: data.name,
+      description: data.description,
+      subtitle: supplierData?.name,
+      cost: data.cost,
+      costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '',
+      badge: CATEGORY_BADGE.supplier,
+      affordable: canAfford(data.costResource, data.cost),
+      purchased: state.purchased,
+      onBuy: () => buySupplierUpgrade(data.id as SupplierUpgradeId),
+    }
+  }).filter((x): x is UpgradeItem => x !== null)
+
+  // ── 3. Synergy upgrades ──
+  const synergyItems: UpgradeItem[] = SYNERGY_UPGRADE_ORDER.map((id): UpgradeItem | null => {
+    const uid = id as string
+    const data = SYNERGY_UPGRADES[uid]
+    const state = upgrades[uid]
+    if (!data || !state) return null
+    const visible = state.purchased || isUpgradeVisible(uid, allResources, allBuildings, upgrades)
+    if (!visible) return null
+    const category = data.category ?? 'synergy'
+    return {
+      key: uid,
+      emoji: data.emoji,
+      name: data.name,
+      description: data.description,
+      cost: data.cost,
+      costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
+      badge: CATEGORY_BADGE[category],
+      dynamicLabel: computeDynamicLabel(data, allBuildings, totalBuildingCount, totalUpgradeCount),
+      affordable: canAfford(data.costResource, data.cost),
+      purchased: state.purchased,
+      onBuy: () => buyUpgrade(id as UpgradeId),
+    }
+  }).filter((x): x is UpgradeItem => x !== null)
+
+  // ── Merge all ──
+  const allItems = [...productItems, ...supplierItems, ...synergyItems]
+  const available = allItems.filter((i) => !i.purchased)
+  const purchased = allItems.filter((i) => i.purchased)
 
   if (available.length === 0 && purchased.length === 0) return null
 
-  return (
-    <div className="mt-4 pt-4 border-t border-amber-200">
-      <h3 className="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-1.5">
-        <span>🔗</span> Ameliorations de synergie
-      </h3>
-
-      {available.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-          {available.map((id) => {
-            const uid = id as string
-            const data = SYNERGY_UPGRADES[uid]
-            if (!data) return null
-            const affordable = canAfford(data.costResource, data.cost)
-            const costEmoji = ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙'
-            const category = data.category ?? 'synergy'
-            const badge = CATEGORY_BADGE[category]
-            const borderColor = CATEGORY_BORDER[category] ?? 'border-amber-300'
-
-            // Dynamic label for upgrades that show scaling values
-            const dynamicLabel = computeDynamicLabel(data, allBuildings, totalBuildingCount, totalUpgradeCount)
-
-            return (
-              <button
-                key={uid}
-                onClick={() => buyUpgrade(id as UpgradeId)}
-                disabled={!affordable}
-                className={`
-                  flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all
-                  ${affordable
-                    ? `${borderColor} bg-white hover:bg-amber-50 cursor-pointer`
-                    : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                  }
-                `}
-              >
-                <span className="text-2xl shrink-0 mt-0.5">{data.emoji}</span>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-amber-900 text-sm">{data.name}</h3>
-                    {badge && (
-                      <span className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border ${badge.bg} ${badge.text}`}>
-                        {badge.label}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-amber-600">{data.description}</p>
-                  {dynamicLabel && (
-                    <p className="text-xs text-green-700 font-medium mt-0.5">
-                      Actuellement : {dynamicLabel}
-                    </p>
-                  )}
-                  <p className="text-xs text-amber-800 font-medium mt-1">
-                    <NumberDisplay value={data.cost} /> {costEmoji}
-                  </p>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {purchased.length > 0 && (
-        <div className="border-t border-amber-100 pt-3">
-          <p className="text-xs text-amber-500 mb-2">Achetees</p>
-          <div className="flex flex-wrap gap-2">
-            {purchased.map((id) => {
-              const uid = id as string
-              const data = SYNERGY_UPGRADES[uid]
-              if (!data) return null
-              const category = data.category ?? 'synergy'
-              const badge = CATEGORY_BADGE[category]
-
-              // Dynamic label for purchased upgrades
-              const dynamicLabel = computeDynamicLabel(data, allBuildings, totalBuildingCount, totalUpgradeCount)
-
-              return (
-                <span
-                  key={uid}
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${badge?.bg ?? 'bg-amber-100'} ${badge?.text ?? 'text-amber-800'}`}
-                  title={`${data.name} -- ${data.description}${dynamicLabel ? ` (${dynamicLabel})` : ''}`}
-                >
-                  {data.emoji} {data.name}
-                  {dynamicLabel && (
-                    <span className="text-green-700 font-medium ml-1">({dynamicLabel})</span>
-                  )}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Supplier upgrades section ──────────────────────────────────
-
-function SupplierUpgradesSection() {
-  const { bundle } = useProduct()
-  const upgradeStates = useSupplierStore((s) => s.supplierUpgrades)
-  const buyUpgrade = useSupplierStore((s) => s.buySupplierUpgrade)
-  const canAfford = useResourceStore((s) => s.canAfford)
-
-  if (!bundle.supplierUpgradeOrder || bundle.supplierUpgradeOrder.length === 0) return null
-
-  const available = bundle.supplierUpgradeOrder.filter((id) => {
-    const state = upgradeStates[id as string]
-    return state && !state.purchased
-  })
-
-  const purchased = bundle.supplierUpgradeOrder.filter((id) => {
-    return upgradeStates[id as string]?.purchased
-  })
-
-  if (available.length === 0 && purchased.length === 0) return null
-
-  return (
-    <div className="mt-4 pt-4 border-t border-amber-200">
-      <h3 className="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-1.5">
-        <span>🚚</span> Ameliorations fournisseurs
-      </h3>
-
-      {available.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-          {available.map((id) => {
-            const uid = id as string
-            const data = ALL_SUPPLIER_UPGRADES[uid]
-            if (!data) return null
-            const affordable = canAfford(data.costResource, data.cost)
-            const costRes = ALL_RESOURCES[data.costResource as string]
-            const costEmoji = costRes?.emoji ?? ''
-            const supplierData = ALL_SUPPLIERS[data.targetSupplier as string]
-            const supplierName = supplierData?.name ?? data.targetSupplier
-
-            return (
-              <button
-                key={uid}
-                onClick={() => buyUpgrade(data.id as SupplierUpgradeId)}
-                disabled={!affordable}
-                className={`
-                  flex items-start gap-3 p-3 rounded-lg border text-left transition-all
-                  ${affordable
-                    ? 'border-amber-300 bg-amber-50 hover:bg-amber-100 hover:border-amber-400 cursor-pointer'
-                    : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                  }
-                `}
-              >
-                <span className="text-2xl shrink-0 mt-0.5">{data.emoji}</span>
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-amber-900 text-sm">{data.name}</h3>
-                  <p className="text-xs text-amber-600">{data.description}</p>
-                  <p className="text-[10px] text-amber-400">Cible : {supplierName}</p>
-                  <p className="text-xs text-amber-800 font-medium mt-1">
-                    <NumberDisplay value={data.cost} /> {costEmoji}
-                  </p>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {purchased.length > 0 && (
-        <div className="border-t border-amber-100 pt-3">
-          <p className="text-xs text-amber-500 mb-2">Achetees</p>
-          <div className="flex flex-wrap gap-2">
-            {purchased.map((id) => {
-              const uid = id as string
-              const data = ALL_SUPPLIER_UPGRADES[uid]
-              if (!data) return null
-              return (
-                <span
-                  key={uid}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs"
-                  title={`${data.name} -- ${data.description}`}
-                >
-                  {data.emoji} {data.name}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Main panel ─────────────────────────────────────────────────
-
-export function UpgradePanel() {
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
       <h2 className="text-xl font-semibold text-amber-800 mb-4">
         Ameliorations
       </h2>
 
-      <ProductUpgrades />
-      <SupplierUpgradesSection />
-      <GlobalSynergyUpgrades />
+      {available.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          {available.map((item) => {
+            const borderColor = item.badge?.border ?? 'border-amber-300'
+            const hasBadge = !!item.badge
+            return (
+              <button
+                key={item.key}
+                onClick={item.onBuy}
+                disabled={!item.affordable}
+                className={`
+                  flex items-start gap-3 p-3 rounded-lg text-left transition-all
+                  ${hasBadge ? 'border-2' : 'border'}
+                  ${item.affordable
+                    ? `${borderColor} ${hasBadge ? 'bg-white hover:bg-amber-50' : 'bg-amber-50 hover:bg-amber-100 hover:border-amber-400'} cursor-pointer`
+                    : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                  }
+                `}
+              >
+                <span className="text-2xl shrink-0 mt-0.5">{item.emoji}</span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-amber-900 text-sm">{item.name}</h3>
+                    {item.badge && (
+                      <span className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border ${item.badge.bg} ${item.badge.border} ${item.badge.text}`}>
+                        {item.badge.label}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-amber-600">{item.description}</p>
+                  {item.subtitle && (
+                    <p className="text-[10px] text-amber-400">Cible : {item.subtitle}</p>
+                  )}
+                  {item.dynamicLabel && (
+                    <p className="text-xs text-green-700 font-medium mt-0.5">
+                      Actuellement : {item.dynamicLabel}
+                    </p>
+                  )}
+                  <p className="text-xs text-amber-800 font-medium mt-1">
+                    <NumberDisplay value={item.cost} /> {item.costEmoji}
+                  </p>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {purchased.length > 0 && (
+        <div className="border-t border-amber-100 pt-3">
+          <p className="text-xs text-amber-500 mb-2">Achetees</p>
+          <div className="flex flex-wrap gap-2">
+            {purchased.map((item) => {
+              const pillBg = item.badge
+                ? `${item.badge.bg} ${item.badge.text} border ${item.badge.border}`
+                : 'bg-amber-100 text-amber-800'
+              return (
+                <span
+                  key={item.key}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${pillBg}`}
+                  title={`${item.name} -- ${item.description}`}
+                >
+                  {item.emoji} {item.name}
+                  {item.dynamicLabel && (
+                    <span className="text-green-700 font-medium ml-1">({item.dynamicLabel})</span>
+                  )}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
