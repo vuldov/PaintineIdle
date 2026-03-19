@@ -286,14 +286,14 @@ const suppliers: Record<string, SupplierData> = {
     id: BEURRIER_ARTISANAL, name: 'Beurrier artisanal', emoji: '🧈',
     description: 'Petit producteur local de beurre frais',
     producedResource: BEURRE,
-    baseMaxRate: new Decimal(2), baseCostPerSecond: new Decimal(5),
+    baseMaxRate: new Decimal(2), baseCostPerSecond: new Decimal(0.4),
     contractCost: new Decimal(50), scope: 'croissants',
   },
   [MOULIN_A_FARINE as string]: {
     id: MOULIN_A_FARINE, name: 'Moulin a farine', emoji: '🌾',
     description: 'Moulin traditionnel produisant de la farine de qualite',
     producedResource: FARINE,
-    baseMaxRate: new Decimal(3), baseCostPerSecond: new Decimal(8),
+    baseMaxRate: new Decimal(3), baseCostPerSecond: new Decimal(0.6),
     contractCost: new Decimal(80), scope: 'croissants',
   },
 }
