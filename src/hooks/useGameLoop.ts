@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react'
 import Decimal from 'decimal.js'
-import type { ResourceId, ProductId, Upgrade } from '@/types'
+import type { ResourceId, ProductId, Upgrade, Building } from '@/types'
 import { PANTINS_COINS_ID } from '@/types'
 import { calcTotalProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
+import type { TotalProductionResult } from '@/mechanics/productionMechanics'
 import { calcSynergyBonuses } from '@/mechanics/synergyMechanics'
 import type { SynergyCalcInput } from '@/mechanics/synergyMechanics'
 import { COMBO_DEFINITIONS } from '@/lib/synergies/combos'
@@ -14,6 +15,7 @@ import { useProductStore } from '@/store/productStore'
 import { useSynergyStore } from '@/store/synergyStore'
 import { useSupplierStore } from '@/store/supplierStore'
 import { calcSupplierTick } from '@/mechanics/supplierMechanics'
+import type { SupplierTickResult } from '@/mechanics/supplierMechanics'
 import { ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES } from '@/lib/products/registry'
 import {
   PRODUCT_REGISTRY,
@@ -23,15 +25,13 @@ import {
   getAllBuildingUnlockThresholds,
 } from '@/lib/products/registry'
 
-/**
- * Check and unlock buildings and resources.
- */
-function checkUnlocks() {
+// ─── Unlock checks ──────────────────────────────────────────────
+
+function checkBuildingAndResourceUnlocks() {
   const resourceStore = useResourceStore.getState()
   const allResources = resourceStore.getAllResources()
   const buildingStore = useBuildingStore.getState()
 
-  // Building unlocks (all products)
   const thresholds = getAllBuildingUnlockThresholds()
   const allBuildings = buildingStore.getAllBuildings()
 
@@ -44,7 +44,6 @@ function checkUnlocks() {
     }
   }
 
-  // Shared resource unlocks
   for (const [resourceId, condition] of Object.entries(SHARED_RESOURCE_UNLOCK_THRESHOLDS)) {
     if (!condition) continue
     const res = allResources[resourceId]
@@ -56,9 +55,6 @@ function checkUnlocks() {
   }
 }
 
-/**
- * Check if new products should be unlocked based on pantins_coins totalEarned.
- */
 function checkProductUnlocks() {
   const resourceStore = useResourceStore.getState()
   const coinsResource = resourceStore.globalResources[PANTINS_COINS_ID as string]
@@ -77,9 +73,76 @@ function checkProductUnlocks() {
   }
 }
 
+// ─── Active product detection ───────────────────────────────────
+
+function getActiveProductIds(
+  unlockedProducts: string[],
+  buildings: Record<ProductId, Record<string, Building>>,
+): ProductId[] {
+  const result: ProductId[] = []
+  for (const productId of unlockedProducts) {
+    const productBuildings = buildings[productId as ProductId] ?? {}
+    const bundle = PRODUCT_REGISTRY[productId as ProductId]
+    if (!bundle) continue
+    for (const [bid, building] of Object.entries(productBuildings)) {
+      if (building.count <= 0) continue
+      const data = bundle.buildings[bid]
+      if (data && (data.pipelineRole === 'cuisson' || data.pipelineRole === 'full_pipeline')) {
+        result.push(productId as ProductId)
+        break
+      }
+    }
+  }
+  return result
+}
+
+// ─── Per-second display ─────────────────────────────────────────
+
 /**
- * Game loop using requestAnimationFrame.
+ * Build the per-second rates shown in the UI.
+ *
+ * - Positive rates → real (post-clamping/throttle) so the player sees actual gains
+ * - Negative rates from buildings → theoretical so the player sees WHY a resource stays at 0
+ * - pantins_coins → always real (coin drain is not a pipeline constraint)
+ * - Supplier rates → always real (player controls the slider directly)
  */
+function buildDisplayPerSecond(
+  totalResult: TotalProductionResult,
+  buildingDeltas: Record<string, Decimal>,
+  supplierResult: SupplierTickResult,
+  delta: number,
+): Record<string, Decimal> {
+  if (delta <= 0) return {}
+
+  const display: Record<string, Decimal> = {}
+
+  // Theoretical net from buildings (pipeline consumption)
+  const buildingNet = totalResult.totalNet
+
+  // Real per-second from actual building deltas
+  const realBuildingPerSec: Record<string, Decimal> = {}
+  for (const [rid, d] of Object.entries(buildingDeltas)) {
+    realBuildingPerSec[rid] = d.div(delta)
+  }
+
+  // Merge: real for positive, theoretical for negative (except coins)
+  const buildingKeys = new Set([...Object.keys(buildingNet), ...Object.keys(realBuildingPerSec)])
+  for (const rid of buildingKeys) {
+    const theoretical = buildingNet[rid] ?? new Decimal(0)
+    const real = realBuildingPerSec[rid] ?? new Decimal(0)
+    display[rid] = (theoretical.isNeg() && rid !== 'pantins_coins') ? theoretical : real
+  }
+
+  // Suppliers: always real (post-throttle)
+  for (const [rid, d] of Object.entries(supplierResult.resourceDeltas)) {
+    display[rid] = (display[rid] ?? new Decimal(0)).add(d.div(delta))
+  }
+
+  return display
+}
+
+// ─── Game loop ──────────────────────────────────────────────────
+
 export function useGameLoop() {
   const lastTimeRef = useRef<number>(0)
   const rafRef = useRef<number>(0)
@@ -95,116 +158,74 @@ export function useGameLoop() {
     const delta = Math.min(rawDelta, 1)
     lastTimeRef.current = timestamp
 
-    // 1. Tick all active crafting tasks
+    // 1. Crafting
     useCraftingStore.getState().tickCrafting(delta)
 
-    // 2. Calculate production for all unlocked products
+    // 2. Production (synergies → production calc → clamped deltas)
     const { unlockedProducts } = useProductStore.getState()
     const buildingStore = useBuildingStore.getState()
     const { upgrades } = useUpgradeStore.getState()
     const resourceStore = useResourceStore.getState()
-
-    // Compute synergy bonuses
     const allBuildings = buildingStore.getAllBuildings()
     const allResources = resourceStore.getAllResources()
 
-    // Determine active products (products with at least 1 building in cuisson or full_pipeline)
-    const activeProductIds: ProductId[] = []
-    for (const productId of unlockedProducts) {
-      const productBuildings = buildingStore.buildings[productId as ProductId] ?? {}
-      const bundle = PRODUCT_REGISTRY[productId as ProductId]
-      if (!bundle) continue
-      let isActive = false
-      for (const [bid, building] of Object.entries(productBuildings)) {
-        if (building.count <= 0) continue
-        const data = bundle.buildings[bid]
-        if (data && (data.pipelineRole === 'cuisson' || data.pipelineRole === 'full_pipeline')) {
-          isActive = true
-          break
-        }
-      }
-      if (isActive) activeProductIds.push(productId as ProductId)
-    }
-
-    // Gather purchased upgrades
+    const activeProductIds = getActiveProductIds(unlockedProducts, buildingStore.buildings)
     const purchasedUpgrades: Upgrade[] = Object.values(upgrades).filter(u => u.purchased)
 
-    // Count totals for scaling upgrades
     let totalBuildingCount = 0
     for (const building of Object.values(allBuildings)) {
       totalBuildingCount += building.count
     }
-    const totalUpgradeCount = purchasedUpgrades.length
 
-    // Gather resource totals for cross-product upgrades
     const resourceTotals: Record<string, Decimal> = {}
     for (const [rid, res] of Object.entries(allResources)) {
       resourceTotals[rid] = res.totalEarned
     }
 
-    const synergyInput: SynergyCalcInput = {
+    const synergyBonuses = calcSynergyBonuses({
       allBuildings,
       allBuildingData: ALL_BUILDING_DATA,
       purchasedUpgrades,
       activeProductIds,
       comboDefinitions: COMBO_DEFINITIONS,
       totalBuildingCount,
-      totalUpgradeCount,
+      totalUpgradeCount: purchasedUpgrades.length,
       resourceTotals,
-    }
+    })
 
-    const synergyBonuses = calcSynergyBonuses(synergyInput)
-
-    // Update synergy store for UI components
     useSynergyStore.getState().updateBonuses(
       synergyBonuses,
       activeProductIds,
       totalBuildingCount,
-      totalUpgradeCount,
+      purchasedUpgrades.length,
     )
 
     const totalResult = calcTotalProduction(
-      unlockedProducts,
-      PRODUCT_REGISTRY,
-      buildingStore.buildings,
-      upgrades,
-      synergyBonuses,
+      unlockedProducts, PRODUCT_REGISTRY, buildingStore.buildings, upgrades, synergyBonuses,
     )
 
-    // 3. Apply clamped deltas
-    const deltas = calcClampedDelta(totalResult, allResources, delta)
+    const buildingDeltas = calcClampedDelta(totalResult, allResources, delta)
+    resourceStore.applyDeltas(buildingDeltas)
 
-    resourceStore.applyDeltas(deltas)
-
-    // 4. Supplier tick — runs after production so coins earned this tick are available
+    // 3. Suppliers (runs after production so earned coins are available)
     const { suppliers, supplierUpgrades: supplierUpgradeStates } = useSupplierStore.getState()
     const coinsAfterProduction = useResourceStore.getState().globalResources['pantins_coins']
     const availableCoins = coinsAfterProduction ? coinsAfterProduction.amount : new Decimal(0)
 
-    const supplierResult = calcSupplierTick(suppliers, ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES, supplierUpgradeStates, availableCoins, delta)
+    const supplierResult = calcSupplierTick(
+      suppliers, ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES, supplierUpgradeStates, availableCoins, delta,
+    )
     if (Object.keys(supplierResult.resourceDeltas).length > 0) {
       useResourceStore.getState().applyDeltas(supplierResult.resourceDeltas)
     }
 
-    // Merge supplier per-second rates into display
-    const netWithSuppliers = { ...totalResult.totalNet }
-    for (const entry of supplierResult.entries) {
-      const effRate = supplierResult.effectiveRates[entry.supplierId]
-      const state = suppliers[entry.supplierId]
-      if (!effRate || !state) continue
-      const ratePerSec = effRate.maxRate.mul(state.ratePercent).div(100)
-      const resId = entry.producedResource
-      netWithSuppliers[resId] = (netWithSuppliers[resId] ?? new Decimal(0)).add(ratePerSec)
-    }
-    if (supplierResult.totalCostPerSecond.gt(0)) {
-      const coinsId = 'pantins_coins'
-      netWithSuppliers[coinsId] = (netWithSuppliers[coinsId] ?? new Decimal(0)).sub(supplierResult.totalCostPerSecond)
-    }
+    // 4. Display per-second rates
+    resourceStore.updatePerSecond(
+      buildDisplayPerSecond(totalResult, buildingDeltas, supplierResult, delta),
+    )
 
-    resourceStore.updatePerSecond(netWithSuppliers)
-
-    // 5. Check unlocks
-    checkUnlocks()
+    // 5. Unlocks
+    checkBuildingAndResourceUnlocks()
     checkProductUnlocks()
 
     rafRef.current = requestAnimationFrame(tick)

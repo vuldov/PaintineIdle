@@ -43,7 +43,12 @@ export function formatNumber(n: Decimal): string {
     return '0'
   }
 
-  // Nombres très petits (< 1)
+  // Nombres très petits (< 0.01) → afficher 0
+  if (n.lt(new Decimal('0.01'))) {
+    return '0'
+  }
+
+  // Nombres < 1
   if (n.lt(1)) {
     return n.toFixed(2).replace('.', ',')
   }

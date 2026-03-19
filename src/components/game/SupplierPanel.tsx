@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js'
 import type { SupplierData, SupplierState } from '@/types'
 import { PANTINS_COINS_ID } from '@/types'
 import { useProduct } from './ProductContext'
@@ -16,7 +17,10 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
   const buyContract = useSupplierStore((s) => s.buyContract)
   const toggleSupplier = useSupplierStore((s) => s.toggleSupplier)
   const setRate = useSupplierStore((s) => s.setRate)
-  const canAfford = useResourceStore((s) => s.canAfford)
+  const coinsAmount = useResourceStore((s) => {
+    const coins = s.globalResources[PANTINS_COINS_ID as string]
+    return coins ? coins.amount : new Decimal(0)
+  })
 
   if (!data || !state) return null
 
@@ -29,7 +33,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
 
   // ── Locked state ──
   if (!state.unlocked) {
-    const affordable = canAfford(PANTINS_COINS_ID, data.contractCost)
+    const affordable = coinsAmount.gte(data.contractCost)
     return (
       <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 shadow-sm opacity-80">
         <div className="flex items-center gap-3 mb-2">
