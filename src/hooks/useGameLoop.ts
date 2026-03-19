@@ -140,11 +140,89 @@ function buildDisplayPerSecond(
   return display
 }
 
+// ─── Core tick logic (shared by RAF and background interval) ────
+
+const BACKGROUND_INTERVAL_MS = 1000
+
+function executeTick(delta: number) {
+  // 1. Crafting
+  useCraftingStore.getState().tickCrafting(delta)
+
+  // 2. Production (synergies → production calc → clamped deltas)
+  const { unlockedProducts } = useProductStore.getState()
+  const buildingStore = useBuildingStore.getState()
+  const { upgrades } = useUpgradeStore.getState()
+  const resourceStore = useResourceStore.getState()
+  const allBuildings = buildingStore.getAllBuildings()
+  const allResources = resourceStore.getAllResources()
+
+  const activeProductIds = getActiveProductIds(unlockedProducts, buildingStore.buildings)
+  const purchasedUpgrades: Upgrade[] = Object.values(upgrades).filter(u => u.purchased)
+
+  let totalBuildingCount = 0
+  for (const building of Object.values(allBuildings)) {
+    totalBuildingCount += building.count
+  }
+
+  const resourceTotals: Record<string, Decimal> = {}
+  for (const [rid, res] of Object.entries(allResources)) {
+    resourceTotals[rid] = res.totalEarned
+  }
+
+  const synergyBonuses = calcSynergyBonuses({
+    allBuildings,
+    allBuildingData: ALL_BUILDING_DATA,
+    purchasedUpgrades,
+    activeProductIds,
+    comboDefinitions: COMBO_DEFINITIONS,
+    totalBuildingCount,
+    totalUpgradeCount: purchasedUpgrades.length,
+    resourceTotals,
+  })
+
+  useSynergyStore.getState().updateBonuses(
+    synergyBonuses,
+    activeProductIds,
+    totalBuildingCount,
+    purchasedUpgrades.length,
+  )
+
+  const totalResult = calcTotalProduction(
+    unlockedProducts, PRODUCT_REGISTRY, buildingStore.buildings, upgrades, synergyBonuses,
+  )
+
+  const buildingDeltas = calcClampedDelta(totalResult, allResources, delta)
+  resourceStore.applyDeltas(buildingDeltas)
+
+  // 3. Suppliers (runs after production so earned coins are available)
+  const { suppliers, supplierUpgrades: supplierUpgradeStates } = useSupplierStore.getState()
+  const coinsAfterProduction = useResourceStore.getState().globalResources['pantins_coins']
+  const availableCoins = coinsAfterProduction ? coinsAfterProduction.amount : new Decimal(0)
+
+  const supplierResult = calcSupplierTick(
+    suppliers, ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES, supplierUpgradeStates, availableCoins, delta,
+  )
+  if (Object.keys(supplierResult.resourceDeltas).length > 0) {
+    useResourceStore.getState().applyDeltas(supplierResult.resourceDeltas)
+  }
+
+  // 4. Display per-second rates
+  resourceStore.updatePerSecond(
+    buildDisplayPerSecond(totalResult, buildingDeltas, supplierResult, delta),
+  )
+
+  // 5. Unlocks
+  checkBuildingAndResourceUnlocks()
+  checkProductUnlocks()
+}
+
 // ─── Game loop ──────────────────────────────────────────────────
 
 export function useGameLoop() {
   const lastTimeRef = useRef<number>(0)
   const rafRef = useRef<number>(0)
+  const backgroundIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastBackgroundTimeRef = useRef<number>(0)
 
   const tick = useCallback((timestamp: number) => {
     if (lastTimeRef.current === 0) {
@@ -157,81 +235,55 @@ export function useGameLoop() {
     const delta = Math.min(rawDelta, 1)
     lastTimeRef.current = timestamp
 
-    // 1. Crafting
-    useCraftingStore.getState().tickCrafting(delta)
-
-    // 2. Production (synergies → production calc → clamped deltas)
-    const { unlockedProducts } = useProductStore.getState()
-    const buildingStore = useBuildingStore.getState()
-    const { upgrades } = useUpgradeStore.getState()
-    const resourceStore = useResourceStore.getState()
-    const allBuildings = buildingStore.getAllBuildings()
-    const allResources = resourceStore.getAllResources()
-
-    const activeProductIds = getActiveProductIds(unlockedProducts, buildingStore.buildings)
-    const purchasedUpgrades: Upgrade[] = Object.values(upgrades).filter(u => u.purchased)
-
-    let totalBuildingCount = 0
-    for (const building of Object.values(allBuildings)) {
-      totalBuildingCount += building.count
-    }
-
-    const resourceTotals: Record<string, Decimal> = {}
-    for (const [rid, res] of Object.entries(allResources)) {
-      resourceTotals[rid] = res.totalEarned
-    }
-
-    const synergyBonuses = calcSynergyBonuses({
-      allBuildings,
-      allBuildingData: ALL_BUILDING_DATA,
-      purchasedUpgrades,
-      activeProductIds,
-      comboDefinitions: COMBO_DEFINITIONS,
-      totalBuildingCount,
-      totalUpgradeCount: purchasedUpgrades.length,
-      resourceTotals,
-    })
-
-    useSynergyStore.getState().updateBonuses(
-      synergyBonuses,
-      activeProductIds,
-      totalBuildingCount,
-      purchasedUpgrades.length,
-    )
-
-    const totalResult = calcTotalProduction(
-      unlockedProducts, PRODUCT_REGISTRY, buildingStore.buildings, upgrades, synergyBonuses,
-    )
-
-    const buildingDeltas = calcClampedDelta(totalResult, allResources, delta)
-    resourceStore.applyDeltas(buildingDeltas)
-
-    // 3. Suppliers (runs after production so earned coins are available)
-    const { suppliers, supplierUpgrades: supplierUpgradeStates } = useSupplierStore.getState()
-    const coinsAfterProduction = useResourceStore.getState().globalResources['pantins_coins']
-    const availableCoins = coinsAfterProduction ? coinsAfterProduction.amount : new Decimal(0)
-
-    const supplierResult = calcSupplierTick(
-      suppliers, ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES, supplierUpgradeStates, availableCoins, delta,
-    )
-    if (Object.keys(supplierResult.resourceDeltas).length > 0) {
-      useResourceStore.getState().applyDeltas(supplierResult.resourceDeltas)
-    }
-
-    // 4. Display per-second rates
-    resourceStore.updatePerSecond(
-      buildDisplayPerSecond(totalResult, buildingDeltas, supplierResult, delta),
-    )
-
-    // 5. Unlocks
-    checkBuildingAndResourceUnlocks()
-    checkProductUnlocks()
+    executeTick(delta)
 
     rafRef.current = requestAnimationFrame(tick)
   }, [])
 
+  // Start background interval (called when tab becomes hidden)
+  const startBackground = useCallback(() => {
+    if (backgroundIntervalRef.current) return
+    cancelAnimationFrame(rafRef.current)
+    lastBackgroundTimeRef.current = Date.now()
+
+    backgroundIntervalRef.current = setInterval(() => {
+      const now = Date.now()
+      const rawDelta = (now - lastBackgroundTimeRef.current) / 1000
+      const delta = Math.min(rawDelta, 2) // allow slightly larger ticks in background
+      lastBackgroundTimeRef.current = now
+      executeTick(delta)
+    }, BACKGROUND_INTERVAL_MS)
+  }, [])
+
+  // Stop background interval, resume RAF (called when tab becomes visible)
+  const stopBackground = useCallback(() => {
+    if (!backgroundIntervalRef.current) return
+    clearInterval(backgroundIntervalRef.current)
+    backgroundIntervalRef.current = null
+
+    // Reset RAF timing to avoid a large delta jump
+    lastTimeRef.current = 0
+    rafRef.current = requestAnimationFrame(tick)
+  }, [tick])
+
   useEffect(() => {
     rafRef.current = requestAnimationFrame(tick)
-    return () => { cancelAnimationFrame(rafRef.current) }
-  }, [tick])
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        startBackground()
+      } else {
+        stopBackground()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+      if (backgroundIntervalRef.current) {
+        clearInterval(backgroundIntervalRef.current)
+      }
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [tick, startBackground, stopBackground])
 }
