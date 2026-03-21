@@ -40,7 +40,7 @@ export interface SynergyCalcInput {
   allBuildingData: Record<string, BuildingData>
   /** All purchased upgrades (already filtered to only purchased ones) */
   purchasedUpgrades: Upgrade[]
-  /** Products that are actively producing (have at least 1 building with count > 0 in cuisson or full_pipeline) */
+  /** Products that are actively producing (have at least 1 building with count > 0 in cuisson) */
   activeProductIds: ProductId[]
   /** Combo definitions to evaluate */
   comboDefinitions: ComboBoulangerie[]

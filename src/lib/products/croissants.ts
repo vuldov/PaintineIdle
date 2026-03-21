@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js'
 import { resourceId, buildingId, craftingRecipeId, upgradeId, supplierId, supplierUpgradeId, PANTINS_COINS_ID } from '@/types'
 import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig, SupplierData, SupplierUpgradeData } from '@/types'
+import { generateMilestones } from '@/lib/milestones/generateMilestones'
 
 // ─── Resource IDs ──────────────────────────────────────────────
 const BEURRE = resourceId('beurre')
@@ -11,12 +12,7 @@ const CROISSANTS = resourceId('croissants')
 // ─── Building IDs ──────────────────────────────────────────────
 const FOURNIL = buildingId('fournil')
 const PETRIN = buildingId('petrin')
-const FOUR_PRO = buildingId('four_pro')
 const BOUTIQUE = buildingId('boutique')
-
-const USINE = buildingId('usine')
-const FRANCHISE = buildingId('franchise')
-const EMPIRE = buildingId('empire')
 
 // ─── Resources ─────────────────────────────────────────────────
 const resources: Record<string, ResourceData> = {
@@ -66,17 +62,6 @@ const buildings: Record<string, BuildingData> = {
       targetRecipe: 'petrissage_croissant', description: '+2% vitesse pétrissage croissant par pétrin',
     },
   },
-  [FOUR_PRO as string]: {
-    id: FOUR_PRO, name: 'Four professionnel', emoji: '🔥',
-    description: 'Cuisson rapide et de qualité supérieure',
-    baseCost: new Decimal(200), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(2),
-    producedResource: CROISSANTS, pipelineRole: 'cuisson', scope: 'croissants',
-    aura: {
-      effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.03),
-      targetRecipe: 'cuisson_croissant', description: '+3% vitesse cuisson croissant par four pro',
-    },
-  },
   [BOUTIQUE as string]: {
     id: BOUTIQUE, name: 'Boutique', emoji: '🏪',
     description: 'Vend automatiquement les croissants',
@@ -86,39 +71,6 @@ const buildings: Record<string, BuildingData> = {
     aura: {
       effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.05),
       targetProduct: 'croissants', description: '+5% prix de vente croissants par boutique',
-    },
-  },
-[USINE as string]: {
-    id: USINE, name: 'Usine viennoiserie', emoji: '🏭',
-    description: 'Production industrielle : pétrit, cuit et vend',
-    baseCost: new Decimal(10_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(5),
-    producedResource: CROISSANTS, pipelineRole: 'full_pipeline', scope: 'croissants',
-    aura: {
-      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.01),
-      description: '+1% production globale par usine',
-    },
-  },
-  [FRANCHISE as string]: {
-    id: FRANCHISE, name: 'Franchise nationale', emoji: '🗺️',
-    description: 'Réseau de vente dans toute la France',
-    baseCost: new Decimal(50_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(10),
-    producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'croissants',
-    aura: {
-      effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
-      description: '+1% prix de vente tous produits par franchise',
-    },
-  },
-  [EMPIRE as string]: {
-    id: EMPIRE, name: 'Empire mondial', emoji: '🌍',
-    description: 'Domination mondiale de la viennoiserie',
-    baseCost: new Decimal(500_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(50),
-    producedResource: CROISSANTS, pipelineRole: 'full_pipeline', scope: 'croissants',
-    aura: {
-      effectType: 'all_speed_bonus', bonusPerBuilding: new Decimal(0.005),
-      description: '+0,5% vitesse globale par empire mondial',
     },
   },
 }
@@ -172,6 +124,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PATE_FEUILLETEE, amount: new Decimal(2) },
     durationSeconds: 3,
     scope: 'croissants',
+    linkedBuildingId: PETRIN,
   },
   [CUISSON_CROISSANT as string]: {
     id: CUISSON_CROISSANT, name: 'Cuisson', emoji: '🔥',
@@ -182,6 +135,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: CROISSANTS, amount: new Decimal(3) },
     durationSeconds: 5,
     scope: 'croissants',
+    linkedBuildingId: FOURNIL,
   },
 }
 
@@ -249,14 +203,6 @@ const upgrades: Record<string, UpgradeData> = {
     cost: new Decimal(2_000), costResource: PANTINS_COINS_ID,
     effect: { type: 'sell_multiplier', multiplier: new Decimal(3) },
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(1_000) },
-    scope: 'croissants',
-  },
-  four_turbo: {
-    id: upgradeId('four_turbo'), name: 'Four turbo',
-    description: 'x2 production du four pro', emoji: '🔥',
-    cost: new Decimal(2_000), costResource: PANTINS_COINS_ID,
-    effect: { type: 'building_multiplier', targetBuilding: FOUR_PRO, multiplier: new Decimal(2) },
-    unlockCondition: { type: 'building_count', buildingId: FOUR_PRO, threshold: new Decimal(5) },
     scope: 'croissants',
   },
   vitrine_refrigeree: {
@@ -530,6 +476,18 @@ const supplierUpgradeOrder = [
   supplierUpgradeId('moulin_a_farine_rate_6'),
 ]
 
+// ─── Milestones → Upgrades ─────────────────────────────────────
+
+const milestonesPetrin = generateMilestones(PETRIN, 'petrissage', 'Petrin mecanique', 'croissants', PATE_FEUILLETEE)
+const milestonesFournil = generateMilestones(FOURNIL, 'cuisson', 'Fournil', 'croissants', PATE_FEUILLETEE)
+const milestonesBoutique = generateMilestones(BOUTIQUE, 'vente', 'Boutique', 'croissants', PATE_FEUILLETEE)
+
+const allMilestoneUpgrades: Record<string, UpgradeData> = {
+  ...milestonesPetrin.upgrades,
+  ...milestonesFournil.upgrades,
+  ...milestonesBoutique.upgrades,
+}
+
 // ─── Bundle ────────────────────────────────────────────────────
 
 export const CROISSANTS_BUNDLE: ProductBundle = {
@@ -542,19 +500,15 @@ export const CROISSANTS_BUNDLE: ProductBundle = {
   },
   resources,
   buildings,
-  buildingOrder: [PETRIN, FOURNIL, FOUR_PRO, BOUTIQUE, USINE, FRANCHISE, EMPIRE],
+  buildingOrder: [PETRIN, FOURNIL, BOUTIQUE],
   buildingUnlockThresholds: {
     [PETRIN as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(5) },
     [FOURNIL as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(5) },
-    [FOUR_PRO as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(80) },
     [BOUTIQUE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(200) },
-[USINE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(4_000) },
-    [FRANCHISE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(20_000) },
-    [EMPIRE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(200_000) },
   },
   craftingRecipes,
   craftingOrder: [PETRISSAGE_CROISSANT, CUISSON_CROISSANT],
-  upgrades,
+  upgrades: { ...upgrades, ...allMilestoneUpgrades },
   upgradeOrder: [
     upgradeId('petrissage_rapide'),
     upgradeId('cuisson_rapide'),
@@ -564,10 +518,12 @@ export const CROISSANTS_BUNDLE: ProductBundle = {
     upgradeId('farine_tradition'),
     upgradeId('achat_en_gros'),
     upgradeId('marketing'),
-    upgradeId('four_turbo'),
     upgradeId('vitrine_refrigeree'),
     upgradeId('negociation_fournisseurs'),
-],
+    ...milestonesPetrin.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesFournil.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesBoutique.upgradeOrder.map(id => upgradeId(id)),
+  ],
   suppliers,
   supplierOrder: [BEURRIER_ARTISANAL, MOULIN_A_FARINE],
   supplierUpgrades,
@@ -579,4 +535,9 @@ export const CROISSANTS_BUNDLE: ProductBundle = {
   },
   finishedProductId: CROISSANTS,
   baseSellRate: new Decimal(1),
+  milestones: [
+    ...milestonesPetrin.milestones,
+    ...milestonesFournil.milestones,
+    ...milestonesBoutique.milestones,
+  ],
 }

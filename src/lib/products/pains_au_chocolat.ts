@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js'
 import { resourceId, buildingId, craftingRecipeId, upgradeId, supplierId, supplierUpgradeId, PANTINS_COINS_ID } from '@/types'
 import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig, SupplierData, SupplierUpgradeData } from '@/types'
+import { generateMilestones } from '@/lib/milestones/generateMilestones'
 
 // ─── Resource IDs ──────────────────────────────────────────────
 const BEURRE_DOUX = resourceId('beurre_doux')
@@ -13,13 +14,8 @@ const PAINS_AU_CHOCOLAT = resourceId('pains_au_chocolat')
 // ─── Building IDs ──────────────────────────────────────────────
 const MALAXEUR = buildingId('malaxeur')
 const GARNISSEUR = buildingId('garnisseur')
-const ATELIER_CHOCOLAT = buildingId('atelier_chocolat')
 const FOUR_VENTILE = buildingId('four_ventile')
 const CHOCOLATERIE = buildingId('chocolaterie')
-
-const MANUFACTURE = buildingId('manufacture')
-const CHAINE_BOULANGERE = buildingId('chaine_boulangere')
-const CONSORTIUM_CHOCOLAT = buildingId('consortium_chocolat')
 
 // ─── Resources ─────────────────────────────────────────────────
 const resources: Record<string, ResourceData> = {
@@ -79,17 +75,6 @@ const buildings: Record<string, BuildingData> = {
       targetProduct: 'pains_au_chocolat', description: '+3% production pains au chocolat par garnisseur',
     },
   },
-  [ATELIER_CHOCOLAT as string]: {
-    id: ATELIER_CHOCOLAT, name: 'Atelier chocolat', emoji: '🍫',
-    description: 'Garnissage professionnel a haute cadence',
-    baseCost: new Decimal(500), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(1.5),
-    producedResource: PATON_CHOCOLAT, pipelineRole: 'garnissage', scope: 'pains_au_chocolat',
-    aura: {
-      effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.05),
-      targetResource: 'chocolat_patissier', description: '+5% génération chocolat par atelier chocolat',
-    },
-  },
   [FOUR_VENTILE as string]: {
     id: FOUR_VENTILE, name: 'Four ventile', emoji: '🔥',
     description: 'Cuisson homogene pour des pains au chocolat parfaits',
@@ -110,35 +95,6 @@ const buildings: Record<string, BuildingData> = {
     aura: {
       effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
       description: '+1% prix de vente tous produits par chocolaterie',
-    },
-  },
-[MANUFACTURE as string]: {
-    id: MANUFACTURE, name: 'Manufacture', emoji: '🏭',
-    description: 'Ligne complete : petrit, garnit, cuit et vend',
-    baseCost: new Decimal(30_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(4.5),
-    producedResource: PAINS_AU_CHOCOLAT, pipelineRole: 'full_pipeline', scope: 'pains_au_chocolat',
-    aura: {
-      effectType: 'cross_product_bonus', bonusPerBuilding: new Decimal(0.01),
-      crossProductTarget: 'croissants', description: '+1% production croissants par manufacture',
-    },
-  },
-  [CHAINE_BOULANGERE as string]: {
-    id: CHAINE_BOULANGERE, name: 'Chaine boulangere', emoji: '🗺️',
-    description: 'Reseau de ventes specialisees',
-    baseCost: new Decimal(150_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(9),
-    producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pains_au_chocolat',
-  },
-  [CONSORTIUM_CHOCOLAT as string]: {
-    id: CONSORTIUM_CHOCOLAT, name: 'Consortium chocolat', emoji: '🌍',
-    description: 'Empire mondial du pain au chocolat',
-    baseCost: new Decimal(1_500_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(45),
-    producedResource: PAINS_AU_CHOCOLAT, pipelineRole: 'full_pipeline', scope: 'pains_au_chocolat',
-    aura: {
-      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.005),
-      description: '+0,5% production globale par consortium chocolat',
     },
   },
 }
@@ -207,6 +163,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PATE_LEVEE_FEUILLETEE, amount: new Decimal(2) },
     durationSeconds: 4,
     scope: 'pains_au_chocolat',
+    linkedBuildingId: MALAXEUR,
   },
   [GARNISSAGE_PAC as string]: {
     id: GARNISSAGE_PAC, name: 'Garnissage', emoji: '🍫',
@@ -218,6 +175,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PATON_CHOCOLAT, amount: new Decimal(2) },
     durationSeconds: 3,
     scope: 'pains_au_chocolat',
+    linkedBuildingId: GARNISSEUR,
   },
   [CUISSON_PAC as string]: {
     id: CUISSON_PAC, name: 'Cuisson', emoji: '🔥',
@@ -228,6 +186,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PAINS_AU_CHOCOLAT, amount: new Decimal(3) },
     durationSeconds: 6,
     scope: 'pains_au_chocolat',
+    linkedBuildingId: FOUR_VENTILE,
   },
 }
 
@@ -271,14 +230,6 @@ const upgrades: Record<string, UpgradeData> = {
     cost: new Decimal(500), costResource: PANTINS_COINS_ID,
     effect: { type: 'building_multiplier', targetBuilding: GARNISSEUR, multiplier: new Decimal(2) },
     unlockCondition: { type: 'building_count', buildingId: GARNISSEUR, threshold: new Decimal(5) },
-    scope: 'pains_au_chocolat',
-  },
-  chocolat_suisse: {
-    id: upgradeId('chocolat_suisse'), name: 'Chocolat suisse',
-    description: 'x2 production de l\'atelier chocolat', emoji: '🍫',
-    cost: new Decimal(3_000), costResource: PANTINS_COINS_ID,
-    effect: { type: 'building_multiplier', targetBuilding: ATELIER_CHOCOLAT, multiplier: new Decimal(2) },
-    unlockCondition: { type: 'building_count', buildingId: ATELIER_CHOCOLAT, threshold: new Decimal(5) },
     scope: 'pains_au_chocolat',
   },
   cuisson_parfaite: {
@@ -689,6 +640,20 @@ const supplierUpgradeOrder = [
   supplierUpgradeId('chocolatier_suisse_rate_6'),
 ]
 
+// ─── Milestones → Upgrades ─────────────────────────────────────
+
+const milestonesMalaxeur = generateMilestones(MALAXEUR, 'petrissage', 'Malaxeur', 'pains_au_chocolat', PATE_LEVEE_FEUILLETEE)
+const milestonesGarnisseur = generateMilestones(GARNISSEUR, 'garnissage', 'Garnisseur', 'pains_au_chocolat', PATE_LEVEE_FEUILLETEE)
+const milestonesFourVentile = generateMilestones(FOUR_VENTILE, 'cuisson', 'Four ventile', 'pains_au_chocolat', PATE_LEVEE_FEUILLETEE)
+const milestonesChocolaterie = generateMilestones(CHOCOLATERIE, 'vente', 'Chocolaterie', 'pains_au_chocolat', PATE_LEVEE_FEUILLETEE)
+
+const allPacMilestoneUpgrades: Record<string, UpgradeData> = {
+  ...milestonesMalaxeur.upgrades,
+  ...milestonesGarnisseur.upgrades,
+  ...milestonesFourVentile.upgrades,
+  ...milestonesChocolaterie.upgrades,
+}
+
 // ─── Bundle ────────────────────────────────────────────────────
 
 export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
@@ -701,20 +666,16 @@ export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
   },
   resources,
   buildings,
-  buildingOrder: [MALAXEUR, GARNISSEUR, ATELIER_CHOCOLAT, FOUR_VENTILE, CHOCOLATERIE, MANUFACTURE, CHAINE_BOULANGERE, CONSORTIUM_CHOCOLAT],
+  buildingOrder: [MALAXEUR, GARNISSEUR, FOUR_VENTILE, CHOCOLATERIE],
   buildingUnlockThresholds: {
     [MALAXEUR as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15) },
     [GARNISSEUR as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15) },
-    [ATELIER_CHOCOLAT as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(200) },
     [FOUR_VENTILE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(250) },
     [CHOCOLATERIE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(600) },
-[MANUFACTURE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(12_000) },
-    [CHAINE_BOULANGERE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(60_000) },
-    [CONSORTIUM_CHOCOLAT as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(600_000) },
   },
   craftingRecipes,
   craftingOrder: [PETRISSAGE_PAC, GARNISSAGE_PAC, CUISSON_PAC],
-  upgrades,
+  upgrades: { ...upgrades, ...allPacMilestoneUpgrades },
   upgradeOrder: [
     upgradeId('pac_petrissage_rapide'),
     upgradeId('pac_garnissage_rapide'),
@@ -722,10 +683,13 @@ export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
     upgradeId('pac_meilleur_prix'),
     upgradeId('pac_malaxeur_boost'),
     upgradeId('pac_garnisseur_boost'),
-    upgradeId('chocolat_suisse'),
     upgradeId('cuisson_parfaite'),
     upgradeId('pac_farine_premium'),
     upgradeId('pac_achat_en_gros'),
+    ...milestonesMalaxeur.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesGarnisseur.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesFourVentile.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesChocolaterie.upgradeOrder.map(id => upgradeId(id)),
   ],
   suppliers,
   supplierOrder: [CREMERIE_NORMANDE, MINOTERIE, CHOCOLATIER_BELGE],
@@ -739,4 +703,10 @@ export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
   },
   finishedProductId: PAINS_AU_CHOCOLAT,
   baseSellRate: new Decimal(4),
+  milestones: [
+    ...milestonesMalaxeur.milestones,
+    ...milestonesGarnisseur.milestones,
+    ...milestonesFourVentile.milestones,
+    ...milestonesChocolaterie.milestones,
+  ],
 }

@@ -85,7 +85,7 @@ function getActiveProductIds(
     for (const [bid, building] of Object.entries(productBuildings)) {
       if (building.count <= 0) continue
       const data = bundle.buildings[bid]
-      if (data && (data.pipelineRole === 'cuisson' || data.pipelineRole === 'full_pipeline')) {
+      if (data && data.pipelineRole === 'cuisson') {
         result.push(productId as ProductId)
         break
       }

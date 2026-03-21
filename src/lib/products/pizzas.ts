@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js'
 import { resourceId, buildingId, craftingRecipeId, upgradeId, supplierId, supplierUpgradeId, PANTINS_COINS_ID } from '@/types'
 import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig, SupplierData, SupplierUpgradeData } from '@/types'
+import { generateMilestones } from '@/lib/milestones/generateMilestones'
 
 // ─── Resource IDs ──────────────────────────────────────────────
 const TOMATES_FRAICHES = resourceId('tomates_fraiches')
@@ -21,10 +22,6 @@ const PLAN_DE_TRAVAIL = buildingId('plan_de_travail')
 const TABLE_GARNITURE = buildingId('table_garniture')
 const FOUR_A_BOIS = buildingId('four_a_bois')
 const PIZZERIA = buildingId('pizzeria')
-
-const USINE_PIZZA = buildingId('usine_pizza')
-const CHAINE_PIZZERIAS = buildingId('chaine_pizzerias')
-const EMPIRE_PIZZA = buildingId('empire_pizza')
 
 // ─── Resources ─────────────────────────────────────────────────
 const resources: Record<string, ResourceData> = {
@@ -148,39 +145,6 @@ const buildings: Record<string, BuildingData> = {
       description: '+1% prix de vente tous produits par pizzeria',
     },
   },
-[USINE_PIZZA as string]: {
-    id: USINE_PIZZA, name: 'Usine à pizza', emoji: '🏭',
-    description: 'Production industrielle complète',
-    baseCost: new Decimal(750_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(3.5),
-    producedResource: PIZZAS, pipelineRole: 'full_pipeline', scope: 'pizzas',
-    aura: {
-      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.02),
-      description: '+2% production globale par usine pizza',
-    },
-  },
-  [CHAINE_PIZZERIAS as string]: {
-    id: CHAINE_PIZZERIAS, name: 'Chaîne pizzerias', emoji: '🗺️',
-    description: 'Réseau national de pizzerias',
-    baseCost: new Decimal(4_000_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(7),
-    producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pizzas',
-    aura: {
-      effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.02),
-      description: '+2% prix de vente tous produits par chaîne pizzerias',
-    },
-  },
-  [EMPIRE_PIZZA as string]: {
-    id: EMPIRE_PIZZA, name: 'Empire pizza', emoji: '🌍',
-    description: 'Domination mondiale de la pizza',
-    baseCost: new Decimal(40_000_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(35),
-    producedResource: PIZZAS, pipelineRole: 'full_pipeline', scope: 'pizzas',
-    aura: {
-      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.01),
-      description: '+1% production globale par empire pizza',
-    },
-  },
 }
 
 // ─── Pipeline config ───────────────────────────────────────────
@@ -271,6 +235,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: SAUCE_TOMATE, amount: new Decimal(2) },
     durationSeconds: 4,
     scope: 'pizzas',
+    linkedBuildingId: POTAGER,
   },
   [PETRISSAGE_PIZZA as string]: {
     id: PETRISSAGE_PIZZA, name: 'Pétrissage', emoji: '🤲',
@@ -282,6 +247,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PATE_A_PIZZA, amount: new Decimal(2) },
     durationSeconds: 5,
     scope: 'pizzas',
+    linkedBuildingId: PETRIN_PIZZA,
   },
   [ETALAGE_PIZZA as string]: {
     id: ETALAGE_PIZZA, name: 'Étalage', emoji: '🪵',
@@ -292,6 +258,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PATE_ETALEE, amount: new Decimal(2) },
     durationSeconds: 3,
     scope: 'pizzas',
+    linkedBuildingId: PLAN_DE_TRAVAIL,
   },
   [GARNISSAGE_PIZZA as string]: {
     id: GARNISSAGE_PIZZA, name: 'Garnissage', emoji: '🧀',
@@ -304,6 +271,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PIZZA_GARNIE, amount: new Decimal(2) },
     durationSeconds: 5,
     scope: 'pizzas',
+    linkedBuildingId: TABLE_GARNITURE,
   },
   [CUISSON_PIZZA as string]: {
     id: CUISSON_PIZZA, name: 'Cuisson', emoji: '🔥',
@@ -314,6 +282,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PIZZAS, amount: new Decimal(3) },
     durationSeconds: 8,
     scope: 'pizzas',
+    linkedBuildingId: FOUR_A_BOIS,
   },
 }
 
@@ -1033,6 +1002,24 @@ const supplierUpgradeOrder = [
   supplierUpgradeId('levurerie_rate_6'),
 ]
 
+// ─── Milestones → Upgrades ─────────────────────────────────────
+
+const milestonesPotager = generateMilestones(POTAGER, 'preparation_sauce', 'Potager', 'pizzas', SAUCE_TOMATE)
+const milestonesPetrinPizza = generateMilestones(PETRIN_PIZZA, 'petrissage', 'Petrin a pizza', 'pizzas', SAUCE_TOMATE)
+const milestonesPlanDeTravail = generateMilestones(PLAN_DE_TRAVAIL, 'etalage', 'Plan de travail', 'pizzas', SAUCE_TOMATE)
+const milestonesTableGarniture = generateMilestones(TABLE_GARNITURE, 'garnissage', 'Table de garniture', 'pizzas', SAUCE_TOMATE)
+const milestonesFourABois = generateMilestones(FOUR_A_BOIS, 'cuisson', 'Four a bois', 'pizzas', SAUCE_TOMATE)
+const milestonesPizzeria = generateMilestones(PIZZERIA, 'vente', 'Pizzeria', 'pizzas', SAUCE_TOMATE)
+
+const allPizzaMilestoneUpgrades: Record<string, UpgradeData> = {
+  ...milestonesPotager.upgrades,
+  ...milestonesPetrinPizza.upgrades,
+  ...milestonesPlanDeTravail.upgrades,
+  ...milestonesTableGarniture.upgrades,
+  ...milestonesFourABois.upgrades,
+  ...milestonesPizzeria.upgrades,
+}
+
 // ─── Bundle ────────────────────────────────────────────────────
 
 export const PIZZAS_BUNDLE: ProductBundle = {
@@ -1045,7 +1032,7 @@ export const PIZZAS_BUNDLE: ProductBundle = {
   },
   resources,
   buildings,
-  buildingOrder: [POTAGER, PETRIN_PIZZA, PLAN_DE_TRAVAIL, TABLE_GARNITURE, FOUR_A_BOIS, PIZZERIA, USINE_PIZZA, CHAINE_PIZZERIAS, EMPIRE_PIZZA],
+  buildingOrder: [POTAGER, PETRIN_PIZZA, PLAN_DE_TRAVAIL, TABLE_GARNITURE, FOUR_A_BOIS, PIZZERIA],
   buildingUnlockThresholds: {
     [POTAGER as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(500) },
     [PETRIN_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(500) },
@@ -1053,13 +1040,10 @@ export const PIZZAS_BUNDLE: ProductBundle = {
     [TABLE_GARNITURE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(3_500) },
     [FOUR_A_BOIS as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(6_000) },
     [PIZZERIA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15_000) },
-[USINE_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(300_000) },
-    [CHAINE_PIZZERIAS as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(1_500_000) },
-    [EMPIRE_PIZZA as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(15_000_000) },
   },
   craftingRecipes,
   craftingOrder: [PREPARATION_SAUCE_PIZZA, PETRISSAGE_PIZZA, ETALAGE_PIZZA, GARNISSAGE_PIZZA, CUISSON_PIZZA],
-  upgrades,
+  upgrades: { ...upgrades, ...allPizzaMilestoneUpgrades },
   upgradeOrder: [
     upgradeId('pizza_sauce_rapide'),
     upgradeId('pizza_petrissage_rapide'),
@@ -1073,6 +1057,12 @@ export const PIZZAS_BUNDLE: ProductBundle = {
     upgradeId('pizza_four_bois_boost'),
     upgradeId('pizza_global'),
     upgradeId('pizza_achat_en_gros'),
+    ...milestonesPotager.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesPetrinPizza.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesPlanDeTravail.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesTableGarniture.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesFourABois.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesPizzeria.upgradeOrder.map(id => upgradeId(id)),
   ],
   suppliers,
   supplierOrder: [MARAICHER_ITALIEN, FROMAGERIE_NAPOLITAINE, MOULIN_SICILIEN, HERBORISTE, LEVURERIE],
@@ -1088,4 +1078,12 @@ export const PIZZAS_BUNDLE: ProductBundle = {
   },
   finishedProductId: PIZZAS,
   baseSellRate: new Decimal(50),
+  milestones: [
+    ...milestonesPotager.milestones,
+    ...milestonesPetrinPizza.milestones,
+    ...milestonesPlanDeTravail.milestones,
+    ...milestonesTableGarniture.milestones,
+    ...milestonesFourABois.milestones,
+    ...milestonesPizzeria.milestones,
+  ],
 }

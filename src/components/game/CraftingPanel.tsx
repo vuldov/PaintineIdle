@@ -4,6 +4,7 @@ import { useUpgradeStore } from '@/store/upgradeStore'
 import { useCraftingStore } from '@/store/craftingStore'
 import { useProduct } from './ProductContext'
 import { canStartCrafting, calcSellValue } from '@/mechanics/craftingMechanics'
+import { isMilestoneAutoCraftUnlocked } from '@/mechanics/milestoneMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { ALL_RESOURCES } from '@/lib/products/registry'
 import type { CraftingRecipeId, Resource } from '@/types'
@@ -19,8 +20,15 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
   const productResources = useResourceStore((state) => state.productResources)
   const activeTask = useCraftingStore((state) => state.activeTasks[productId])
   const startCrafting = useCraftingStore((state) => state.startCrafting)
+  const autoCraft = useCraftingStore((state) => state.autoCraft[rid] ?? false)
+  const toggleAutoCraft = useCraftingStore((state) => state.toggleAutoCraft)
+  const upgrades = useUpgradeStore((state) => state.upgrades)
 
   if (!recipe) return null
+
+  // Check if auto-craft milestone is unlocked
+  const linkedBid = recipe.linkedBuildingId as string | undefined
+  const autoUnlocked = linkedBid ? isMilestoneAutoCraftUnlocked(upgrades, linkedBid) : false
 
   // Merge resources for canStartCrafting check (inline, not in selector)
   const allResources: Record<string, Resource> = { ...globalResources }
@@ -60,26 +68,45 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
       {/* Progress bar */}
       <div className="h-3 bg-gray-100 rounded-full overflow-hidden mb-2">
         <div
-          className="h-full bg-amber-400 rounded-full"
+          className="h-full bg-amber-400 rounded-full transition-[width] duration-200"
           style={{ width: `${Math.round(Math.min(progress * 100, 100))}%` }}
         />
       </div>
 
-      <button
-        onClick={() => startCrafting(productId, recipeId)}
-        disabled={!canStart}
-        className={`
-          w-full py-2 rounded-lg text-sm font-medium transition-colors
-          ${canStart
-            ? 'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 cursor-pointer'
-            : isActive
-              ? 'bg-amber-300 text-amber-800 cursor-wait'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }
-        `}
-      >
-        {isActive ? `${recipe.verb}... ${Math.floor(progress * 100)}%` : recipe.verb}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => startCrafting(productId, recipeId)}
+          disabled={!canStart}
+          className={`
+            flex-1 py-2 rounded-lg text-sm font-medium transition-colors
+            ${canStart
+              ? 'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 cursor-pointer'
+              : isActive
+                ? 'bg-amber-300 text-amber-800 cursor-wait'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }
+          `}
+        >
+          {isActive ? `${recipe.verb}... ${Math.floor(progress * 100)}%` : recipe.verb}
+        </button>
+
+        {/* Auto-craft toggle — visible only when milestone unlocked */}
+        {autoUnlocked && (
+          <button
+            onClick={() => toggleAutoCraft(recipeId)}
+            title={autoCraft ? 'Desactiver le crafting automatique' : 'Activer le crafting automatique'}
+            className={`
+              shrink-0 w-9 h-9 rounded-lg border-2 flex items-center justify-center transition-colors cursor-pointer
+              ${autoCraft
+                ? 'bg-green-100 border-green-400 text-green-700'
+                : 'bg-gray-50 border-gray-300 text-gray-400 hover:border-amber-300 hover:text-amber-600'
+              }
+            `}
+          >
+            <span className="text-base">{autoCraft ? '🔄' : '⏸️'}</span>
+          </button>
+        )}
+      </div>
     </div>
   )
 }

@@ -18,6 +18,7 @@ const CATEGORY_BADGE: Record<string, { bg: string; text: string; label: string; 
   synergy:        { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Synergie', border: 'border-purple-400' },
   scaling:        { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Combo', border: 'border-blue-400' },
   supplier:       { bg: 'bg-teal-100', text: 'text-teal-800', label: 'Fournisseur', border: 'border-teal-400' },
+  milestone:      { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Palier', border: 'border-orange-400' },
 }
 
 // ─── Dynamic value computation ──────────────────────────────────
@@ -110,26 +111,61 @@ export function UpgradePanel() {
     Object.assign(allBuildings, productBuildings)
   }
 
-  // ── 1. Product upgrades ──
-  const productItems: UpgradeItem[] = bundle.upgradeOrder.map((id): UpgradeItem | null => {
+  // ── 1. Product upgrades (non-milestone) ──
+  const regularProductItems: UpgradeItem[] = []
+  const milestoneAvailableItems: UpgradeItem[] = []
+  const milestonePurchasedItems: UpgradeItem[] = []
+
+  for (const id of bundle.upgradeOrder) {
     const uid = id as string
     const data = bundle.upgrades[uid]
     const state = upgrades[uid]
-    if (!data || !state) return null
-    const visible = state.purchased || isUpgradeVisible(uid, allResources, allBuildings, upgrades)
-    if (!visible) return null
-    return {
-      key: uid,
-      emoji: data.emoji,
-      name: data.name,
-      description: data.description,
-      cost: data.cost,
-      costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
-      affordable: canAfford(data.costResource, data.cost),
-      purchased: state.purchased,
-      onBuy: () => buyUpgrade(id as UpgradeId),
+    if (!data || !state) continue
+
+    if (data.category === 'milestone') {
+      // Milestone upgrade: show ALL whose threshold is reached
+      if (state.purchased) {
+        milestonePurchasedItems.push({
+          key: uid, emoji: data.emoji, name: data.name, description: data.description,
+          cost: data.cost,
+          costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
+          badge: CATEGORY_BADGE.milestone,
+          affordable: false, purchased: true, onBuy: () => {},
+        })
+        continue
+      }
+
+      const visible = isUpgradeVisible(uid, allResources, allBuildings, upgrades)
+      if (!visible) continue
+
+      milestoneAvailableItems.push({
+        key: uid, emoji: data.emoji, name: data.name, description: data.description,
+        cost: data.cost,
+        costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
+        badge: CATEGORY_BADGE.milestone,
+        affordable: canAfford(data.costResource, data.cost),
+        purchased: false,
+        onBuy: () => buyUpgrade(id as UpgradeId),
+      })
+    } else {
+      // Regular product upgrade
+      const visible = state.purchased || isUpgradeVisible(uid, allResources, allBuildings, upgrades)
+      if (!visible) continue
+      regularProductItems.push({
+        key: uid,
+        emoji: data.emoji,
+        name: data.name,
+        description: data.description,
+        cost: data.cost,
+        costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
+        affordable: canAfford(data.costResource, data.cost),
+        purchased: state.purchased,
+        onBuy: () => buyUpgrade(id as UpgradeId),
+      })
     }
-  }).filter((x): x is UpgradeItem => x !== null)
+  }
+
+  const productItems = [...regularProductItems, ...milestoneAvailableItems, ...milestonePurchasedItems]
 
   // ── 2. Supplier upgrades (show only next unpurchased per supplier) ──
   const supplierItems: UpgradeItem[] = []

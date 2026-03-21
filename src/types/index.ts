@@ -44,8 +44,30 @@ export type PipelineRole =
   | 'etalage'
   | 'cuisson'
   | 'vente'
-  | 'ingredients'
-  | 'full_pipeline'
+
+// ─── Milestone system ─────────────────────────────────────────
+export const MILESTONE_THRESHOLDS = [1, 5, 10, 25, 50, 75, 100, 150, 200, 250] as const
+export type MilestoneThreshold = typeof MILESTONE_THRESHOLDS[number]
+
+export type MilestoneEffectType =
+  | 'building_production_multiplier'
+  | 'crafting_ratio_bonus'
+  | 'crafting_duration_reduction'
+  | 'crafting_auto_unlock'
+
+export interface MilestoneEffect {
+  type: MilestoneEffectType
+  value: Decimal
+}
+
+export interface MilestoneData {
+  id: string
+  buildingId: BuildingId
+  threshold: MilestoneThreshold
+  name: string
+  description: string
+  effects: MilestoneEffect[]
+}
 
 // ─── Resource data (definition, not state) ─────────────────────
 export interface ResourceData {
@@ -104,6 +126,7 @@ export interface CraftingRecipeData {
   output: CraftingOutput
   durationSeconds: number
   scope: EntityScope
+  linkedBuildingId?: BuildingId
 }
 
 // ─── Product definition ────────────────────────────────────────
@@ -137,6 +160,8 @@ export interface ProductBundle {
   /** The resource ID of the finished product (e.g., croissants, pains_au_chocolat) */
   finishedProductId: ResourceId
   baseSellRate: Decimal
+  /** Milestone definitions for buildings in this product */
+  milestones: MilestoneData[]
 }
 
 // ─── Upgrade data ──────────────────────────────────────────────
@@ -152,6 +177,9 @@ export type UpgradeEffectType =
   | 'specialization'
   | 'cross_product_synergy'
   | 'scaling'
+  | 'crafting_ratio_bonus'
+  | 'crafting_duration_reduction'
+  | 'crafting_auto_unlock'
 
 export interface UpgradeEffect {
   type: UpgradeEffectType
@@ -184,6 +212,8 @@ export interface UpgradeEffect {
     bonusPerUnit: Decimal
     scalingDivisor?: number
   }
+  /** For milestone upgrades: additional building production multiplier when primary type is a crafting effect */
+  buildingProductionMultiplier?: Decimal
 }
 
 export type UnlockConditionType = 'resource_threshold' | 'building_count' | 'upgrade_purchased'
@@ -206,7 +236,7 @@ export interface UpgradeData {
   effect: UpgradeEffect
   unlockCondition: UnlockCondition
   scope: EntityScope
-  category?: 'specialization' | 'synergy' | 'scaling'
+  category?: 'specialization' | 'synergy' | 'scaling' | 'milestone'
 }
 
 // ─── Supplier data (definition, not state) ──────────────────────
@@ -307,7 +337,7 @@ export interface Upgrade {
   effect: UpgradeEffect
   unlockCondition: UnlockCondition
   scope: EntityScope
-  category?: 'specialization' | 'synergy' | 'scaling'
+  category?: 'specialization' | 'synergy' | 'scaling' | 'milestone'
 }
 
 // ─── Stats ───────────────────────────────────────────────────────

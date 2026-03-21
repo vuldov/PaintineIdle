@@ -24,6 +24,7 @@ export interface BuildingRates {
 
 /**
  * Calculate effective production and consumption rates per building unit.
+ * Includes sell multiplier, resource multipliers, and synergy bonuses when provided.
  * Data-driven: uses the pipeline config from the bundle.
  * Pure function.
  */
@@ -32,9 +33,16 @@ export function calcBuildingRates(
   pipelineStages: PipelineStageConfig[],
   baseProduction: Decimal,
   upgrades: Record<string, Upgrade>,
+  baseSellRate?: Decimal,
+  extraMultiplier?: Decimal,
+  extraSellMultiplier?: Decimal,
 ): BuildingRates {
   let bMult = new Decimal(1)
-  let globalMult = new Decimal(1)
+  let globalMult = extraMultiplier ?? new Decimal(1)
+  let sellMult = baseSellRate ?? new Decimal(1)
+  const sellSynergyMult = extraSellMultiplier ?? new Decimal(1)
+  const resourceMultipliers: Record<string, Decimal> = {}
+
   for (const upgrade of Object.values(upgrades)) {
     if (!upgrade.purchased) continue
     if (upgrade.effect.type === 'building_multiplier' && (upgrade.effect.targetBuilding as string) === (buildingData.id as string)) {
@@ -42,6 +50,19 @@ export function calcBuildingRates(
     }
     if (upgrade.effect.type === 'global_multiplier') {
       globalMult = globalMult.mul(upgrade.effect.multiplier)
+    }
+    if (upgrade.effect.type === 'sell_multiplier') {
+      sellMult = sellMult.mul(upgrade.effect.multiplier)
+    }
+    if (upgrade.effect.type === 'resource_multiplier') {
+      const target = upgrade.effect.targetResource as string | undefined
+      if (target) {
+        resourceMultipliers[target] = (resourceMultipliers[target] ?? new Decimal(1)).mul(upgrade.effect.multiplier)
+      }
+    }
+    // Handle buildingProductionMultiplier on any upgrade type (milestone dual-effects)
+    if (upgrade.effect.buildingProductionMultiplier && (upgrade.effect.targetBuilding as string) === (buildingData.id as string)) {
+      bMult = bMult.mul(upgrade.effect.buildingProductionMultiplier)
     }
   }
 
@@ -53,40 +74,17 @@ export function calcBuildingRates(
   // Find the matching pipeline stage for this building's role
   const matchingStage = pipelineStages.find(s => s.role === buildingData.pipelineRole)
 
-  if (buildingData.pipelineRole === 'ingredients') {
-    // Ingredients role: produces all base ingredients consumed across the pipeline.
-    // "Base ingredient" = consumed by a stage but NOT produced by any stage.
-    const allProduced = new Set(
-      pipelineStages.flatMap(s => s.produces.map(p => p.resource as string))
-    )
-    const baseIngredients = new Set<string>()
-    for (const stage of pipelineStages) {
-      for (const c of stage.consumes) {
-        if (!allProduced.has(c.resource as string)) {
-          baseIngredients.add(c.resource as string)
-        }
-      }
-    }
-    // Primary resource (the building's producedResource) gets base production
-    produces.push({ resource: buildingData.producedResource, amount: effectiveProd })
-    // Other base ingredients get 1.5x production
-    for (const resId of baseIngredients) {
-      if (resId !== (buildingData.producedResource as string)) {
-        produces.push({ resource: resId as ResourceId, amount: effectiveProd.mul(1.5) })
-      }
-    }
-  } else if (buildingData.pipelineRole === 'full_pipeline') {
-    // Full pipeline just produces the finished product
-    const cuissonStage = pipelineStages.find(s => s.role === 'cuisson')
-    if (cuissonStage && cuissonStage.produces.length > 0) {
-      produces.push({ resource: cuissonStage.produces[0].resource, amount: effectiveProd })
-    } else {
-      produces.push({ resource: buildingData.producedResource, amount: effectiveProd })
-    }
-  } else if (matchingStage) {
-    // Pipeline stage: produce and consume based on config
+  if (matchingStage) {
     for (const p of matchingStage.produces) {
-      produces.push({ resource: p.resource, amount: effectiveProd.mul(p.ratio) })
+      let amount = effectiveProd.mul(p.ratio)
+      // Vente stage: apply sell multiplier to coins production
+      if (buildingData.pipelineRole === 'vente' && (p.resource as string) === 'pantins_coins' && baseSellRate) {
+        amount = amount.mul(sellMult).div(baseSellRate).mul(sellSynergyMult)
+      }
+      // Apply resource multipliers
+      const resMult = resourceMultipliers[p.resource as string]
+      if (resMult) amount = amount.mul(resMult)
+      produces.push({ resource: p.resource, amount })
     }
     for (const c of matchingStage.consumes) {
       consumes.push({ resource: c.resource, amount: effectiveProd.mul(c.ratio) })
@@ -145,7 +143,7 @@ export interface PipelineStage {
 }
 
 export interface ProductionResult {
-  /** Free production (regen, ingredients, full_pipeline) -- never throttled */
+  /** Free production (regen) -- never throttled */
   freeProduction: Record<string, Decimal>
   /** Pipeline stages: each throttled independently */
   stages: PipelineStage[]
@@ -207,6 +205,16 @@ export function calcProductionForProduct(
         }
         break
       }
+      default:
+        break
+    }
+    // Handle buildingProductionMultiplier on any upgrade type (milestone dual-effects)
+    if (upgrade.effect.buildingProductionMultiplier) {
+      const target = upgrade.effect.targetBuilding as string | undefined
+      if (target) {
+        const current = buildingMultipliers[target] ?? new Decimal(1)
+        buildingMultipliers[target] = current.mul(upgrade.effect.buildingProductionMultiplier)
+      }
     }
   }
 
@@ -221,9 +229,6 @@ export function calcProductionForProduct(
   // Compute sell synergy multiplier for this product
   const sellSynergyMult = (synergy.sellMultipliers[productId] ?? new Decimal(1))
     .mul(synergy.globalSellMultiplier)
-  // Compute ingredient synergy multiplier (global)
-  const ingredientGlobalMult = synergy.ingredientMultipliers['_global'] ?? new Decimal(1)
-
   // ── Passive regen -> free ──────────────────────────────────
   for (const [resId, regen] of Object.entries(bundle.passiveRegen)) {
     addTo(freeProduction, resId, regen)
@@ -246,40 +251,7 @@ export function calcProductionForProduct(
       s => s.role === buildingData.pipelineRole
     )
 
-    if (buildingData.pipelineRole === 'ingredients') {
-      // Ingredients: free production of all base ingredients.
-      // "Base ingredient" = consumed by a stage but NOT produced by any stage.
-      const allProduced = new Set(
-        bundle.pipelineConfig.stages.flatMap(s => s.produces.map(p => p.resource as string))
-      )
-      const baseIngredients = new Set<string>()
-      for (const stage of bundle.pipelineConfig.stages) {
-        for (const c of stage.consumes) {
-          if (!allProduced.has(c.resource as string)) {
-            baseIngredients.add(c.resource as string)
-          }
-        }
-      }
-      // Primary resource gets base production, with per-resource ingredient synergy
-      const primaryResId = buildingData.producedResource as string
-      const primaryIngMult = synergy.ingredientMultipliers[primaryResId] ?? new Decimal(1)
-      addTo(freeProduction, primaryResId, baseProd.mul(ingredientGlobalMult).mul(primaryIngMult))
-      // Other base ingredients get 1.5x, also with ingredient synergy
-      for (const resId of baseIngredients) {
-        if (resId !== primaryResId) {
-          const resIngMult = synergy.ingredientMultipliers[resId] ?? new Decimal(1)
-          addTo(freeProduction, resId, baseProd.mul(1.5).mul(ingredientGlobalMult).mul(resIngMult))
-        }
-      }
-    } else if (buildingData.pipelineRole === 'full_pipeline') {
-      // Full pipeline: free production of finished product
-      const cuissonStage = bundle.pipelineConfig.stages.find(s => s.role === 'cuisson')
-      if (cuissonStage && cuissonStage.produces.length > 0) {
-        addTo(freeProduction, cuissonStage.produces[0].resource as string, baseProd)
-      } else {
-        addTo(freeProduction, buildingData.producedResource as string, baseProd)
-      }
-    } else if (stageIndex >= 0) {
+    if (stageIndex >= 0) {
       const stageConfig = bundle.pipelineConfig.stages[stageIndex]
       const accumulator = stageAccumulators[stageIndex]
 

@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js'
 import { resourceId, buildingId, craftingRecipeId, upgradeId, supplierId, supplierUpgradeId, PANTINS_COINS_ID } from '@/types'
 import type { ProductBundle, ResourceData, BuildingData, CraftingRecipeData, UpgradeData, PipelineStageConfig, SupplierData, SupplierUpgradeData } from '@/types'
+import { generateMilestones } from '@/lib/milestones/generateMilestones'
 
 // ─── Resource IDs ──────────────────────────────────────────────
 const CHOCOLAT_NOIR = resourceId('chocolat_noir')
@@ -15,14 +16,9 @@ const CHOCOLATINES = resourceId('chocolatines')
 // ─── Building IDs ──────────────────────────────────────────────
 const FONDOIR = buildingId('fondoir')
 const BATTEUR_PRO = buildingId('batteur_pro')
-const GARNISSEUR_CHOCO = buildingId('garnisseur_choco')
 const DOREUSE = buildingId('doreuse')
 const FOUR_A_SOLE = buildingId('four_a_sole')
 const PATISSERIE = buildingId('patisserie')
-
-const LIGNE_PRODUCTION = buildingId('ligne_production')
-const RESEAU_PATISSERIES = buildingId('reseau_patisseries')
-const EMPIRE_CHOCOLATINE = buildingId('empire_chocolatine')
 
 // ─── Resources ─────────────────────────────────────────────────
 const resources: Record<string, ResourceData> = {
@@ -92,17 +88,6 @@ const buildings: Record<string, BuildingData> = {
       targetResource: 'chocolat_noir', description: '+5% génération chocolat noir par fondoir',
     },
   },
-  [GARNISSEUR_CHOCO as string]: {
-    id: GARNISSEUR_CHOCO, name: 'Garnisseur choco', emoji: '🤲',
-    description: 'Garnissage professionnel à haute cadence',
-    baseCost: new Decimal(1_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.8),
-    producedResource: PATON_CHOCOLATINE, pipelineRole: 'garnissage', scope: 'chocolatines',
-    aura: {
-      effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.03),
-      targetResource: 'sucre_vanille', description: '+3% génération sucre vanillé par garnisseur choco',
-    },
-  },
   [DOREUSE as string]: {
     id: DOREUSE, name: 'Doreuse', emoji: '🌟',
     description: 'Applique la dorure à l\'oeuf sur les pâtons',
@@ -134,39 +119,6 @@ const buildings: Record<string, BuildingData> = {
     aura: {
       effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
       description: '+1% prix de vente tous produits par pâtisserie',
-    },
-  },
-[LIGNE_PRODUCTION as string]: {
-    id: LIGNE_PRODUCTION, name: 'Ligne de production', emoji: '🏭',
-    description: 'Production automatisée complète',
-    baseCost: new Decimal(150_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(4),
-    producedResource: CHOCOLATINES, pipelineRole: 'full_pipeline', scope: 'chocolatines',
-    aura: {
-      effectType: 'cross_product_bonus', bonusPerBuilding: new Decimal(0.02),
-      crossProductTarget: 'pains_au_chocolat', description: '+2% production pains au chocolat par ligne de production',
-    },
-  },
-  [RESEAU_PATISSERIES as string]: {
-    id: RESEAU_PATISSERIES, name: 'Réseau pâtisseries', emoji: '🗺️',
-    description: 'Réseau national de pâtisseries',
-    baseCost: new Decimal(750_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(8),
-    producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'chocolatines',
-    aura: {
-      effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
-      targetProduct: 'chocolatines', description: '+1% prix de vente chocolatines par réseau pâtisseries',
-    },
-  },
-  [EMPIRE_CHOCOLATINE as string]: {
-    id: EMPIRE_CHOCOLATINE, name: 'Empire chocolatine', emoji: '🌍',
-    description: 'Domination mondiale de la chocolatine',
-    baseCost: new Decimal(7_500_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(40),
-    producedResource: CHOCOLATINES, pipelineRole: 'full_pipeline', scope: 'chocolatines',
-    aura: {
-      effectType: 'global_production_bonus', bonusPerBuilding: new Decimal(0.005),
-      description: '+0,5% production globale par empire chocolatine',
     },
   },
 }
@@ -247,6 +199,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PATE_BRIOCHEE, amount: new Decimal(2) },
     durationSeconds: 5,
     scope: 'chocolatines',
+    linkedBuildingId: BATTEUR_PRO,
   },
   [GARNISSAGE_CHOCOLATINE as string]: {
     id: GARNISSAGE_CHOCOLATINE, name: 'Garnissage', emoji: '🍫',
@@ -258,6 +211,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: PATON_CHOCOLATINE, amount: new Decimal(2) },
     durationSeconds: 4,
     scope: 'chocolatines',
+    linkedBuildingId: FONDOIR,
   },
   [DORURE_CHOCOLATINE as string]: {
     id: DORURE_CHOCOLATINE, name: 'Dorure', emoji: '🌟',
@@ -269,6 +223,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: CHOCOLATINE_DOREE, amount: new Decimal(2) },
     durationSeconds: 3,
     scope: 'chocolatines',
+    linkedBuildingId: DOREUSE,
   },
   [CUISSON_CHOCOLATINE as string]: {
     id: CUISSON_CHOCOLATINE, name: 'Cuisson', emoji: '🔥',
@@ -279,6 +234,7 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     output: { resource: CHOCOLATINES, amount: new Decimal(3) },
     durationSeconds: 7,
     scope: 'chocolatines',
+    linkedBuildingId: FOUR_A_SOLE,
   },
 }
 
@@ -861,6 +817,22 @@ const supplierUpgradeOrder = [
   supplierUpgradeId('elevage_poules_rate_6'),
 ]
 
+// ─── Milestones → Upgrades ─────────────────────────────────────
+
+const milestonesBatteurPro = generateMilestones(BATTEUR_PRO, 'petrissage', 'Batteur pro', 'chocolatines', PATE_BRIOCHEE)
+const milestonesFondoir = generateMilestones(FONDOIR, 'garnissage', 'Fondoir', 'chocolatines', PATE_BRIOCHEE)
+const milestonesDoreuse = generateMilestones(DOREUSE, 'dorure', 'Doreuse', 'chocolatines', PATE_BRIOCHEE)
+const milestonesFourASole = generateMilestones(FOUR_A_SOLE, 'cuisson', 'Four a sole', 'chocolatines', PATE_BRIOCHEE)
+const milestonesPatisserie = generateMilestones(PATISSERIE, 'vente', 'Patisserie', 'chocolatines', PATE_BRIOCHEE)
+
+const allChocoMilestoneUpgrades: Record<string, UpgradeData> = {
+  ...milestonesBatteurPro.upgrades,
+  ...milestonesFondoir.upgrades,
+  ...milestonesDoreuse.upgrades,
+  ...milestonesFourASole.upgrades,
+  ...milestonesPatisserie.upgrades,
+}
+
 // ─── Bundle ────────────────────────────────────────────────────
 
 export const CHOCOLATINES_BUNDLE: ProductBundle = {
@@ -873,21 +845,17 @@ export const CHOCOLATINES_BUNDLE: ProductBundle = {
   },
   resources,
   buildings,
-  buildingOrder: [BATTEUR_PRO, FONDOIR, GARNISSEUR_CHOCO, DOREUSE, FOUR_A_SOLE, PATISSERIE, LIGNE_PRODUCTION, RESEAU_PATISSERIES, EMPIRE_CHOCOLATINE],
+  buildingOrder: [BATTEUR_PRO, FONDOIR, DOREUSE, FOUR_A_SOLE, PATISSERIE],
   buildingUnlockThresholds: {
     [BATTEUR_PRO as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(100) },
     [FONDOIR as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(100) },
-    [GARNISSEUR_CHOCO as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(400) },
     [DOREUSE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(1_000) },
     [FOUR_A_SOLE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(2_000) },
     [PATISSERIE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(4_000) },
-[LIGNE_PRODUCTION as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(60_000) },
-    [RESEAU_PATISSERIES as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(300_000) },
-    [EMPIRE_CHOCOLATINE as string]: { resource: PANTINS_COINS_ID, amount: new Decimal(3_000_000) },
   },
   craftingRecipes,
   craftingOrder: [PETRISSAGE_CHOCOLATINE, GARNISSAGE_CHOCOLATINE, DORURE_CHOCOLATINE, CUISSON_CHOCOLATINE],
-  upgrades,
+  upgrades: { ...upgrades, ...allChocoMilestoneUpgrades },
   upgradeOrder: [
     upgradeId('choco_petrissage_rapide'),
     upgradeId('choco_garnissage_rapide'),
@@ -899,6 +867,11 @@ export const CHOCOLATINES_BUNDLE: ProductBundle = {
     upgradeId('choco_doreuse_boost'),
     upgradeId('choco_global'),
     upgradeId('choco_achat_en_gros'),
+    ...milestonesBatteurPro.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesFondoir.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesDoreuse.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesFourASole.upgradeOrder.map(id => upgradeId(id)),
+    ...milestonesPatisserie.upgradeOrder.map(id => upgradeId(id)),
   ],
   suppliers,
   supplierOrder: [MAITRE_CHOCOLATIER, FERME_LAITIERE, PLANTATION_VANILLE, ELEVAGE_POULES],
@@ -913,4 +886,11 @@ export const CHOCOLATINES_BUNDLE: ProductBundle = {
   },
   finishedProductId: CHOCOLATINES,
   baseSellRate: new Decimal(15),
+  milestones: [
+    ...milestonesBatteurPro.milestones,
+    ...milestonesFondoir.milestones,
+    ...milestonesDoreuse.milestones,
+    ...milestonesFourASole.milestones,
+    ...milestonesPatisserie.milestones,
+  ],
 }

@@ -46,20 +46,13 @@ interface SaveDataV3 {
   upgrades: Record<string, { purchased: boolean }>
   suppliers?: Record<string, SerializedSupplier>
   supplierUpgrades?: Record<string, { purchased: boolean }>
+  autoCraft?: Record<string, boolean>
   unlockedProducts: string[]
   activeProduct: string
   version: number
   lastSave: number
 }
 
-// Legacy v2 types for migration
-interface SaveDataV2 {
-  resources: Record<string, SerializedResource>
-  buildings: Record<string, SerializedBuilding>
-  upgrades?: Record<string, { purchased: boolean }>
-  version: number
-  lastSave: number
-}
 
 // ─── Serialization ──────────────────────────────────────────────
 
@@ -134,6 +127,8 @@ function serializeSave(): SaveDataV3 {
     serializedSupplierUpgrades[id] = { purchased: upState.purchased }
   }
 
+  const { autoCraft } = useCraftingStore.getState()
+
   return {
     globalResources: serializedGlobal,
     productResources: serializedProductResources,
@@ -141,6 +136,7 @@ function serializeSave(): SaveDataV3 {
     upgrades: serializedUpgrades,
     suppliers: serializedSuppliers,
     supplierUpgrades: serializedSupplierUpgrades,
+    autoCraft: { ...autoCraft },
     unlockedProducts: [...unlockedProducts],
     activeProduct,
     version: GAME_VERSION,
@@ -201,14 +197,9 @@ export async function importSave(base64: string): Promise<boolean> {
     const json = fromBase64(base64)
     const rawData = JSON.parse(json) as { version?: number }
 
-    if (!rawData.version || rawData.version < 2) return false
+    if (!rawData.version || rawData.version < GAME_VERSION) return false
 
-    let data: SaveDataV3
-    if (rawData.version === 2) {
-      data = migrateV2ToV3(rawData as SaveDataV2)
-    } else {
-      data = rawData as SaveDataV3
-    }
+    const data = rawData as SaveDataV3
 
     // Reset stores first, then restore from imported data
     useResourceStore.getState().resetResources()
@@ -245,74 +236,6 @@ export async function hardResetGame() {
   await deleteSaveData()
   // Persist the clean state immediately
   saveGame()
-}
-
-// ─── Migration v2 -> v3 ─────────────────────────────────────────
-
-function migrateV2ToV3(data: SaveDataV2): SaveDataV3 {
-  // Map old resource IDs to the new croissant product
-  const oldToCroissantResources: Record<string, string> = {
-    beurre: 'beurre',
-    farine: 'farine',
-    pate: 'pate_feuilletee',
-    croissants: 'croissants',
-  }
-
-  const globalResources: Record<string, SerializedResource> = {}
-  const croissantResources: Record<string, SerializedResource> = {}
-
-  for (const [id, resource] of Object.entries(data.resources)) {
-    if (id === 'pantins_coins') {
-      globalResources[id] = { ...resource, id }
-    } else if (oldToCroissantResources[id]) {
-      const newId = oldToCroissantResources[id]
-      croissantResources[newId] = { ...resource, id: newId }
-    }
-  }
-
-  // Migrate old building IDs (they stay the same for croissants)
-  const croissantBuildings: Record<string, SerializedBuilding> = {}
-  for (const [id, building] of Object.entries(data.buildings)) {
-    // Map producedResource
-    let producedResource = building.producedResource
-    if (producedResource === 'pate') producedResource = 'pate_feuilletee'
-    croissantBuildings[id] = { ...building, producedResource }
-  }
-
-  // Migrate upgrades
-  const upgrades: Record<string, { purchased: boolean }> = {}
-  if (data.upgrades) {
-    // Map old crafting recipe IDs
-    const recipeIdMap: Record<string, string> = {
-      petrissage: 'petrissage_croissant',
-      cuisson: 'cuisson_croissant',
-    }
-
-    for (const [id, upgrade] of Object.entries(data.upgrades)) {
-      // Check if the upgrade ID still exists in new data
-      // Old upgrade IDs are the same for croissants product
-      upgrades[id] = { purchased: upgrade.purchased }
-    }
-
-    // Update recipe-targeted upgrades: petrissage_rapide -> targets petrissage_croissant
-    // This is handled in the upgrade data definitions, no ID change needed
-    void recipeIdMap
-  }
-
-  return {
-    globalResources,
-    productResources: {
-      croissants: croissantResources,
-    },
-    buildings: {
-      croissants: croissantBuildings,
-    },
-    upgrades,
-    unlockedProducts: ['croissants'],
-    activeProduct: 'croissants',
-    version: 3,
-    lastSave: data.lastSave,
-  }
 }
 
 // ─── Load ───────────────────────────────────────────────────────
@@ -428,6 +351,11 @@ function restoreFromSaveData(data: SaveDataV3) {
     useSupplierStore.setState({ supplierUpgrades: restoredUpgrades })
   }
 
+  // Restore auto-craft settings
+  if (data.autoCraft) {
+    useCraftingStore.setState({ autoCraft: { ...data.autoCraft } })
+  }
+
   // Restore product store
   if (data.unlockedProducts) {
     useProductStore.setState({
@@ -468,19 +396,13 @@ async function loadGame() {
 
     const rawData = JSON.parse(raw) as { version?: number }
 
-    // Handle v1 -- too old, discard
-    if (!rawData.version || rawData.version < 2) {
+    // Handle old versions -- too old, discard (v7 changed building structure)
+    if (!rawData.version || rawData.version < GAME_VERSION) {
       await deleteSaveData()
       return
     }
 
-    // Migrate v2 -> v3
-    let data: SaveDataV3
-    if (rawData.version === 2) {
-      data = migrateV2ToV3(rawData as SaveDataV2)
-    } else {
-      data = rawData as SaveDataV3
-    }
+    const data = rawData as SaveDataV3
 
     restoreFromSaveData(data)
     _lastSaveTimestamp = data.lastSave || Date.now()
