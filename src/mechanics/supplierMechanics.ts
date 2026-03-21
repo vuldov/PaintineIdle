@@ -53,15 +53,26 @@ export function calcSupplierProduction(
   return effectiveMaxRate.mul(state.ratePercent).div(100)
 }
 
-/** Cost in paintine coins per second at current ratePercent. */
+/**
+ * Cost in paintine coins per second at current production rate.
+ * Cost scales with actual production based on the BASE cost-per-unit ratio:
+ *   costPerUnit = effectiveCost / baseMaxRate
+ *   cost = costPerUnit × actualProduction
+ * This means rate upgrades increase production WITHOUT increasing cost proportionally,
+ * making each unit cheaper (the whole point of rate upgrades).
+ */
 export function calcSupplierCostPerSecond(
   effectiveCost: Decimal,
+  baseMaxRate: Decimal,
+  effectiveMaxRate: Decimal,
   state: SupplierState,
 ): Decimal {
-  if (!state.unlocked || !state.active || state.ratePercent <= 0) {
+  if (!state.unlocked || !state.active || state.ratePercent <= 0 || baseMaxRate.isZero()) {
     return new Decimal(0)
   }
-  return effectiveCost.mul(state.ratePercent).div(100)
+  const actualProduction = effectiveMaxRate.mul(state.ratePercent).div(100)
+  const costPerUnit = effectiveCost.div(baseMaxRate)
+  return costPerUnit.mul(actualProduction)
 }
 
 // ─── Aggregated tick calculation ─────────────────────────────────
@@ -120,10 +131,12 @@ export function calcSupplierTick(
     const effectiveMax = calcEffectiveMaxRate(data, supplierUpgrades, upgradeStates)
     const effectiveCost = calcEffectiveCostPerSecond(data, supplierUpgrades, upgradeStates)
 
-    effectiveRates[id] = { maxRate: effectiveMax, costPerSec: effectiveCost }
+    // costPerSec at full effective rate: costPerUnit × effectiveMaxRate
+    const costAtFullRate = effectiveCost.div(data.baseMaxRate).mul(effectiveMax)
+    effectiveRates[id] = { maxRate: effectiveMax, costPerSec: costAtFullRate }
 
     const productionPerSec = calcSupplierProduction(effectiveMax, state)
-    const costPerSec = calcSupplierCostPerSecond(effectiveCost, state)
+    const costPerSec = calcSupplierCostPerSecond(effectiveCost, data.baseMaxRate, effectiveMax, state)
 
     if (productionPerSec.isZero()) continue
 

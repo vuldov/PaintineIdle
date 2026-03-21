@@ -63,7 +63,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
 
   // ── Unlocked state ──
   const production = calcSupplierProduction(effectiveMax, state)
-  const costPerSec = calcSupplierCostPerSecond(effectiveCost, state)
+  const costPerSec = calcSupplierCostPerSecond(effectiveCost, data.baseMaxRate, effectiveMax, state)
 
   return (
     <div className={`rounded-xl border p-4 shadow-sm transition-colors ${

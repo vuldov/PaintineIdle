@@ -150,19 +150,30 @@ describe('calcSupplierProduction', () => {
 // ─── calcSupplierCostPerSecond ───────────────────────────────────
 
 describe('calcSupplierCostPerSecond', () => {
-  it('returns effectiveCost at 100%', () => {
-    const result = calcSupplierCostPerSecond(new Decimal(5), makeState())
+  it('returns effectiveCost at 100% when no rate upgrades', () => {
+    // baseMaxRate=10, effectiveMax=10 (no upgrades), so costPerUnit=5/10=0.5, cost=0.5*10=5
+    const result = calcSupplierCostPerSecond(new Decimal(5), new Decimal(10), new Decimal(10), makeState())
     expect(result.eq(new Decimal(5))).toBe(true)
   })
 
   it('scales linearly with ratePercent', () => {
-    const result = calcSupplierCostPerSecond(new Decimal(5), makeState({ ratePercent: 50 }))
+    const result = calcSupplierCostPerSecond(new Decimal(5), new Decimal(10), new Decimal(10), makeState({ ratePercent: 50 }))
     expect(result.eq(new Decimal(2.5))).toBe(true)
   })
 
   it('returns 0 when inactive', () => {
-    const result = calcSupplierCostPerSecond(new Decimal(5), makeState({ active: false }))
+    const result = calcSupplierCostPerSecond(new Decimal(5), new Decimal(10), new Decimal(10), makeState({ active: false }))
     expect(result.isZero()).toBe(true)
+  })
+
+  it('cost increases sub-linearly with rate upgrades', () => {
+    // baseMaxRate=10, effectiveMax=30 (×3 upgrade), baseCost=5
+    // costPerUnit = 5/10 = 0.5, actualProduction = 30, cost = 0.5 * 30 = 15
+    // Without this fix, cost would still be 5 (old formula: effectiveCost * ratePercent/100)
+    const result = calcSupplierCostPerSecond(new Decimal(5), new Decimal(10), new Decimal(30), makeState())
+    expect(result.eq(new Decimal(15))).toBe(true)
+    // But production is 30 (×3), cost is 15 (×3) — cost per unit stays 0.5
+    // The benefit is that cost_reduction upgrades stack multiplicatively on top
   })
 })
 

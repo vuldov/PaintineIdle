@@ -80,7 +80,7 @@ export const useSupplierStore = create<SupplierStore>((set, get) => ({
     set((s) => ({
       suppliers: {
         ...s.suppliers,
-        [sid]: { ...s.suppliers[sid], unlocked: true },
+        [sid]: { ...s.suppliers[sid], unlocked: true, active: true, ratePercent: 0 },
       },
     }))
     return true

@@ -3,7 +3,6 @@ import Decimal from 'decimal.js'
 import type { ResourceId, ProductId, Upgrade, Building } from '@/types'
 import { PANTINS_COINS_ID } from '@/types'
 import { calcTotalProduction, calcClampedDelta } from '@/mechanics/productionMechanics'
-import type { TotalProductionResult } from '@/mechanics/productionMechanics'
 import { calcSynergyBonuses } from '@/mechanics/synergyMechanics'
 import { COMBO_DEFINITIONS } from '@/lib/synergies/combos'
 import { useResourceStore } from '@/store/resourceStore'
@@ -99,14 +98,9 @@ function getActiveProductIds(
 
 /**
  * Build the per-second rates shown in the UI.
- *
- * - Positive rates → real (post-clamping/throttle) so the player sees actual gains
- * - Negative rates from buildings → theoretical so the player sees WHY a resource stays at 0
- * - pantins_coins → always real (coin drain is not a pipeline constraint)
- * - Supplier rates → always real (player controls the slider directly)
+ * All rates are real (post-clamping/throttle) so the player sees actual gains and losses.
  */
 function buildDisplayPerSecond(
-  totalResult: TotalProductionResult,
   buildingDeltas: Record<string, Decimal>,
   supplierResult: SupplierTickResult,
   delta: number,
@@ -115,24 +109,12 @@ function buildDisplayPerSecond(
 
   const display: Record<string, Decimal> = {}
 
-  // Theoretical net from buildings (pipeline consumption)
-  const buildingNet = totalResult.totalNet
-
-  // Real per-second from actual building deltas
-  const realBuildingPerSec: Record<string, Decimal> = {}
+  // Real per-second from actual building deltas (post-throttle)
   for (const [rid, d] of Object.entries(buildingDeltas)) {
-    realBuildingPerSec[rid] = d.div(delta)
+    display[rid] = d.div(delta)
   }
 
-  // Merge: real for positive, theoretical for negative (except coins)
-  const buildingKeys = new Set([...Object.keys(buildingNet), ...Object.keys(realBuildingPerSec)])
-  for (const rid of buildingKeys) {
-    const theoretical = buildingNet[rid] ?? new Decimal(0)
-    const real = realBuildingPerSec[rid] ?? new Decimal(0)
-    display[rid] = (theoretical.isNeg() && rid !== 'pantins_coins') ? theoretical : real
-  }
-
-  // Suppliers: always real (post-throttle)
+  // Suppliers: real (post-throttle)
   for (const [rid, d] of Object.entries(supplierResult.resourceDeltas)) {
     display[rid] = (display[rid] ?? new Decimal(0)).add(d.div(delta))
   }
@@ -206,10 +188,15 @@ function executeTick(delta: number) {
     useResourceStore.getState().applyDeltas(supplierResult.resourceDeltas)
   }
 
-  // 4. Display per-second rates
-  resourceStore.updatePerSecond(
-    buildDisplayPerSecond(totalResult, buildingDeltas, supplierResult, delta),
-  )
+  // 4. Display per-second rates (include all known resources so stale values get zeroed)
+  const knownResources = resourceStore.getAllResources()
+  const displayRates = buildDisplayPerSecond(buildingDeltas, supplierResult, delta)
+  for (const rid of Object.keys(knownResources)) {
+    if (!(rid in displayRates)) {
+      displayRates[rid] = new Decimal(0)
+    }
+  }
+  resourceStore.updatePerSecond(displayRates)
 
   // 5. Unlocks
   checkBuildingAndResourceUnlocks()
