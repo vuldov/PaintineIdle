@@ -34,103 +34,92 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
   const visibleProducts = PRODUCT_ORDER.filter((id) => unlockedProducts.includes(id))
 
   return (
-    <header className="sticky top-0 z-10 bg-amber-100/90 backdrop-blur-sm border-b border-amber-300 px-4 py-3 shadow-sm">
-      <div className="flex flex-wrap items-center justify-center gap-6">
-        {/* Paintines Coins -- always visible, not clickable */}
-        {coinsResource && coinsData && (
-          <div className="flex items-center gap-2 text-amber-900">
-            <span className="text-2xl" role="img" aria-label={coinsData.name}>
-              {coinsData.emoji}
-            </span>
-            <div className="flex flex-col items-start leading-tight">
-              <span className="font-bold text-lg">
-                <NumberDisplay value={coinsResource.amount} />
+    <header className="sticky top-0 z-10 bg-amber-100/90 backdrop-blur-sm border-b border-amber-300 px-2 py-2 shadow-sm">
+      <div className="flex items-center gap-1.5">
+        {/* Left/center: coins + products */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 flex-1 min-w-0">
+          {/* Paintines Coins */}
+          {coinsResource && coinsData && (
+            <div className="flex items-center gap-1.5 text-amber-900 rounded-lg px-2.5 py-1 min-w-[100px]">
+              <span className="text-xl shrink-0" role="img" aria-label={coinsData.name}>
+                {coinsData.emoji}
               </span>
-              <span className="text-xs text-amber-700">
-                <NumberDisplay value={coinsResource.perSecond} />/s
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Separator */}
-        {visibleProducts.length > 0 && (
-          <div className="w-px h-8 bg-amber-300" />
-        )}
-
-        {/* All unlocked product finished resources -- clickable to switch */}
-        {visibleProducts.map((id) => {
-          const bundle = PRODUCT_REGISTRY[id]
-          const finishedRid = bundle.finishedProductId as string
-          const finishedRes = productResources[id]?.[finishedRid]
-          const finishedData = bundle.resources[finishedRid]
-          const isActive = id === activeProduct
-          const ringClass = RING_CLASSES[bundle.definition.color] ?? RING_CLASSES.amber
-
-          if (!finishedRes || !finishedData) return null
-
-          return (
-            <button
-              key={id}
-              onClick={() => setActiveProduct(id as ProductId)}
-              title={`${bundle.definition.name} — Cliquez pour afficher`}
-              className={`
-                flex items-center gap-2 text-amber-900 rounded-lg px-3 py-1.5 transition-all cursor-pointer
-                ${isActive
-                  ? `ring-2 ${ringClass} bg-white/60 shadow-sm`
-                  : 'hover:bg-white/40'
-                }
-              `}
-            >
-              <span className="text-2xl" role="img" aria-label={finishedData.name}>
-                {finishedData.emoji}
-              </span>
-              <div className="flex flex-col items-start leading-tight">
-                <span className="font-bold text-lg">
-                  <NumberDisplay value={finishedRes.amount} />
+              <div className="flex flex-col leading-tight tabular-nums">
+                <span className="font-bold text-sm">
+                  <NumberDisplay value={coinsResource.amount} />
                 </span>
-                <span className="text-xs text-amber-700">
-                  <NumberDisplay value={finishedRes.perSecond} />/s
+                <span className="text-[10px] text-amber-700">
+                  <NumberDisplay value={coinsResource.perSecond} />/s
                 </span>
               </div>
-            </button>
-          )
-        })}
+            </div>
+          )}
 
-        {/* Synergy button */}
-        {visibleProducts.length > 0 && (
-          <>
-            <div className="w-px h-8 bg-amber-300" />
+          {/* Product tabs */}
+          {visibleProducts.map((id) => {
+            const bundle = PRODUCT_REGISTRY[id]
+            const finishedRid = bundle.finishedProductId as string
+            const finishedRes = productResources[id]?.[finishedRid]
+            const finishedData = bundle.resources[finishedRid]
+            const isActive = id === activeProduct
+            const ringClass = RING_CLASSES[bundle.definition.color] ?? RING_CLASSES.amber
+
+            if (!finishedRes || !finishedData) return null
+
+            return (
+              <button
+                key={id}
+                onClick={() => setActiveProduct(id as ProductId)}
+                title={`${bundle.definition.name} — Cliquez pour afficher`}
+                className={`
+                  flex items-center gap-1.5 text-amber-900 rounded-lg px-2.5 py-1 transition-all cursor-pointer min-w-[100px]
+                  ${isActive
+                    ? `ring-2 ${ringClass} bg-white/60 shadow-sm`
+                    : 'bg-white/20 hover:bg-white/50 opacity-75 hover:opacity-100'
+                  }
+                `}
+              >
+                <span className="text-xl shrink-0" role="img" aria-label={finishedData.name}>
+                  {finishedData.emoji}
+                </span>
+                <div className="flex flex-col leading-tight tabular-nums">
+                  <span className="font-bold text-sm">
+                    <NumberDisplay value={finishedRes.amount} />
+                  </span>
+                  <span className="text-[10px] text-amber-700">
+                    <NumberDisplay value={finishedRes.perSecond} />/s
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Right: utility icons */}
+        <div className="flex flex-col gap-1 shrink-0">
+          {visibleProducts.length > 0 && (
             <button
               onClick={() => setViewMode(viewMode === 'synergies' ? 'product' : 'synergies')}
               title="Synergies & Bonus"
               className={`
-                flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer
+                w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer
                 ${viewMode === 'synergies'
                   ? 'ring-2 ring-purple-400 bg-purple-50 shadow-sm'
                   : 'hover:bg-white/40 text-amber-900'
                 }
               `}
             >
-              <span className="text-xl">✨</span>
-              <span className="text-sm font-semibold hidden sm:inline">
-                Synergies
-              </span>
+              <span className="text-lg">✨</span>
             </button>
-          </>
-        )}
-
-        {/* Settings button */}
-        <div className="w-px h-8 bg-amber-300" />
-        <button
-          onClick={onOpenSettings}
-          title="Options"
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:bg-white/40 text-amber-900"
-        >
-          <span className="text-xl">&#9881;</span>
-          <span className="text-sm font-semibold hidden sm:inline">Options</span>
-        </button>
-
+          )}
+          <button
+            onClick={onOpenSettings}
+            title="Options"
+            className="w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer hover:bg-white/40 text-amber-900"
+          >
+            <span className="text-lg">&#9881;</span>
+          </button>
+        </div>
       </div>
     </header>
   )
