@@ -340,10 +340,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('beurrier_artisanal_rate_6') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_rate_6'),
     name: 'Beurre premium VI', emoji: '🧈',
-    description: 'Debit max fixe a 1 000/s - Beurrier artisanal',
+    description: 'x3 debit max - Beurrier artisanal',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(3570), costResource: PATE_FEUILLETEE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'croissants',
   },
 
@@ -441,10 +441,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('moulin_a_farine_rate_6') as string]: {
     id: supplierUpgradeId('moulin_a_farine_rate_6'),
     name: 'Moulin ameliore VI', emoji: '🌾',
-    description: 'Debit max fixe a 1 000/s - Moulin a farine',
+    description: 'x3 debit max - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(3570), costResource: PATE_FEUILLETEE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'croissants',
   },
 }

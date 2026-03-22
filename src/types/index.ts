@@ -263,7 +263,7 @@ export interface SupplierData {
 export type SupplierUpgradeId = Brand<string, 'SupplierUpgradeId'>
 export const supplierUpgradeId = (id: string): SupplierUpgradeId => id as SupplierUpgradeId
 
-export type SupplierUpgradeEffectType = 'max_rate_bonus' | 'cost_reduction' | 'set_max_rate'
+export type SupplierUpgradeEffectType = 'max_rate_bonus' | 'cost_reduction'
 
 export interface SupplierUpgradeData {
   id: SupplierUpgradeId
@@ -283,16 +283,30 @@ export interface SupplierUpgradeData {
   scope: ProductId
 }
 
+// ─── Supplier contract tiers ─────────────────────────────────────
+
+export type SupplierContractTier = 0 | 1 | 2 | 3 | 4
+
+export interface SupplierContractTierData {
+  tier: SupplierContractTier
+  name: string
+  emoji: string
+  /** Multiplier applied to the base max rate (x1, x5, x25, x125, x625) */
+  rateMultiplier: number
+  /** Multiplier applied to the contractCost to determine upgrade cost (x1, x10, x100, x1000, x10000) */
+  costMultiplier: number
+}
+
 // ─── Supplier runtime state ──────────────────────────────────────
 
 export interface SupplierState {
   id: SupplierId
   /** Has the contract been purchased? */
   unlocked: boolean
-  /** Is this supplier currently active (producing)? */
-  active: boolean
   /** Production rate as percentage of effective max (0–100) */
   ratePercent: number
+  /** Current contract tier (0 = Artisanal, 4 = Import mondial) */
+  contractTier: SupplierContractTier
 }
 
 export interface SupplierUpgradeState {

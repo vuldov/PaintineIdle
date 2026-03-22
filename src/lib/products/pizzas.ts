@@ -527,10 +527,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('maraicher_italien_rate_6') as string]: {
     id: supplierUpgradeId('maraicher_italien_rate_6'),
     name: 'Serres du Vesuve VI', emoji: '🍅',
-    description: 'Debit max fixe a 1 000/s - Maraicher italien',
+    description: 'x3 debit max - Maraicher italien',
     targetSupplier: MARAICHER_ITALIEN,
     cost: new Decimal(7141), costResource: SAUCE_TOMATE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'pizzas',
   },
 
@@ -628,10 +628,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('fromagerie_napolitaine_rate_6') as string]: {
     id: supplierUpgradeId('fromagerie_napolitaine_rate_6'),
     name: 'Bufflonnes selectionnees VI', emoji: '🧀',
-    description: 'Debit max fixe a 1 000/s - Fromagerie napolitaine',
+    description: 'x3 debit max - Fromagerie napolitaine',
     targetSupplier: FROMAGERIE_NAPOLITAINE,
     cost: new Decimal(8926), costResource: PIZZA_GARNIE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'pizzas',
   },
 
@@ -729,10 +729,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('moulin_sicilien_rate_6') as string]: {
     id: supplierUpgradeId('moulin_sicilien_rate_6'),
     name: 'Ble ancien sicilien VI', emoji: '🌾',
-    description: 'Debit max fixe a 1 000/s - Moulin sicilien',
+    description: 'x3 debit max - Moulin sicilien',
     targetSupplier: MOULIN_SICILIEN,
     cost: new Decimal(7141), costResource: PATE_A_PIZZA,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'pizzas',
   },
 
@@ -830,10 +830,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('herboriste_rate_6') as string]: {
     id: supplierUpgradeId('herboriste_rate_6'),
     name: 'Serre hydroponique VI', emoji: '🌿',
-    description: 'Debit max fixe a 1 000/s - Herboriste',
+    description: 'x3 debit max - Herboriste',
     targetSupplier: HERBORISTE,
     cost: new Decimal(5356), costResource: SAUCE_TOMATE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'pizzas',
   },
 
@@ -931,10 +931,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('levurerie_rate_6') as string]: {
     id: supplierUpgradeId('levurerie_rate_6'),
     name: 'Culture optimisee VI', emoji: '🧫',
-    description: 'Debit max fixe a 1 000/s - Levurerie',
+    description: 'x3 debit max - Levurerie',
     targetSupplier: LEVURERIE,
     cost: new Decimal(5356), costResource: PATE_A_PIZZA,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'pizzas',
   },
 }

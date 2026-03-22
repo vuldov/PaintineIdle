@@ -1,26 +1,45 @@
 import Decimal from 'decimal.js'
-import type { SupplierData, SupplierState, SupplierUpgradeData, SupplierUpgradeState } from '@/types'
+import type { SupplierData, SupplierState, SupplierUpgradeData, SupplierUpgradeState, SupplierContractTier } from '@/types'
+import { SUPPLIER_CONTRACT_TIERS } from '@/lib/constants'
+
+// ─── Contract tier helpers ──────────────────────────────────────
+
+/** Get the tier data for a given contract tier. */
+export function getContractTierData(tier: SupplierContractTier) {
+  return SUPPLIER_CONTRACT_TIERS[tier]
+}
+
+/** Compute the cost to upgrade a supplier to the given target tier. */
+export function calcContractUpgradeCost(
+  supplierData: SupplierData,
+  targetTier: SupplierContractTier,
+): Decimal {
+  const tierData = SUPPLIER_CONTRACT_TIERS[targetTier]
+  return supplierData.contractCost.mul(tierData.costMultiplier)
+}
 
 // ─── Effective stats (after upgrades) ─────────────────────────────
 
-/** Compute the effective max rate for a supplier after all purchased upgrades. */
+/** Compute the effective max rate for a supplier after contract tier and all purchased upgrades. */
 export function calcEffectiveMaxRate(
   data: SupplierData,
   upgrades: Record<string, SupplierUpgradeData>,
   upgradeStates: Record<string, SupplierUpgradeState>,
+  contractTier: SupplierContractTier = 0,
 ): Decimal {
-  let rate = data.baseMaxRate
-  let override: Decimal | null = null
+  // Start with base rate multiplied by contract tier bonus
+  const tierData = SUPPLIER_CONTRACT_TIERS[contractTier]
+  let rate = data.baseMaxRate.mul(tierData.rateMultiplier)
+
+  // Then apply individual upgrade multipliers on top
   for (const [id, upData] of Object.entries(upgrades)) {
     if (upData.targetSupplier !== data.id) continue
     if (!upgradeStates[id]?.purchased) continue
     if (upData.effectType === 'max_rate_bonus') {
       rate = rate.mul(upData.effectValue)
-    } else if (upData.effectType === 'set_max_rate') {
-      override = upData.effectValue
     }
   }
-  return override ?? rate
+  return rate
 }
 
 /** Compute the effective cost/sec at full rate for a supplier after all purchased upgrades. */
@@ -47,7 +66,7 @@ export function calcSupplierProduction(
   effectiveMaxRate: Decimal,
   state: SupplierState,
 ): Decimal {
-  if (!state.unlocked || !state.active || state.ratePercent <= 0) {
+  if (!state.unlocked || state.ratePercent <= 0) {
     return new Decimal(0)
   }
   return effectiveMaxRate.mul(state.ratePercent).div(100)
@@ -67,7 +86,7 @@ export function calcSupplierCostPerSecond(
   effectiveMaxRate: Decimal,
   state: SupplierState,
 ): Decimal {
-  if (!state.unlocked || !state.active || state.ratePercent <= 0 || baseMaxRate.isZero()) {
+  if (!state.unlocked || state.ratePercent <= 0 || baseMaxRate.isZero()) {
     return new Decimal(0)
   }
   const actualProduction = effectiveMaxRate.mul(state.ratePercent).div(100)
@@ -128,7 +147,7 @@ export function calcSupplierTick(
     const data = supplierData[id]
     if (!data) continue
 
-    const effectiveMax = calcEffectiveMaxRate(data, supplierUpgrades, upgradeStates)
+    const effectiveMax = calcEffectiveMaxRate(data, supplierUpgrades, upgradeStates, state.contractTier ?? 0)
     const effectiveCost = calcEffectiveCostPerSecond(data, supplierUpgrades, upgradeStates)
 
     // costPerSec at full effective rate: costPerUnit × effectiveMaxRate

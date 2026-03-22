@@ -1,12 +1,13 @@
 import Decimal from 'decimal.js'
-import type { SupplierData, SupplierState } from '@/types'
+import type { SupplierData, SupplierState, SupplierContractTier } from '@/types'
 import { PANTINS_COINS_ID } from '@/types'
 import { useProduct } from './ProductContext'
 import { useSupplierStore } from '@/store/supplierStore'
 import { useResourceStore } from '@/store/resourceStore'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES } from '@/lib/products/registry'
-import { calcEffectiveMaxRate, calcEffectiveCostPerSecond, calcSupplierProduction, calcSupplierCostPerSecond } from '@/mechanics/supplierMechanics'
+import { SUPPLIER_CONTRACT_TIERS } from '@/lib/constants'
+import { calcEffectiveMaxRate, calcEffectiveCostPerSecond, calcSupplierProduction, calcSupplierCostPerSecond, calcContractUpgradeCost } from '@/mechanics/supplierMechanics'
 
 // ─── Single supplier card ────────────────────────────────────────
 
@@ -15,7 +16,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
   const state: SupplierState | undefined = useSupplierStore((s) => s.suppliers[supplierId])
   const upgradeStates = useSupplierStore((s) => s.supplierUpgrades)
   const buyContract = useSupplierStore((s) => s.buyContract)
-  const toggleSupplier = useSupplierStore((s) => s.toggleSupplier)
+  const upgradeContract = useSupplierStore((s) => s.upgradeContract)
   const setRate = useSupplierStore((s) => s.setRate)
   const coinsAmount = useResourceStore((s) => {
     const coins = s.globalResources[PANTINS_COINS_ID as string]
@@ -28,8 +29,11 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
   const resourceEmoji = resourceData?.emoji ?? ''
   const resourceName = resourceData?.name ?? data.producedResource
 
-  const effectiveMax = calcEffectiveMaxRate(data, ALL_SUPPLIER_UPGRADES, upgradeStates)
+  const contractTier = state.contractTier ?? 0
+  const effectiveMax = calcEffectiveMaxRate(data, ALL_SUPPLIER_UPGRADES, upgradeStates, contractTier)
   const effectiveCost = calcEffectiveCostPerSecond(data, ALL_SUPPLIER_UPGRADES, upgradeStates)
+
+  const currentTierData = SUPPLIER_CONTRACT_TIERS[contractTier]
 
   // ── Locked state ──
   if (!state.unlocked) {
@@ -65,12 +69,14 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
   const production = calcSupplierProduction(effectiveMax, state)
   const costPerSec = calcSupplierCostPerSecond(effectiveCost, data.baseMaxRate, effectiveMax, state)
 
+  const canUpgradeTier = contractTier < 4
+  const nextTier = canUpgradeTier ? ((contractTier + 1) as SupplierContractTier) : null
+  const nextTierData = nextTier !== null ? SUPPLIER_CONTRACT_TIERS[nextTier] : null
+  const upgradeCost = nextTier !== null ? calcContractUpgradeCost(data, nextTier) : null
+  const canAffordUpgrade = upgradeCost !== null && coinsAmount.gte(upgradeCost)
+
   return (
-    <div className={`rounded-xl border p-4 shadow-sm transition-colors ${
-      state.active
-        ? 'bg-amber-50 border-amber-300'
-        : 'bg-white border-amber-200'
-    }`}>
+    <div className="rounded-xl border p-4 shadow-sm transition-colors bg-amber-50 border-amber-300">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3 min-w-0">
           <span className="text-2xl">{data.emoji}</span>
@@ -79,11 +85,11 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
             <p className="text-xs text-amber-600">{data.description}</p>
           </div>
         </div>
-        {state.active && (
-          <span className="shrink-0 text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-            Actif
-          </span>
-        )}
+      </div>
+
+      {/* Contract tier */}
+      <div className="text-xs font-medium text-amber-600 mb-1">
+        {currentTierData.emoji} {currentTierData.name}
       </div>
 
       {/* Resource info */}
@@ -91,41 +97,47 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
         {resourceEmoji} {resourceName} — max <NumberDisplay value={effectiveMax} />/s
       </div>
 
-      {/* Toggle button */}
-      <button
-        onClick={() => toggleSupplier(data.id)}
-        className={`w-full py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer mb-3 ${
-          state.active
-            ? 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-            : 'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700'
-        }`}
-      >
-        {state.active ? 'Desactiver' : 'Activer'}
-      </button>
+      {/* Rate slider */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between text-xs text-amber-800 mb-1">
+          <span>Debit : {state.ratePercent}%</span>
+          <span>
+            <NumberDisplay value={production} />/s → <NumberDisplay value={costPerSec} /> 🪙/s
+          </span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={10}
+          value={state.ratePercent}
+          onChange={(e) => setRate(data.id, Number(e.target.value))}
+          className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
+        />
+        <div className="flex justify-between text-[10px] text-amber-500 mt-0.5">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
+        </div>
+      </div>
 
-      {/* Rate slider (only when active) */}
-      {state.active && (
-        <div className="mb-2">
-          <div className="flex items-center justify-between text-xs text-amber-800 mb-1">
-            <span>Debit : {state.ratePercent}%</span>
-            <span>
-              <NumberDisplay value={production} />/s → <NumberDisplay value={costPerSec} /> 🪙/s
-            </span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={10}
-            value={state.ratePercent}
-            onChange={(e) => setRate(data.id, Number(e.target.value))}
-            className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
-          />
-          <div className="flex justify-between text-[10px] text-amber-500 mt-0.5">
-            <span>0%</span>
-            <span>50%</span>
-            <span>100%</span>
-          </div>
+      {/* Contract tier upgrade */}
+      {canUpgradeTier && nextTierData && upgradeCost && (
+        <button
+          onClick={() => upgradeContract(data.id)}
+          disabled={!canAffordUpgrade}
+          className={`w-full py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            canAffordUpgrade
+              ? 'bg-purple-500 text-white hover:bg-purple-600 active:bg-purple-700'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          Ameliorer contrat → {nextTierData.emoji} {nextTierData.name} (x{nextTierData.rateMultiplier} debit) — <NumberDisplay value={upgradeCost} /> 🪙
+        </button>
+      )}
+      {!canUpgradeTier && (
+        <div className="text-center text-[10px] text-amber-500 font-medium">
+          Contrat au rang maximum
         </div>
       )}
     </div>

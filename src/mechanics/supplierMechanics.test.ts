@@ -8,6 +8,8 @@ import {
   calcSupplierProduction,
   calcSupplierCostPerSecond,
   calcSupplierTick,
+  calcContractUpgradeCost,
+  getContractTierData,
 } from './supplierMechanics'
 
 // ─── Fixtures ──────────────────────────────────────────────────
@@ -20,7 +22,7 @@ function makeData(overrides: Partial<SupplierData> = {}): SupplierData {
   return {
     id: supplierId('test_supplier'),
     name: 'Test Supplier',
-    emoji: '🧈',
+    emoji: '\u{1F9C8}',
     description: 'A test supplier',
     producedResource: BEURRE,
     baseMaxRate: new Decimal(10),
@@ -35,8 +37,8 @@ function makeState(overrides: Partial<SupplierState> = {}): SupplierState {
   return {
     id: supplierId('test_supplier'),
     unlocked: true,
-    active: true,
     ratePercent: 100,
+    contractTier: 0,
     ...overrides,
   }
 }
@@ -44,10 +46,98 @@ function makeState(overrides: Partial<SupplierState> = {}): SupplierState {
 const NO_UPGRADES: Record<string, SupplierUpgradeData> = {}
 const NO_UPGRADE_STATES: Record<string, SupplierUpgradeState> = {}
 
+// ─── getContractTierData ────────────────────────────────────────
+
+describe('getContractTierData', () => {
+  it('returns correct data for tier 0', () => {
+    const tier = getContractTierData(0)
+    expect(tier.name).toBe('Artisanal')
+    expect(tier.rateMultiplier).toBe(1)
+    expect(tier.costMultiplier).toBe(1)
+  })
+
+  it('returns correct data for tier 4', () => {
+    const tier = getContractTierData(4)
+    expect(tier.name).toBe('Import mondial')
+    expect(tier.rateMultiplier).toBe(625)
+    expect(tier.costMultiplier).toBe(10000)
+  })
+})
+
+// ─── calcContractUpgradeCost ────────────────────────────────────
+
+describe('calcContractUpgradeCost', () => {
+  it('returns contractCost * 1 for tier 0', () => {
+    const data = makeData({ contractCost: new Decimal(100) })
+    const cost = calcContractUpgradeCost(data, 0)
+    expect(cost.eq(new Decimal(100))).toBe(true)
+  })
+
+  it('returns contractCost * 10 for tier 1', () => {
+    const data = makeData({ contractCost: new Decimal(100) })
+    const cost = calcContractUpgradeCost(data, 1)
+    expect(cost.eq(new Decimal(1000))).toBe(true)
+  })
+
+  it('returns contractCost * 100 for tier 2', () => {
+    const data = makeData({ contractCost: new Decimal(100) })
+    const cost = calcContractUpgradeCost(data, 2)
+    expect(cost.eq(new Decimal(10000))).toBe(true)
+  })
+
+  it('returns contractCost * 1000 for tier 3', () => {
+    const data = makeData({ contractCost: new Decimal(100) })
+    const cost = calcContractUpgradeCost(data, 3)
+    expect(cost.eq(new Decimal(100000))).toBe(true)
+  })
+
+  it('returns contractCost * 10000 for tier 4', () => {
+    const data = makeData({ contractCost: new Decimal(100) })
+    const cost = calcContractUpgradeCost(data, 4)
+    expect(cost.eq(new Decimal(1000000))).toBe(true)
+  })
+
+  it('works with very large contractCost', () => {
+    const data = makeData({ contractCost: new Decimal('1e30') })
+    const cost = calcContractUpgradeCost(data, 4)
+    expect(cost.eq(new Decimal('1e34'))).toBe(true)
+  })
+})
+
 // ─── calcEffectiveMaxRate ───────────────────────────────────────
 
 describe('calcEffectiveMaxRate', () => {
-  it('returns baseMaxRate with no upgrades', () => {
+  it('returns baseMaxRate with no upgrades and tier 0', () => {
+    const data = makeData()
+    const result = calcEffectiveMaxRate(data, NO_UPGRADES, NO_UPGRADE_STATES, 0)
+    expect(result.eq(new Decimal(10))).toBe(true)
+  })
+
+  it('returns baseMaxRate * 5 at tier 1 with no upgrades', () => {
+    const data = makeData()
+    const result = calcEffectiveMaxRate(data, NO_UPGRADES, NO_UPGRADE_STATES, 1)
+    expect(result.eq(new Decimal(50))).toBe(true)
+  })
+
+  it('returns baseMaxRate * 25 at tier 2 with no upgrades', () => {
+    const data = makeData()
+    const result = calcEffectiveMaxRate(data, NO_UPGRADES, NO_UPGRADE_STATES, 2)
+    expect(result.eq(new Decimal(250))).toBe(true)
+  })
+
+  it('returns baseMaxRate * 125 at tier 3 with no upgrades', () => {
+    const data = makeData()
+    const result = calcEffectiveMaxRate(data, NO_UPGRADES, NO_UPGRADE_STATES, 3)
+    expect(result.eq(new Decimal(1250))).toBe(true)
+  })
+
+  it('returns baseMaxRate * 625 at tier 4 with no upgrades', () => {
+    const data = makeData()
+    const result = calcEffectiveMaxRate(data, NO_UPGRADES, NO_UPGRADE_STATES, 4)
+    expect(result.eq(new Decimal(6250))).toBe(true)
+  })
+
+  it('defaults to tier 0 when contractTier is not provided', () => {
     const data = makeData()
     const result = calcEffectiveMaxRate(data, NO_UPGRADES, NO_UPGRADE_STATES)
     expect(result.eq(new Decimal(10))).toBe(true)
@@ -57,7 +147,7 @@ describe('calcEffectiveMaxRate', () => {
     const data = makeData()
     const upgrades: Record<string, SupplierUpgradeData> = {
       up1: {
-        id: supplierUpgradeId('up1'), name: 'Boost', emoji: '⬆️',
+        id: supplierUpgradeId('up1'), name: 'Boost', emoji: '\u2B06\uFE0F',
         description: 'test', targetSupplier: supplierId('test_supplier'),
         cost: new Decimal(10), costResource: PATE,
         effectType: 'max_rate_bonus', effectValue: new Decimal(1.5),
@@ -67,15 +157,34 @@ describe('calcEffectiveMaxRate', () => {
     const states: Record<string, SupplierUpgradeState> = {
       up1: { id: supplierUpgradeId('up1'), purchased: true },
     }
-    const result = calcEffectiveMaxRate(data, upgrades, states)
+    const result = calcEffectiveMaxRate(data, upgrades, states, 0)
     expect(result.eq(new Decimal(15))).toBe(true)
+  })
+
+  it('contract tier and upgrade multipliers stack multiplicatively', () => {
+    const data = makeData() // baseMaxRate = 10
+    const upgrades: Record<string, SupplierUpgradeData> = {
+      up1: {
+        id: supplierUpgradeId('up1'), name: 'Boost', emoji: '\u2B06\uFE0F',
+        description: 'test', targetSupplier: supplierId('test_supplier'),
+        cost: new Decimal(10), costResource: PATE,
+        effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+        scope: 'croissants',
+      },
+    }
+    const states: Record<string, SupplierUpgradeState> = {
+      up1: { id: supplierUpgradeId('up1'), purchased: true },
+    }
+    // tier 1 = x5, upgrade = x3 => 10 * 5 * 3 = 150
+    const result = calcEffectiveMaxRate(data, upgrades, states, 1)
+    expect(result.eq(new Decimal(150))).toBe(true)
   })
 
   it('ignores unpurchased upgrades', () => {
     const data = makeData()
     const upgrades: Record<string, SupplierUpgradeData> = {
       up1: {
-        id: supplierUpgradeId('up1'), name: 'Boost', emoji: '⬆️',
+        id: supplierUpgradeId('up1'), name: 'Boost', emoji: '\u2B06\uFE0F',
         description: 'test', targetSupplier: supplierId('test_supplier'),
         cost: new Decimal(10), costResource: PATE,
         effectType: 'max_rate_bonus', effectValue: new Decimal(2),
@@ -85,7 +194,7 @@ describe('calcEffectiveMaxRate', () => {
     const states: Record<string, SupplierUpgradeState> = {
       up1: { id: supplierUpgradeId('up1'), purchased: false },
     }
-    const result = calcEffectiveMaxRate(data, upgrades, states)
+    const result = calcEffectiveMaxRate(data, upgrades, states, 0)
     expect(result.eq(new Decimal(10))).toBe(true)
   })
 })
@@ -103,7 +212,7 @@ describe('calcEffectiveCostPerSecond', () => {
     const data = makeData()
     const upgrades: Record<string, SupplierUpgradeData> = {
       up1: {
-        id: supplierUpgradeId('up1'), name: 'Discount', emoji: '⬇️',
+        id: supplierUpgradeId('up1'), name: 'Discount', emoji: '\u2B07\uFE0F',
         description: 'test', targetSupplier: supplierId('test_supplier'),
         cost: new Decimal(10), costResource: PATE,
         effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -141,8 +250,8 @@ describe('calcSupplierProduction', () => {
     expect(result.isZero()).toBe(true)
   })
 
-  it('returns 0 if not active', () => {
-    const result = calcSupplierProduction(new Decimal(10), makeState({ active: false }))
+  it('returns 0 if ratePercent is 0', () => {
+    const result = calcSupplierProduction(new Decimal(10), makeState({ ratePercent: 0 }))
     expect(result.isZero()).toBe(true)
   })
 })
@@ -161,19 +270,16 @@ describe('calcSupplierCostPerSecond', () => {
     expect(result.eq(new Decimal(2.5))).toBe(true)
   })
 
-  it('returns 0 when inactive', () => {
-    const result = calcSupplierCostPerSecond(new Decimal(5), new Decimal(10), new Decimal(10), makeState({ active: false }))
+  it('returns 0 when ratePercent is 0', () => {
+    const result = calcSupplierCostPerSecond(new Decimal(5), new Decimal(10), new Decimal(10), makeState({ ratePercent: 0 }))
     expect(result.isZero()).toBe(true)
   })
 
   it('cost increases sub-linearly with rate upgrades', () => {
-    // baseMaxRate=10, effectiveMax=30 (×3 upgrade), baseCost=5
+    // baseMaxRate=10, effectiveMax=30 (x3 upgrade), baseCost=5
     // costPerUnit = 5/10 = 0.5, actualProduction = 30, cost = 0.5 * 30 = 15
-    // Without this fix, cost would still be 5 (old formula: effectiveCost * ratePercent/100)
     const result = calcSupplierCostPerSecond(new Decimal(5), new Decimal(10), new Decimal(30), makeState())
     expect(result.eq(new Decimal(15))).toBe(true)
-    // But production is 30 (×3), cost is 15 (×3) — cost per unit stays 0.5
-    // The benefit is that cost_reduction upgrades stack multiplicatively on top
   })
 })
 
@@ -193,6 +299,20 @@ describe('calcSupplierTick', () => {
     expect(result.entries[0].cost.eq(new Decimal(5))).toBe(true)
     expect(result.resourceDeltas['beurre']?.eq(new Decimal(10))).toBe(true)
     expect(result.resourceDeltas['pantins_coins']?.eq(new Decimal(-5))).toBe(true)
+  })
+
+  it('applies contract tier multiplier in tick calculation', () => {
+    const data = makeData() // baseMaxRate=10, baseCost=5
+    const state = makeState({ contractTier: 1 }) // tier 1 = x5 rate
+    const suppliers = { test_supplier: state }
+    const supplierData = { test_supplier: data }
+
+    const result = calcSupplierTick(suppliers, supplierData, NO_UPGRADES, NO_UPGRADE_STATES, new Decimal(100000), 1)
+
+    // effectiveMax = 10 * 5 = 50
+    expect(result.entries[0].production.eq(new Decimal(50))).toBe(true)
+    // costPerUnit = 5/10 = 0.5, actualProduction = 50, cost = 0.5 * 50 = 25
+    expect(result.entries[0].cost.eq(new Decimal(25))).toBe(true)
   })
 
   it('applies delta time correctly', () => {
@@ -234,7 +354,7 @@ describe('calcSupplierTick', () => {
     const suppliers = { s1: state1, s2: state2 }
     const supplierData = { s1: data1, s2: data2 }
 
-    // Total cost/sec = 5 + 10 = 15. Available = 7.5 → throttle = 0.5
+    // Total cost/sec = 5 + 10 = 15. Available = 7.5 -> throttle = 0.5
     const result = calcSupplierTick(suppliers, supplierData, NO_UPGRADES, NO_UPGRADE_STATES, new Decimal(7.5), 1)
 
     expect(result.entries).toHaveLength(2)
@@ -248,9 +368,9 @@ describe('calcSupplierTick', () => {
     expect(s2Entry.cost.eq(new Decimal(5))).toBe(true)        // 10 * 0.5
   })
 
-  it('skips inactive/unlocked suppliers', () => {
+  it('skips zero-rate/unlocked suppliers', () => {
     const suppliers = {
-      s1: makeState({ id: supplierId('s1'), active: false }),
+      s1: makeState({ id: supplierId('s1'), ratePercent: 0 }),
       s2: makeState({ id: supplierId('s2'), unlocked: false }),
     }
     const supplierData = {

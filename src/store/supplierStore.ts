@@ -1,7 +1,8 @@
 import { create } from 'zustand'
-import type { SupplierId, SupplierState, SupplierUpgradeId, SupplierUpgradeState, ProductId } from '@/types'
+import type { SupplierId, SupplierState, SupplierUpgradeId, SupplierUpgradeState, ProductId, SupplierContractTier } from '@/types'
 import { PANTINS_COINS_ID } from '@/types'
 import { PRODUCT_REGISTRY, ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES } from '@/lib/products/registry'
+import { calcContractUpgradeCost } from '@/mechanics/supplierMechanics'
 import { useResourceStore } from './resourceStore'
 
 // ─── Initial state ──────────────────────────────────────────────
@@ -13,8 +14,8 @@ function createInitialSuppliers(): Record<string, SupplierState> {
       result[id] = {
         id: data.id,
         unlocked: false,
-        active: false,
         ratePercent: 100,
+        contractTier: 0,
       }
     }
   }
@@ -43,8 +44,8 @@ interface SupplierStore {
   /** Buy the contract for a supplier (one-time cost in paintine coins). */
   buyContract: (id: SupplierId) => boolean
 
-  /** Toggle a supplier on/off. Multiple can be active simultaneously. */
-  toggleSupplier: (id: SupplierId) => void
+  /** Upgrade a supplier's contract to the next tier (costs paintine coins). */
+  upgradeContract: (id: SupplierId) => boolean
 
   /** Set the rate percentage (0–100) for a supplier. */
   setRate: (id: SupplierId, percent: number) => void
@@ -80,23 +81,37 @@ export const useSupplierStore = create<SupplierStore>((set, get) => ({
     set((s) => ({
       suppliers: {
         ...s.suppliers,
-        [sid]: { ...s.suppliers[sid], unlocked: true, active: true, ratePercent: 0 },
+        [sid]: { ...s.suppliers[sid], unlocked: true, ratePercent: 0, contractTier: 0 },
       },
     }))
     return true
   },
 
-  toggleSupplier: (id) => {
+  upgradeContract: (id) => {
     const sid = id as string
+    const data = ALL_SUPPLIERS[sid]
+    if (!data) return false
+
     const state = get().suppliers[sid]
-    if (!state || !state.unlocked) return
+    if (!state || !state.unlocked) return false
+
+    const currentTier = state.contractTier ?? 0
+    if (currentTier >= 4) return false
+
+    const nextTier = (currentTier + 1) as SupplierContractTier
+    const cost = calcContractUpgradeCost(data, nextTier)
+
+    const resourceStore = useResourceStore.getState()
+    const success = resourceStore.spendResource(PANTINS_COINS_ID, cost)
+    if (!success) return false
 
     set((s) => ({
       suppliers: {
         ...s.suppliers,
-        [sid]: { ...s.suppliers[sid], active: !s.suppliers[sid].active },
+        [sid]: { ...s.suppliers[sid], contractTier: nextTier },
       },
     }))
+    return true
   },
 
   setRate: (id, percent) => {

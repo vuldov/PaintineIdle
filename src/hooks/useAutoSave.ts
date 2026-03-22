@@ -35,8 +35,8 @@ interface SerializedBuilding {
 interface SerializedSupplier {
   id: string
   unlocked: boolean
-  active: boolean
   ratePercent: number
+  contractTier?: number
 }
 
 interface SaveDataV3 {
@@ -117,8 +117,8 @@ function serializeSave(): SaveDataV3 {
     serializedSuppliers[id] = {
       id: supplier.id as string,
       unlocked: supplier.unlocked,
-      active: supplier.active,
       ratePercent: supplier.ratePercent,
+      contractTier: supplier.contractTier ?? 0,
     }
   }
 
@@ -197,7 +197,7 @@ export async function importSave(base64: string): Promise<boolean> {
     const json = fromBase64(base64)
     const rawData = JSON.parse(json) as { version?: number }
 
-    if (!rawData.version || rawData.version < GAME_VERSION) return false
+    if (!rawData.version || rawData.version < 8) return false
 
     const data = rawData as SaveDataV3
 
@@ -328,8 +328,8 @@ function restoreFromSaveData(data: SaveDataV3) {
         restoredSuppliers[id] = {
           ...restoredSuppliers[id],
           unlocked: serialized.unlocked,
-          active: serialized.active,
           ratePercent: serialized.ratePercent,
+          contractTier: (serialized.contractTier ?? 0) as import('@/types').SupplierContractTier,
         }
       }
     }
@@ -397,7 +397,9 @@ async function loadGame() {
     const rawData = JSON.parse(raw) as { version?: number }
 
     // Handle old versions -- too old, discard (v7 changed building structure)
-    if (!rawData.version || rawData.version < GAME_VERSION) {
+    // v8 saves are compatible (contractTier defaults to 0 via migration)
+    const MIN_COMPATIBLE_VERSION = 8
+    if (!rawData.version || rawData.version < MIN_COMPATIBLE_VERSION) {
       await deleteSaveData()
       return
     }

@@ -391,10 +391,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('cremerie_normande_rate_6') as string]: {
     id: supplierUpgradeId('cremerie_normande_rate_6'),
     name: 'Livraison express beurre VI', emoji: '🧈',
-    description: 'Debit max fixe a 1 000/s - Cremerie normande',
+    description: 'x3 debit max - Cremerie normande',
     targetSupplier: CREMERIE_NORMANDE,
     cost: new Decimal(5356), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'pains_au_chocolat',
   },
 
@@ -492,10 +492,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('minoterie_rate_6') as string]: {
     id: supplierUpgradeId('minoterie_rate_6'),
     name: 'Mouture fine VI', emoji: '🌾',
-    description: 'Debit max fixe a 1 000/s - Minoterie',
+    description: 'x3 debit max - Minoterie',
     targetSupplier: MINOTERIE,
     cost: new Decimal(5356), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'pains_au_chocolat',
   },
 
@@ -593,10 +593,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('chocolatier_suisse_rate_6') as string]: {
     id: supplierUpgradeId('chocolatier_suisse_rate_6'),
     name: 'Cacao grand cru VI', emoji: '🍫',
-    description: 'Debit max fixe a 1 000/s - Chocolatier suisse',
+    description: 'x3 debit max - Chocolatier suisse',
     targetSupplier: CHOCOLATIER_BELGE,
     cost: new Decimal(3570), costResource: PATON_CHOCOLAT,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'pains_au_chocolat',
   },
 }

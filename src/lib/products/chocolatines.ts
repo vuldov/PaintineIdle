@@ -455,10 +455,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('maitre_chocolatier_rate_6') as string]: {
     id: supplierUpgradeId('maitre_chocolatier_rate_6'),
     name: 'Plantation cacao VI', emoji: '🍫',
-    description: 'Debit max fixe a 1 000/s - Maitre chocolatier',
+    description: 'x3 debit max - Maitre chocolatier',
     targetSupplier: MAITRE_CHOCOLATIER,
     cost: new Decimal(3570), costResource: PATON_CHOCOLATINE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'chocolatines',
   },
 
@@ -556,10 +556,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('ferme_laitiere_rate_6') as string]: {
     id: supplierUpgradeId('ferme_laitiere_rate_6'),
     name: 'Paturages bio VI', emoji: '🥛',
-    description: 'Debit max fixe a 1 000/s - Ferme laitiere',
+    description: 'x3 debit max - Ferme laitiere',
     targetSupplier: FERME_LAITIERE,
     cost: new Decimal(4285), costResource: PATE_BRIOCHEE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'chocolatines',
   },
 
@@ -657,10 +657,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('plantation_vanille_rate_6') as string]: {
     id: supplierUpgradeId('plantation_vanille_rate_6'),
     name: 'Vanille bourbon VI', emoji: '🌱',
-    description: 'Debit max fixe a 1 000/s - Plantation vanille',
+    description: 'x3 debit max - Plantation vanille',
     targetSupplier: PLANTATION_VANILLE,
     cost: new Decimal(4285), costResource: PATE_BRIOCHEE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'chocolatines',
   },
 
@@ -758,10 +758,10 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   [supplierUpgradeId('elevage_poules_rate_6') as string]: {
     id: supplierUpgradeId('elevage_poules_rate_6'),
     name: 'Poules selectionnees VI', emoji: '🥚',
-    description: 'Debit max fixe a 1 000/s - Elevage de poules',
+    description: 'x3 debit max - Elevage de poules',
     targetSupplier: ELEVAGE_POULES,
     cost: new Decimal(2856), costResource: CHOCOLATINE_DOREE,
-    effectType: 'set_max_rate', effectValue: new Decimal(1000),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'chocolatines',
   },
 }
