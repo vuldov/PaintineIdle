@@ -294,30 +294,6 @@ export function UpgradePanel() {
         </div>
       )}
 
-      {purchased.length > 0 && (
-        <div className="border-t border-amber-100 pt-3">
-          <p className="text-xs text-amber-500 mb-2">Achetees</p>
-          <div className="flex flex-wrap gap-2">
-            {purchased.map((item) => {
-              const pillBg = item.badge
-                ? `${item.badge.bg} ${item.badge.text} border ${item.badge.border}`
-                : 'bg-amber-100 text-amber-800'
-              return (
-                <span
-                  key={item.key}
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${pillBg}`}
-                  title={`${item.name} -- ${item.description}`}
-                >
-                  {item.emoji} {item.name}
-                  {item.dynamicLabel && (
-                    <span className="text-green-700 font-medium ml-1">({item.dynamicLabel})</span>
-                  )}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

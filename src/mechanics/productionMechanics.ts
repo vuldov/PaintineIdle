@@ -101,11 +101,27 @@ export function calcCost(building: Building, count: number, costReduction?: Deci
   return costReduction ? base.mul(costReduction) : base
 }
 
-export function calcBulkCost(building: Building, count: number, amount: number): Decimal {
+export function calcBulkCost(building: Building, count: number, amount: number, costReduction?: Decimal): Decimal {
   if (amount <= 0) return new Decimal(0)
   const base = building.baseCost
   const r = new Decimal(building.costMultiplier)
-  return base.mul(Decimal.pow(r, count)).mul(Decimal.pow(r, amount).sub(1)).div(r.sub(1))
+  const raw = base.mul(Decimal.pow(r, count)).mul(Decimal.pow(r, amount).sub(1)).div(r.sub(1))
+  return costReduction ? raw.mul(costReduction) : raw
+}
+
+/** How many buildings can be bought with a given budget */
+export function calcMaxAffordable(building: Building, count: number, budget: Decimal, costReduction?: Decimal): number {
+  const base = costReduction ? building.baseCost.mul(costReduction) : building.baseCost
+  const r = new Decimal(building.costMultiplier)
+  // Geometric series inversion: budget = base * r^count * (r^n - 1) / (r - 1)
+  // => r^n = budget * (r-1) / (base * r^count) + 1
+  // => n = log_r(budget * (r-1) / (base * r^count) + 1)
+  const firstCost = base.mul(Decimal.pow(r, count))
+  if (firstCost.gt(budget)) return 0
+  const inner = budget.mul(r.sub(1)).div(firstCost).add(1)
+  if (inner.lte(0)) return 0
+  const n = inner.log(r.toNumber())
+  return Math.max(0, Math.floor(n.toNumber()))
 }
 
 // ─── Cost reduction from upgrades ───────────────────────────────

@@ -3,10 +3,11 @@ import type Decimal from 'decimal.js'
 import { useSynergyStore } from '@/store/synergyStore'
 import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
+import { useSupplierStore } from '@/store/supplierStore'
 import type { Building } from '@/types'
 import { COMBO_DEFINITIONS } from '@/lib/synergies/combos'
 import { SYNERGY_UPGRADES, SYNERGY_UPGRADE_ORDER } from '@/lib/synergies/synergyUpgrades'
-import { ALL_BUILDINGS as ALL_BUILDING_DATA } from '@/lib/products/registry'
+import { ALL_BUILDINGS as ALL_BUILDING_DATA, PRODUCT_REGISTRY, ALL_SUPPLIER_UPGRADES } from '@/lib/products/registry'
 import { formatNumber } from '@/lib/formatNumber'
 import type { ProductId } from '@/types'
 import type { AuraEffectType } from '@/types/synergies'
@@ -431,6 +432,61 @@ function UpgradeSynergySection() {
   )
 }
 
+// ─── Purchased upgrades section ──────────────────────────────────
+
+function PurchasedUpgradesSection() {
+  const upgrades = useUpgradeStore((s) => s.upgrades)
+  const supplierUpgrades = useSupplierStore((s) => s.supplierUpgrades)
+
+  const purchased: Array<{ key: string; emoji: string; name: string; category: string }> = []
+
+  // Product upgrades (non-synergy)
+  for (const [productId, bundle] of Object.entries(PRODUCT_REGISTRY)) {
+    const productEmoji = PRODUCT_EMOJIS[productId as ProductId] ?? '🥐'
+    // Regular upgrades
+    for (const uid of bundle.upgradeOrder) {
+      const u = upgrades[uid as string]
+      const data = bundle.upgrades[uid as string]
+      if (u?.purchased && data) {
+        purchased.push({ key: uid as string, emoji: data.emoji ?? productEmoji, name: data.name, category: 'Produit' })
+      }
+    }
+    // Milestone upgrades
+    for (const m of bundle.milestones ?? []) {
+      const u = upgrades[m.id]
+      if (u?.purchased) {
+        purchased.push({ key: m.id, emoji: '🏆', name: m.name, category: 'Palier' })
+      }
+    }
+  }
+
+  // Supplier upgrades
+  for (const [uid, state] of Object.entries(supplierUpgrades)) {
+    if (!state.purchased) continue
+    const data = ALL_SUPPLIER_UPGRADES[uid]
+    if (data) {
+      purchased.push({ key: uid, emoji: '🚚', name: data.name, category: 'Fournisseur' })
+    }
+  }
+
+  if (purchased.length === 0) return null
+
+  return (
+    <Section title="Ameliorations achetees" emoji="🛒" badge={`${purchased.length}`} defaultOpen={false}>
+      <div className="flex flex-wrap gap-1.5">
+        {purchased.map((item) => (
+          <span
+            key={item.key}
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-amber-50 text-amber-700 border border-amber-200"
+          >
+            {item.emoji} {item.name}
+          </span>
+        ))}
+      </div>
+    </Section>
+  )
+}
+
 // ─── Main SynergyPanel ──────────────────────────────────────────
 
 export function SynergyPanel() {
@@ -453,6 +509,7 @@ export function SynergyPanel() {
       <ComboSection />
       <AuraSection />
       <UpgradeSynergySection />
+      <PurchasedUpgradesSection />
     </div>
   )
 }

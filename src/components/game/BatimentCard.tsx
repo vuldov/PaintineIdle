@@ -1,11 +1,11 @@
 import Decimal from 'decimal.js'
-import { useBuildingStore } from '@/store/buildingStore'
+import { useBuildingStore, type BuyMode } from '@/store/buildingStore'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useSynergyStore } from '@/store/synergyStore'
 import { useProduct } from './ProductContext'
 import { ALL_RESOURCES } from '@/lib/products/registry'
-import { calcCost, calcCostReduction, calcBuildingRates } from '@/mechanics/productionMechanics'
+import { calcCost, calcBulkCost, calcCostReduction, calcMaxAffordable, calcBuildingRates } from '@/mechanics/productionMechanics'
 import { getNextMilestone, getMilestoneProgress } from '@/mechanics/milestoneMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { formatNumber } from '@/lib/formatNumber'
@@ -88,6 +88,38 @@ function MilestoneDots({ milestones, buildingCount }: { milestones: MilestoneDat
   )
 }
 
+// ─── Buy mode selector (shared across all cards) ─────────────────
+
+const BUY_MODES: { value: BuyMode; label: string }[] = [
+  { value: '1', label: '×1' },
+  { value: '10', label: '×10' },
+  { value: 'next', label: 'Palier' },
+  { value: 'max', label: 'Max' },
+]
+
+export function BuyModeSelector() {
+  const buyMode = useBuildingStore((s) => s.buyMode)
+  const setBuyMode = useBuildingStore((s) => s.setBuyMode)
+
+  return (
+    <div className="flex gap-1 bg-amber-50 rounded-lg p-0.5 border border-amber-200">
+      {BUY_MODES.map(({ value, label }) => (
+        <button
+          key={value}
+          onClick={() => setBuyMode(value)}
+          className={`px-2 py-0.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+            buyMode === value
+              ? 'bg-amber-500 text-white shadow-sm'
+              : 'text-amber-700 hover:bg-amber-100'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ─── Component ───────────────────────────────────────────────────
 
 interface BatimentCardProps {
@@ -100,6 +132,8 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
 
   const building = useBuildingStore((state) => state.buildings[productId]?.[bid])
   const buyBuilding = useBuildingStore((state) => state.buyBuilding)
+  const sellBuilding = useBuildingStore((state) => state.sellBuilding)
+  const buyMode = useBuildingStore((state) => state.buyMode)
   const upgrades = useUpgradeStore((state) => state.upgrades)
 
   // Filter upgrades to this product's scope
@@ -107,11 +141,38 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
     Object.entries(upgrades).filter(([, u]) => u.scope === productId || u.scope === 'global')
   )
   const costReduction = calcCostReduction(scopedUpgrades)
-  const cost = building ? calcCost(building, building.count, costReduction) : undefined
 
-  const canAfford = useResourceStore((state) =>
-    building && cost ? state.canAfford(building.costResource, cost) : false
+  // Compute buy amount and cost based on mode
+  const budget = useResourceStore((state) =>
+    building ? state.getResource(building.costResource)?.amount ?? new Decimal(0) : new Decimal(0)
   )
+
+  let buyAmount = 0
+  if (building) {
+    switch (buyMode) {
+      case '1': buyAmount = 1; break
+      case '10': buyAmount = 10; break
+      case 'next': {
+        const next = MILESTONE_THRESHOLDS.find(t => t > building.count)
+        buyAmount = next ? next - building.count : 1
+        break
+      }
+      case 'max':
+        buyAmount = calcMaxAffordable(building, building.count, budget, costReduction)
+        break
+    }
+  }
+
+  const cost = building && buyAmount > 0
+    ? (buyAmount === 1
+      ? calcCost(building, building.count, costReduction)
+      : calcBulkCost(building, building.count, buyAmount, costReduction))
+    : undefined
+
+  const canAfford = cost ? budget.gte(cost) : false
+
+  // Synergy bonuses for accurate display (must be before early return)
+  const synergyBonuses = useSynergyStore((state) => state.bonuses)
 
   const data = bundle.buildings[bid]
 
@@ -121,8 +182,6 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
     m => (m.buildingId as string) === bid,
   )
 
-  // Synergy bonuses for accurate display
-  const synergyBonuses = useSynergyStore((state) => state.bonuses)
   const synergyProductionMult = (synergyBonuses.globalProductionMultiplier ?? new Decimal(1))
     .mul(synergyBonuses.productionMultipliers[productId] ?? new Decimal(1))
   const synergySellMult = (synergyBonuses.sellMultipliers[productId] ?? new Decimal(1))
@@ -138,6 +197,12 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
     synergyProductionMult,
     synergySellMult,
   )
+
+  const buyLabel = buyMode === 'max'
+    ? (buyAmount > 0 ? `×${buyAmount}` : 'Max')
+    : buyMode === 'next'
+      ? `×${buyAmount}`
+      : ''
 
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -192,19 +257,31 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
         <MilestoneDots milestones={buildingMilestones} buildingCount={building.count} />
       )}
 
-      <div className="flex items-center justify-end">
+      {/* Buy / Sell buttons */}
+      <div className="flex items-center justify-between gap-2">
+        {building.count > 0 && (
+          <button
+            onClick={() => sellBuilding(buildingId)}
+            className="px-2 py-1.5 rounded-lg text-xs font-medium transition-colors
+              text-red-600 hover:bg-red-50 border border-red-200 cursor-pointer"
+            title="Vendre 1 (50% remboursé)"
+          >
+            Vendre
+          </button>
+        )}
         <button
           onClick={() => buyBuilding(buildingId)}
-          disabled={!canAfford}
+          disabled={!canAfford || buyAmount <= 0}
           className={`
-            px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-            ${canAfford
+            ml-auto px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
+            ${canAfford && buyAmount > 0
               ? 'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 cursor-pointer'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }
           `}
         >
-          {cost && <NumberDisplay value={cost} />} {costEmoji}
+          {buyLabel && <span className="mr-1 text-amber-200 text-xs">{buyLabel}</span>}
+          {cost ? <NumberDisplay value={cost} /> : '—'} {costEmoji}
         </button>
       </div>
     </div>
