@@ -98,10 +98,12 @@ function getActiveProductIds(
 
 /**
  * Build the per-second rates shown in the UI.
- * All rates are real (post-clamping/throttle) so the player sees actual gains and losses.
+ * Uses theoretical (pre-throttle) building rates so the display stays stable
+ * even when a resource is bottlenecked at 0.
+ * Supplier rates are added from actual (post-throttle) values.
  */
 function buildDisplayPerSecond(
-  buildingDeltas: Record<string, Decimal>,
+  theoreticalNet: Record<string, Decimal>,
   supplierResult: SupplierTickResult,
   delta: number,
 ): Record<string, Decimal> {
@@ -109,12 +111,12 @@ function buildDisplayPerSecond(
 
   const display: Record<string, Decimal> = {}
 
-  // Real per-second from actual building deltas (post-throttle)
-  for (const [rid, d] of Object.entries(buildingDeltas)) {
-    display[rid] = d.div(delta)
+  // Theoretical per-second from building production (pre-throttle)
+  for (const [rid, rate] of Object.entries(theoreticalNet)) {
+    display[rid] = rate
   }
 
-  // Suppliers: real (post-throttle)
+  // Suppliers: actual (post-throttle)
   for (const [rid, d] of Object.entries(supplierResult.resourceDeltas)) {
     display[rid] = (display[rid] ?? new Decimal(0)).add(d.div(delta))
   }
@@ -190,7 +192,7 @@ function executeTick(delta: number) {
 
   // 4. Display per-second rates (include all known resources so stale values get zeroed)
   const knownResources = resourceStore.getAllResources()
-  const displayRates = buildDisplayPerSecond(buildingDeltas, supplierResult, delta)
+  const displayRates = buildDisplayPerSecond(totalResult.totalNet, supplierResult, delta)
   for (const rid of Object.keys(knownResources)) {
     if (!(rid in displayRates)) {
       displayRates[rid] = new Decimal(0)
