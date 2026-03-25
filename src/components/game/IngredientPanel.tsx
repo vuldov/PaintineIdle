@@ -16,9 +16,36 @@ export function IngredientPanel() {
   if (visible.length === 0) return null
 
   return (
-    <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
-      <h2 className="text-sm font-semibold text-amber-800 mb-3">Ingredients</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+    <div className="sticky z-[5] bg-white rounded-xl border border-amber-200 shadow-sm p-2 sm:p-4" style={{ top: 'var(--header-h, 3rem)' }}>
+      <h2 className="hidden sm:block text-sm font-semibold text-amber-800 mb-3">Ingredients</h2>
+
+      {/* Mobile: horizontal scroll strip — fixed-width cards so the last one peeks out */}
+      <div className="flex sm:hidden gap-2 overflow-x-auto scrollbar-hide">
+        {visible.map(([id, data]) => {
+          const resource = productResources[id]
+          if (!resource) return null
+          const isNegative = resource.perSecond.lt(0)
+          return (
+            <div key={id} className="flex items-center gap-1.5 bg-amber-50 rounded-lg px-2 py-1.5 shrink-0 w-28">
+              <span className="text-base" role="img" aria-label={data.name}>
+                {data.emoji}
+              </span>
+              <div className="flex flex-col leading-tight min-w-0">
+                <span className="text-xs font-bold text-amber-900 tabular-nums truncate">
+                  <NumberDisplay value={resource.amount} />
+                </span>
+                <span className={`text-[10px] tabular-nums ${isNegative ? 'text-red-500' : 'text-green-600'}`}>
+                  {isNegative ? '' : '+'}
+                  <NumberDisplay value={resource.perSecond} />/s
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Desktop: grid layout */}
+      <div className="hidden sm:grid grid-cols-3 lg:grid-cols-4 gap-2">
         {visible.map(([id, data]) => {
           const resource = productResources[id]
           if (!resource) return null

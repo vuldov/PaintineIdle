@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef } from 'react'
 import { useResourceStore } from '@/store/resourceStore'
 import { useProductStore } from '@/store/productStore'
 import { SHARED_RESOURCES } from '@/lib/products/shared'
@@ -26,6 +27,26 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
   const viewMode = useProductStore((s) => s.viewMode)
   const setViewMode = useProductStore((s) => s.setViewMode)
 
+  // Track header height for sticky children below
+  const headerRef = useRef<HTMLElement>(null)
+  const updateCssVar = useCallback(() => {
+    if (headerRef.current) {
+      document.documentElement.style.setProperty(
+        '--header-h',
+        `${headerRef.current.offsetHeight}px`,
+      )
+    }
+  }, [])
+
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    updateCssVar()
+    const ro = new ResizeObserver(updateCssVar)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [updateCssVar])
+
   // Paintines Coins
   const coinsResource = globalResources[PANTINS_COINS_ID as string]
   const coinsData = SHARED_RESOURCES[PANTINS_COINS_ID as string]
@@ -34,7 +55,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
   const visibleProducts = PRODUCT_ORDER.filter((id) => unlockedProducts.includes(id))
 
   return (
-    <header className="sticky top-0 z-10 bg-amber-100/90 backdrop-blur-sm border-b border-amber-300 px-2 py-2 shadow-sm">
+    <header ref={headerRef} className="sticky top-0 z-10 bg-amber-100/90 backdrop-blur-sm border-b border-amber-300 px-2 py-2 shadow-sm">
       <div className="flex items-center gap-1.5">
         {/* Left/center: coins + products */}
         <div className="flex flex-wrap items-center justify-center gap-1.5 flex-1 min-w-0">
