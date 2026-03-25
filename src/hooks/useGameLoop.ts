@@ -104,27 +104,32 @@ function getActiveProductIds(
 
 /**
  * Build the per-second rates shown in the UI.
- * Uses theoretical (pre-throttle) building rates so the display stays stable
- * even when a resource is bottlenecked at 0.
- * Supplier rates are added from actual (post-throttle) values.
+ * - Negative rates: show theoretical (demand) so the player sees resource deficit
+ * - Positive rates: show actual (post-throttle) so bottlenecked production shows 0
+ * Supplier rates are always actual (post-throttle).
  */
 function buildDisplayPerSecond(
   theoreticalNet: Record<string, Decimal>,
+  buildingDeltas: Record<string, Decimal>,
   supplierResult: SupplierTickResult,
   delta: number,
 ): Record<string, Decimal> {
   if (delta <= 0) return {}
 
   const display: Record<string, Decimal> = {}
+  const d = new Decimal(delta)
 
-  // Theoretical per-second from building production (pre-throttle)
-  for (const [rid, rate] of Object.entries(theoreticalNet)) {
-    display[rid] = rate
+  // For each resource: pick theoretical if negative (shows demand), actual if positive (shows real output)
+  const allKeys = new Set([...Object.keys(theoreticalNet), ...Object.keys(buildingDeltas)])
+  for (const rid of allKeys) {
+    const theoretical = theoreticalNet[rid] ?? new Decimal(0)
+    const actual = (buildingDeltas[rid] ?? new Decimal(0)).div(d)
+    display[rid] = theoretical.isNegative() ? theoretical : actual
   }
 
   // Suppliers: actual (post-throttle)
-  for (const [rid, d] of Object.entries(supplierResult.resourceDeltas)) {
-    display[rid] = (display[rid] ?? new Decimal(0)).add(d.div(delta))
+  for (const [rid, amount] of Object.entries(supplierResult.resourceDeltas)) {
+    display[rid] = (display[rid] ?? new Decimal(0)).add(amount.div(d))
   }
 
   return display
@@ -198,7 +203,7 @@ function executeTick(delta: number) {
 
   // 4. Display per-second rates (include all known resources so stale values get zeroed)
   const knownResources = resourceStore.getAllResources()
-  const displayRates = buildDisplayPerSecond(totalResult.totalNet, supplierResult, delta)
+  const displayRates = buildDisplayPerSecond(totalResult.totalNet, buildingDeltas, supplierResult, delta)
   for (const rid of Object.keys(knownResources)) {
     if (!(rid in displayRates)) {
       displayRates[rid] = new Decimal(0)
