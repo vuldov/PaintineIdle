@@ -22,6 +22,7 @@ import {
   SHARED_RESOURCE_UNLOCK_THRESHOLDS,
   getAllBuildingUnlockThresholds,
 } from '@/lib/products/registry'
+import { useToastStore } from '@/store/toastStore'
 
 // ─── Unlock checks ──────────────────────────────────────────────
 
@@ -67,6 +68,11 @@ function checkProductUnlocks() {
     if (!bundle.definition.unlockCondition) continue
     if (totalCoins.gte(bundle.definition.unlockCondition.amount)) {
       productStore.unlockProduct(productId)
+      const { name, emoji } = bundle.definition
+      useToastStore.getState().addToast(
+        `Nouveau produit debloque : ${name} !`,
+        emoji,
+      )
     }
   }
 }
