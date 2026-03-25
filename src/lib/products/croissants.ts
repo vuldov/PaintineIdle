@@ -347,13 +347,13 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     scope: 'croissants',
   },
 
-  // ── Moulin a farine (baseCost=10, costGrowth=1.8, costResource=PATE_FEUILLETEE) ──
+  // ── Moulin a farine (baseCost=15, costGrowth=2.0, costResource=PATE_FEUILLETEE) ──
   [supplierUpgradeId('moulin_a_farine_rate_1') as string]: {
     id: supplierUpgradeId('moulin_a_farine_rate_1'),
     name: 'Moulin ameliore', emoji: '🌾',
     description: 'x3 debit max - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(10), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(15), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'croissants',
   },
@@ -362,7 +362,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Négociation farine', emoji: '🌾',
     description: 'x0,8 cout - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(18), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(30), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
     scope: 'croissants',
   },
@@ -371,7 +371,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Moulin ameliore II', emoji: '🌾',
     description: 'x3 debit max - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(32), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(60), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'croissants',
   },
@@ -380,7 +380,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Négociation farine II', emoji: '🌾',
     description: 'x0,8 cout - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(58), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(120), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
     scope: 'croissants',
   },
@@ -389,7 +389,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Moulin ameliore III', emoji: '🌾',
     description: 'x3 debit max - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(105), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(240), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'croissants',
   },
@@ -398,7 +398,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Négociation farine III', emoji: '🌾',
     description: 'x0,8 cout - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(189), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(480), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
     scope: 'croissants',
   },
@@ -407,7 +407,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Moulin ameliore IV', emoji: '🌾',
     description: 'x3 debit max - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(340), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(960), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'croissants',
   },
@@ -416,7 +416,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Négociation farine IV', emoji: '🌾',
     description: 'x0,8 cout - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(612), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(1920), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
     scope: 'croissants',
   },
@@ -425,7 +425,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Moulin ameliore V', emoji: '🌾',
     description: 'x3 debit max - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(1102), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(3840), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'croissants',
   },
@@ -434,7 +434,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Négociation farine V', emoji: '🌾',
     description: 'x0,8 cout - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(1984), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(7680), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
     scope: 'croissants',
   },
@@ -443,7 +443,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     name: 'Moulin ameliore VI', emoji: '🌾',
     description: 'x3 debit max - Moulin a farine',
     targetSupplier: MOULIN_A_FARINE,
-    cost: new Decimal(3570), costResource: PATE_FEUILLETEE,
+    cost: new Decimal(15360), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
     scope: 'croissants',
   },
@@ -478,9 +478,9 @@ const supplierUpgradeOrder = [
 
 // ─── Milestones → Upgrades ─────────────────────────────────────
 
-const milestonesPetrin = generateMilestones(PETRIN, 'petrissage', 'Petrin mecanique', 'croissants', PATE_FEUILLETEE)
-const milestonesFournil = generateMilestones(FOURNIL, 'cuisson', 'Fournil', 'croissants', PATE_FEUILLETEE)
-const milestonesBoutique = generateMilestones(BOUTIQUE, 'vente', 'Boutique', 'croissants', PATE_FEUILLETEE)
+const milestonesPetrin = generateMilestones(PETRIN, 'petrissage', 'Petrin mecanique', 'croissants', PATE_FEUILLETEE, 2)
+const milestonesFournil = generateMilestones(FOURNIL, 'cuisson', 'Fournil', 'croissants', PATE_FEUILLETEE, 1)
+const milestonesBoutique = generateMilestones(BOUTIQUE, 'vente', 'Boutique', 'croissants', PATE_FEUILLETEE, 30)
 
 const allMilestoneUpgrades: Record<string, UpgradeData> = {
   ...milestonesPetrin.upgrades,

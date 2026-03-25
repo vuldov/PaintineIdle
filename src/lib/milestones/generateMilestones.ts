@@ -142,6 +142,7 @@ export function generateMilestones(
   buildingName: string,
   scope: EntityScope,
   intermediateResource?: ResourceId,
+  costScale: number = 1,
 ): GeneratedMilestones {
   const template = getTemplate(pipelineRole)
   const milestones: MilestoneData[] = []
@@ -172,7 +173,7 @@ export function generateMilestones(
     // Determine cost resource: thresholds 5 and 75 use intermediate resource if available
     const useIntermediate = INTERMEDIATE_COST_THRESHOLDS.has(threshold) && intermediateResource
     const costResource = useIntermediate ? intermediateResource : PANTINS_COINS_ID
-    const cost = MILESTONE_COSTS[threshold]
+    const cost = MILESTONE_COSTS[threshold].mul(costScale)
 
     // Determine the primary effect (first effect in the list)
     const primaryEffect = entry.effects[0]
