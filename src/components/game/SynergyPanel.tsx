@@ -17,14 +17,14 @@ import type { AuraEffectType } from '@/types/synergies'
 const PRODUCT_EMOJIS: Record<ProductId, string> = {
   croissants: '🥐',
   pains_au_chocolat: '🍫',
-  chocolatines: '🤎',
+  curry_wurst: '🌭',
   pizzas: '🍕',
 }
 
 const PRODUCT_NAMES: Record<ProductId, string> = {
   croissants: 'Croissants',
   pains_au_chocolat: 'Pains au chocolat',
-  chocolatines: 'Chocolatines',
+  curry_wurst: 'Curry Wurst végé',
   pizzas: 'Pizzas',
 }
 

@@ -188,7 +188,7 @@ function CheatsTab() {
       unlockBuilding(bid as BuildingId)
     }
     // Unlock all products
-    const allProducts: ProductId[] = ['croissants', 'pains_au_chocolat', 'chocolatines', 'pizzas']
+    const allProducts: ProductId[] = ['croissants', 'pains_au_chocolat', 'curry_wurst', 'pizzas']
     for (const pid of allProducts) {
       if (!unlockedProducts.includes(pid)) {
         unlockProduct(pid)

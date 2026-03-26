@@ -42,7 +42,7 @@ const SPECIALIZATION_UPGRADES: Record<string, UpgradeData> = {
   chocolat_suisse_specialise: {
     id: upgradeId('chocolat_suisse_specialise'),
     name: 'Chocolat suisse spécialisé',
-    description: 'x2 production PAC + 1% prix chocolatines par tranche de 50 malaxeurs',
+    description: 'x2 production PAC + 1% prix curry wurst par tranche de 50 malaxeurs',
     emoji: '🍫',
     cost: new Decimal(500),
     costResource: PAINS_AU_CHOCOLAT,
@@ -269,17 +269,17 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
   gouter_gourmand: {
     id: upgradeId('gouter_gourmand'),
     name: 'Gouter gourmand',
-    description: '+20% production PAC et chocolatines',
+    description: '+20% production PAC et curry wurst',
     emoji: '🍬',
     cost: new Decimal(600),
     costResource: PAINS_AU_CHOCOLAT,
-    extraCosts: [{ resource: resourceId('chocolatines'), amount: new Decimal(300) }],
+    extraCosts: [{ resource: resourceId('curry_wurst'), amount: new Decimal(300) }],
     effect: {
       type: 'cross_product_synergy',
       multiplier: new Decimal(1),
       crossProductEffect: {
         sourceProduct: 'pains_au_chocolat',
-        targetProduct: 'chocolatines',
+        targetProduct: 'curry_wurst',
         bonusType: 'production',
         bonusPerUnit: new Decimal(0.20),
         scalingDivisor: 1,
@@ -287,7 +287,7 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
     },
     unlockCondition: {
       type: 'resource_threshold',
-      resourceId: resourceId('chocolatines'),
+      resourceId: resourceId('curry_wurst'),
       threshold: new Decimal(100),
     },
     scope: 'global',
@@ -328,7 +328,7 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
     description: '+1,5% production globale par tranche de 25 batiments',
     emoji: '🔥',
     cost: new Decimal(500),
-    costResource: resourceId('chocolatines'),
+    costResource: resourceId('curry_wurst'),
     extraCosts: [{ resource: PIZZAS, amount: new Decimal(500) }],
     effect: {
       type: 'scaling',
@@ -360,7 +360,7 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
     costResource: CROISSANTS,
     extraCosts: [
       { resource: PAINS_AU_CHOCOLAT, amount: new Decimal(1_000) },
-      { resource: resourceId('chocolatines'), amount: new Decimal(500) },
+      { resource: resourceId('curry_wurst'), amount: new Decimal(500) },
     ],
     effect: {
       type: 'scaling',
@@ -374,7 +374,7 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
     },
     unlockCondition: {
       type: 'resource_threshold',
-      resourceId: resourceId('chocolatines'),
+      resourceId: resourceId('curry_wurst'),
       threshold: new Decimal(250),
     },
     scope: 'global',
@@ -389,7 +389,7 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
     cost: new Decimal(1_500),
     costResource: PAINS_AU_CHOCOLAT,
     extraCosts: [
-      { resource: resourceId('chocolatines'), amount: new Decimal(750) },
+      { resource: resourceId('curry_wurst'), amount: new Decimal(750) },
       { resource: PIZZAS, amount: new Decimal(400) },
     ],
     effect: {
@@ -422,7 +422,7 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
     costResource: CROISSANTS,
     extraCosts: [
       { resource: PAINS_AU_CHOCOLAT, amount: new Decimal(2_500) },
-      { resource: resourceId('chocolatines'), amount: new Decimal(1_500) },
+      { resource: resourceId('curry_wurst'), amount: new Decimal(1_500) },
       { resource: PIZZAS, amount: new Decimal(1_000) },
     ],
     effect: {
@@ -453,7 +453,7 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
     costResource: CROISSANTS,
     extraCosts: [
       { resource: PAINS_AU_CHOCOLAT, amount: new Decimal(5_000) },
-      { resource: resourceId('chocolatines'), amount: new Decimal(3_000) },
+      { resource: resourceId('curry_wurst'), amount: new Decimal(3_000) },
       { resource: PIZZAS, amount: new Decimal(2_000) },
     ],
     effect: {
@@ -490,7 +490,7 @@ const ULTIMATE_UPGRADE: Record<string, UpgradeData> = {
     costResource: CROISSANTS,
     extraCosts: [
       { resource: PAINS_AU_CHOCOLAT, amount: new Decimal(5_000_000) },
-      { resource: resourceId('chocolatines'), amount: new Decimal(2_500_000) },
+      { resource: resourceId('curry_wurst'), amount: new Decimal(2_500_000) },
       { resource: PIZZAS, amount: new Decimal(1_000_000) },
     ],
     effect: {

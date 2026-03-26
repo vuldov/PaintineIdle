@@ -287,7 +287,7 @@ describe('calcSynergyBonuses', () => {
         id: 'trio',
         name: 'Trio',
         description: 'test',
-        requiredProducts: ['croissants', 'pains_au_chocolat', 'chocolatines'],
+        requiredProducts: ['croissants', 'pains_au_chocolat', 'curry_wurst'],
         bonusType: 'production',
         bonusMultiplier: new Decimal(0.20),
       },
@@ -314,7 +314,7 @@ describe('calcSynergyBonuses', () => {
 
     it('stacks multiple combos', () => {
       const result = calcSynergyBonuses(makeBaseInput({
-        activeProductIds: ['croissants', 'pains_au_chocolat', 'chocolatines'],
+        activeProductIds: ['croissants', 'pains_au_chocolat', 'curry_wurst'],
         comboDefinitions: testCombos,
       }))
       expect(result.activeCombos).toHaveLength(2)

@@ -36,7 +36,7 @@ function createEmptyTasks(): Record<ProductId, CraftingTask | null> {
   return {
     croissants: null,
     pains_au_chocolat: null,
-    chocolatines: null,
+    curry_wurst: null,
     pizzas: null,
   }
 }

@@ -12,7 +12,7 @@ export type {
 declare const __brand: unique symbol
 type Brand<T, B extends string> = T & { readonly [__brand]: B }
 
-export type ProductId = 'croissants' | 'pains_au_chocolat' | 'chocolatines' | 'pizzas'
+export type ProductId = 'croissants' | 'pains_au_chocolat' | 'curry_wurst' | 'pizzas'
 export type ResourceId = Brand<string, 'ResourceId'>
 export type BuildingId = Brand<string, 'BuildingId'>
 export type CraftingRecipeId = Brand<string, 'CraftingRecipeId'>

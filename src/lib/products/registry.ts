@@ -2,7 +2,7 @@ import type { ProductId, ProductBundle, ResourceData, BuildingData, UpgradeData,
 import { SHARED_RESOURCES, SHARED_RESOURCE_UNLOCK_THRESHOLDS } from './shared'
 import { CROISSANTS_BUNDLE } from './croissants'
 import { PAINS_AU_CHOCOLAT_BUNDLE } from './pains_au_chocolat'
-import { CHOCOLATINES_BUNDLE } from './chocolatines'
+import { CURRY_WURST_BUNDLE } from './curry_wurst'
 import { PIZZAS_BUNDLE } from './pizzas'
 import { SYNERGY_UPGRADES } from '@/lib/synergies/synergyUpgrades'
 import type Decimal from 'decimal.js'
@@ -13,14 +13,14 @@ import type { ResourceId } from '@/types'
 export const PRODUCT_REGISTRY: Record<ProductId, ProductBundle> = {
   croissants: CROISSANTS_BUNDLE,
   pains_au_chocolat: PAINS_AU_CHOCOLAT_BUNDLE,
-  chocolatines: CHOCOLATINES_BUNDLE,
+  curry_wurst: CURRY_WURST_BUNDLE,
   pizzas: PIZZAS_BUNDLE,
 }
 
 export const PRODUCT_ORDER: ProductId[] = [
   'croissants',
   'pains_au_chocolat',
-  'chocolatines',
+  'curry_wurst',
   'pizzas',
 ]
 
@@ -97,7 +97,7 @@ for (const [key, value] of Object.entries(SYNERGY_UPGRADES)) {
 export { SHARED_RESOURCES, SHARED_RESOURCE_UNLOCK_THRESHOLDS }
 export { CROISSANTS_BUNDLE } from './croissants'
 export { PAINS_AU_CHOCOLAT_BUNDLE } from './pains_au_chocolat'
-export { CHOCOLATINES_BUNDLE } from './chocolatines'
+export { CURRY_WURST_BUNDLE } from './curry_wurst'
 export { PIZZAS_BUNDLE } from './pizzas'
 
 // ─── Helpers ───────────────────────────────────────────────────
