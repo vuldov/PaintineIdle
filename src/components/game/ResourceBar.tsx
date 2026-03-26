@@ -61,10 +61,10 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
     <header ref={headerRef} className="sticky top-0 z-10 bg-amber-100/90 backdrop-blur-sm border-b border-amber-300 px-2 py-2 shadow-sm">
       <div className="flex items-center gap-1.5">
         {/* Left/center: coins + products */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto scrollbar-hide sm:flex-wrap sm:justify-center">
           {/* Paintines Coins */}
           {coinsResource && coinsData && (
-            <div className="flex items-center gap-1.5 text-amber-900 rounded-lg px-2.5 py-1 min-w-[100px]">
+            <div className="flex items-center gap-1.5 text-amber-900 rounded-lg px-2 py-1 shrink-0 min-w-[80px] sm:min-w-[100px]">
               <span className="text-xl shrink-0" role="img" aria-label={t(coinsData.name)}>
                 {t(coinsData.emoji)}
               </span>
@@ -96,7 +96,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
                 onClick={() => setActiveProduct(id as ProductId)}
                 title={`${i18n.t(bundle.definition.name, { ns: `products/${id}` })} — ${t('synergy_panel.click_to_show')}`}
                 className={`
-                  flex items-center gap-1.5 text-amber-900 rounded-lg px-2.5 py-1 transition-all cursor-pointer min-w-[100px]
+                  flex items-center gap-1.5 text-amber-900 rounded-lg px-2 py-1 transition-all cursor-pointer shrink-0 min-w-[80px] sm:min-w-[100px]
                   ${isActive
                     ? `ring-2 ${ringClass} bg-white/60 shadow-sm`
                     : 'bg-white/20 hover:bg-white/50 opacity-75 hover:opacity-100'

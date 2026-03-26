@@ -7,6 +7,7 @@ import { useBuildingStore } from '@/store/buildingStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useProductStore } from '@/store/productStore'
 import { ALL_RESOURCES, ALL_BUILDINGS } from '@/lib/constants'
+import i18n from '@/i18n'
 import type { ResourceId, BuildingId, ProductId } from '@/types'
 
 // ─── Types ─────────────────────────────────────────────────────
@@ -249,7 +250,7 @@ function CheatsTab() {
               onClick={() => handleAddResource(id)}
               className="bg-white border border-amber-200 hover:bg-amber-50 active:bg-amber-100 rounded-lg px-3 py-2 text-xs font-medium text-amber-900 cursor-pointer transition-colors text-left"
             >
-              {data.emoji} {data.name}
+              {i18n.t(data.emoji, { ns: data.scope === 'global' ? 'common' : `products/${data.scope}` })} {i18n.t(data.name, { ns: data.scope === 'global' ? 'common' : `products/${data.scope}` })}
             </button>
           ))}
         </div>
