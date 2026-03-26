@@ -16,7 +16,7 @@
     "tour_du_monde": { "name": "Tour du monde", "emoji": "🌍", "description": "+2% production globale par amelioration achetee" },
     "carte_complete": { "name": "Carte complete", "emoji": "👨‍🍳", "description": "+50% production globale et +25% vente globale" },
     "empire_gastronomique": { "name": "Empire gastronomique", "emoji": "👑", "description": "+3% vente globale par batiment possede" },
-    "croissantification_planetaire": { "name": "Croissantification planetaire", "emoji": "🌍🥐", "description": "Transformer la Terre entiere en un croissant geant. Il n'y a plus rien a prouver." }
+    "paintinification_planetaire": { "name": "Paintinification planetaire", "emoji": "🌍\uD83C\uDF96\uFE0F", "description": "Saucer toutes les saucisses, termine le jeuj." }
   },
   "combos": {
     "duo_classique": { "name": "Duo classique", "description": "Croissants + Chocolatines : +10% prix de vente" },

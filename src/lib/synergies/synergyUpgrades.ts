@@ -478,14 +478,14 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 
 // ── Ultimate upgrade ─────────────────────────────────────────────
 
-export const ULTIMATE_UPGRADE_ID = upgradeId('croissantification_planetaire')
+export const ULTIMATE_UPGRADE_ID = upgradeId('paintinification_planetaire')
 
 const ULTIMATE_UPGRADE: Record<string, UpgradeData> = {
-  croissantification_planetaire: {
+  paintinification_planetaire: {
     id: ULTIMATE_UPGRADE_ID,
-    name: 'upgrades.croissantification_planetaire.name',
-    description: 'upgrades.croissantification_planetaire.description',
-    emoji: 'upgrades.croissantification_planetaire.emoji',
+    name: 'upgrades.paintinification_planetaire.name',
+    description: 'upgrades.paintinification_planetaire.description',
+    emoji: 'upgrades.paintinification_planetaire.emoji',
     cost: new Decimal(10_000_000),
     costResource: CROISSANTS,
     extraCosts: [
