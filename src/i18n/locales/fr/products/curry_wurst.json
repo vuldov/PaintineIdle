@@ -1,0 +1,82 @@
+{
+  "definition": {
+    "name": "Curry Wurst végé",
+    "emoji": "🌭"
+  },
+  "resources": {
+    "saucisse_vege": { "name": "Saucisse végé", "emoji": "🌱" },
+    "ketchup": { "name": "Ketchup", "emoji": "🍅" },
+    "epices": { "name": "Épices", "emoji": "🌶️" },
+    "frites": { "name": "Frites", "emoji": "🍟" },
+    "gewurz_ketchup": { "name": "Gewürz Ketchup", "emoji": "🥫" },
+    "saucisse_saucee": { "name": "Saucisse saucée", "emoji": "🌭" },
+    "wurst_garnie": { "name": "Wurst garnie", "emoji": "🍽️" },
+    "curry_wurst": { "name": "Curry Wurst végé", "emoji": "🌭" }
+  },
+  "buildings": {
+    "melangeur_epices": {
+      "name": "Mélangeur d'épices",
+      "emoji": "⚙️",
+      "description": "Mélange ketchup et épices en Gewürz Ketchup",
+      "aura_description": "+2% vitesse assaisonnement globale par mélangeur"
+    },
+    "saucier": {
+      "name": "Saucier",
+      "emoji": "🫕",
+      "description": "Sauce la saucisse végé dans le Gewürz Ketchup",
+      "aura_description": "+5% génération saucisse végé par saucier"
+    },
+    "garnisseuse": {
+      "name": "Garnisseuse",
+      "emoji": "🍟",
+      "description": "Ajoute les frites sur la saucisse saucée",
+      "aura_description": "+4% génération frites par garnisseuse"
+    },
+    "grill_vegetal": {
+      "name": "Grill végétal",
+      "emoji": "🔥",
+      "description": "Cuisson au grill pour une wurst parfaite",
+      "aura_description": "+2% prix de vente curry wurst par grill"
+    },
+    "imbiss": {
+      "name": "Imbiss",
+      "emoji": "🏪",
+      "description": "Vend automatiquement les curry wurst végé",
+      "aura_description": "+1% prix de vente tous produits par imbiss"
+    }
+  },
+  "crafting": {
+    "assaisonnement_curry": { "name": "Assaisonnement", "emoji": "🌶️", "verb": "Assaisonner" },
+    "saucage_curry": { "name": "Saucer la saucisse", "emoji": "🌭", "verb": "Saucer" },
+    "garniture_curry": { "name": "Garniture", "emoji": "🍟", "verb": "Garnir" },
+    "cuisson_curry": { "name": "Cuisson", "emoji": "🔥", "verb": "Cuire" }
+  },
+  "upgrades": {
+    "wurst_assaisonnement_rapide": { "name": "Assaisonnement rapide", "emoji": "⚡", "description": "Assaisonnement 2x plus rapide" },
+    "wurst_saucage_rapide": { "name": "Sauçage rapide", "emoji": "⚡", "description": "Saucer la saucisse 2x plus vite" },
+    "wurst_garniture_rapide": { "name": "Garniture rapide", "emoji": "⚡", "description": "Garniture 2x plus rapide" },
+    "wurst_cuisson_rapide": { "name": "Cuisson rapide", "emoji": "⚡", "description": "Cuisson 2x plus rapide" },
+    "wurst_meilleur_prix": { "name": "Label végé", "emoji": "💰", "description": "x2 prix de vente des curry wurst" },
+    "wurst_saucier_boost": { "name": "Saucier amélioré", "emoji": "🫕", "description": "x2 production du saucier" },
+    "wurst_melangeur_boost": { "name": "Mélangeur turbo", "emoji": "⚙️", "description": "x2 production du mélangeur d'épices" },
+    "wurst_garnisseuse_boost": { "name": "Garnisseuse automatique", "emoji": "🍟", "description": "x2 production de la garnisseuse" },
+    "wurst_global": { "name": "Recette de Berlin", "emoji": "🇩🇪", "description": "x1,5 production de tous les bâtiments" },
+    "wurst_achat_en_gros": { "name": "Approvisionnement en gros", "emoji": "📦", "description": "Bâtiments 15% moins chers" }
+  },
+  "suppliers": {
+    "tofu_meister": { "name": "Tofu-Meister", "emoji": "🌱", "description": "Saucisses végé artisanales au seitan et tofu" },
+    "ferme_tomates": { "name": "Ferme de tomates", "emoji": "🍅", "description": "Ketchup maison à base de tomates bio" },
+    "marche_epices": { "name": "Marché aux épices", "emoji": "🌶️", "description": "Épices du monde entier, mélange curry maison" },
+    "friterie": { "name": "Friterie", "emoji": "🍟", "description": "Frites croustillantes coupées à la main" }
+  },
+  "supplier_upgrades": {
+    "tofu_meister_rate": { "name": "Champ de soja", "emoji": "🌱", "description": "x3 debit max - Tofu-Meister" },
+    "tofu_meister_cost": { "name": "Contrat tofu", "emoji": "🌱", "description": "x0,8 cout - Tofu-Meister" },
+    "ferme_tomates_rate": { "name": "Serres bio", "emoji": "🍅", "description": "x3 debit max - Ferme de tomates" },
+    "ferme_tomates_cost": { "name": "Contrat tomates", "emoji": "🍅", "description": "x0,8 cout - Ferme de tomates" },
+    "marche_epices_rate": { "name": "Épices rares", "emoji": "🌶️", "description": "x3 debit max - Marché aux épices" },
+    "marche_epices_cost": { "name": "Contrat épices", "emoji": "🌶️", "description": "x0,8 cout - Marché aux épices" },
+    "friterie_rate": { "name": "Patates sélectionnées", "emoji": "🍟", "description": "x3 debit max - Friterie" },
+    "friterie_cost": { "name": "Contrat friterie", "emoji": "🍟", "description": "x0,8 cout - Friterie" }
+  }
+}

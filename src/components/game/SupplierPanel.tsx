@@ -1,4 +1,5 @@
 import Decimal from 'decimal.js'
+import { useTranslation } from 'react-i18next'
 import type { SupplierData, SupplierState, SupplierContractTier } from '@/types'
 import { PANTINS_COINS_ID } from '@/types'
 import { useProduct } from './ProductContext'
@@ -25,9 +26,13 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
 
   if (!data || !state) return null
 
+  const { productId } = useProduct()
   const resourceData = useProduct().bundle.resources[data.producedResource as string]
-  const resourceEmoji = resourceData?.emoji ?? ''
-  const resourceName = resourceData?.name ?? data.producedResource
+  const { t: tp } = useTranslation(`products/${productId}`)
+  const { t: tc } = useTranslation('common')
+
+  const resourceEmoji = resourceData ? tp(resourceData.emoji) : ''
+  const resourceName = resourceData ? tp(resourceData.name) : (data.producedResource as string)
 
   const contractTier = state.contractTier ?? 0
   const effectiveMax = calcEffectiveMaxRate(data, ALL_SUPPLIER_UPGRADES, upgradeStates, contractTier)
@@ -41,14 +46,14 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
     return (
       <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 shadow-sm opacity-80">
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-2xl grayscale">{data.emoji}</span>
+          <span className="text-2xl grayscale">{tp(data.emoji)}</span>
           <div className="min-w-0">
-            <h3 className="font-semibold text-gray-700 text-sm">{data.name}</h3>
-            <p className="text-xs text-gray-500">{data.description}</p>
+            <h3 className="font-semibold text-gray-700 text-sm">{tp(data.name)}</h3>
+            <p className="text-xs text-gray-500">{tp(data.description)}</p>
           </div>
         </div>
         <div className="text-xs text-gray-500 mb-3">
-          Produit : {resourceEmoji} {resourceName} (max <NumberDisplay value={effectiveMax} />/s)
+          {tc('supplier.produces')} : {resourceEmoji} {resourceName} (max <NumberDisplay value={effectiveMax} />/s)
         </div>
         <button
           onClick={() => buyContract(data.id)}
@@ -59,7 +64,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
-          Signer le contrat — <NumberDisplay value={data.contractCost} /> 🪙
+          {tc('actions.sign_contract')} — <NumberDisplay value={data.contractCost} /> 🪙
         </button>
       </div>
     )
@@ -79,10 +84,10 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
     <div className="rounded-xl border p-4 shadow-sm transition-colors bg-amber-50 border-amber-300">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-2xl">{data.emoji}</span>
+          <span className="text-2xl">{tp(data.emoji)}</span>
           <div className="min-w-0">
-            <h3 className="font-semibold text-amber-900 text-sm">{data.name}</h3>
-            <p className="text-xs text-amber-600">{data.description}</p>
+            <h3 className="font-semibold text-amber-900 text-sm">{tp(data.name)}</h3>
+            <p className="text-xs text-amber-600">{tp(data.description)}</p>
           </div>
         </div>
       </div>
@@ -100,7 +105,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
       {/* Rate slider */}
       <div className="mb-3">
         <div className="flex items-center justify-between text-xs text-amber-800 mb-1">
-          <span>Debit : {state.ratePercent}%</span>
+          <span>{tc('supplier.rate')} : {state.ratePercent}%</span>
           <span>
             <NumberDisplay value={production} />/s → <NumberDisplay value={costPerSec} /> 🪙/s
           </span>
@@ -132,12 +137,12 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
-          Ameliorer contrat → {nextTierData.emoji} {nextTierData.name} (x{nextTierData.rateMultiplier} debit) — <NumberDisplay value={upgradeCost} /> 🪙
+          {tc('supplier.upgrade_contract')} → {nextTierData.emoji} {nextTierData.name} (x{nextTierData.rateMultiplier} {tc('supplier.rate').toLowerCase()}) — <NumberDisplay value={upgradeCost} /> 🪙
         </button>
       )}
       {!canUpgradeTier && (
         <div className="text-center text-[10px] text-amber-500 font-medium">
-          Contrat au rang maximum
+          {tc('status.max_tier')}
         </div>
       )}
     </div>
@@ -147,6 +152,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
 // ─── Panel ────────────────────────────────────────────────────────
 
 export function SupplierPanel() {
+  const { t } = useTranslation('common')
   const { bundle } = useProduct()
 
   if (!bundle.supplierOrder || bundle.supplierOrder.length === 0) return null
@@ -154,10 +160,10 @@ export function SupplierPanel() {
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
       <h2 className="text-xl font-semibold text-amber-800 mb-1">
-        Fournisseurs
+        {t('sections.suppliers')}
       </h2>
       <p className="text-xs text-amber-600 mb-4">
-        Signez des contrats puis activez vos fournisseurs pour approvisionner vos ingredients automatiquement.
+        {t('supplier.sign_contracts_hint')}
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {bundle.supplierOrder.map((id) => (

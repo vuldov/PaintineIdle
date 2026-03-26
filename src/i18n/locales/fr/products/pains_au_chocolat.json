@@ -1,0 +1,62 @@
+{
+  "definition": { "name": "Chocolatines", "emoji": "🍫" },
+  "resources": {
+    "beurre_doux": { "name": "Beurre doux", "emoji": "🧈" },
+    "farine_qualite": { "name": "Farine de qualite", "emoji": "🌾" },
+    "chocolat_patissier": { "name": "Chocolat patissier", "emoji": "🍫" },
+    "pate_levee_feuilletee": { "name": "Pate levee feuilletee", "emoji": "🫓" },
+    "paton_chocolat": { "name": "Paton au chocolat", "emoji": "🟫" },
+    "pains_au_chocolat": { "name": "Chocolatines", "emoji": "🍫" }
+  },
+  "buildings": {
+    "malaxeur": {
+      "name": "Malaxeur", "emoji": "⚙️",
+      "description": "Petrit le beurre et la farine en pate feuilletee",
+      "aura_description": "+2% production croissants par malaxeur"
+    },
+    "garnisseur": {
+      "name": "Garnisseur", "emoji": "🤲",
+      "description": "Insere les batons de chocolat dans la pate",
+      "aura_description": "+3% production chocolatines par garnisseur"
+    },
+    "four_ventile": {
+      "name": "Four ventile", "emoji": "🔥",
+      "description": "Cuisson homogene pour des chocolatines parfaits",
+      "aura_description": "+2% vitesse cuisson globale par four ventilé"
+    },
+    "chocolaterie": {
+      "name": "Chocolaterie", "emoji": "🏪",
+      "description": "Vend automatiquement les chocolatines",
+      "aura_description": "+1% prix de vente tous produits par chocolaterie"
+    }
+  },
+  "crafting": {
+    "petrissage_pac": { "name": "Petrissage", "emoji": "🤲", "verb": "Petrir" },
+    "garnissage_pac": { "name": "Garnissage", "emoji": "🍫", "verb": "Garnir" },
+    "cuisson_pac": { "name": "Cuisson", "emoji": "🔥", "verb": "Cuire" }
+  },
+  "upgrades": {
+    "pac_petrissage_rapide": { "name": "Petrissage rapide", "emoji": "⚡", "description": "Petrissage 2x plus rapide" },
+    "pac_garnissage_rapide": { "name": "Garnissage rapide", "emoji": "⚡", "description": "Garnissage 2x plus rapide" },
+    "pac_cuisson_rapide": { "name": "Cuisson rapide", "emoji": "⚡", "description": "Cuisson 2x plus rapide" },
+    "pac_malaxeur_boost": { "name": "Malaxeur renforce", "emoji": "⚙️", "description": "x2 production du malaxeur" },
+    "pac_garnisseur_boost": { "name": "Garnisseur automatique", "emoji": "🤲", "description": "x2 production du garnisseur" },
+    "cuisson_parfaite": { "name": "Cuisson parfaite", "emoji": "🔥", "description": "x2 production du four ventile" },
+    "pac_meilleur_prix": { "name": "Emballage premium", "emoji": "💰", "description": "x2 prix de vente" },
+    "pac_farine_premium": { "name": "Farine premium", "emoji": "🌾", "description": "x1,5 production de tous les batiments chocolatines" },
+    "pac_achat_en_gros": { "name": "Achats groupes", "emoji": "📦", "description": "Batiments chocolatines 15% moins chers" }
+  },
+  "suppliers": {
+    "cremerie_normande": { "name": "Cremerie normande", "emoji": "🧈", "description": "Beurre doux de Normandie, onctueux et frais" },
+    "minoterie": { "name": "Minoterie", "emoji": "🌾", "description": "Farine de qualite superieure moulue sur pierre" },
+    "chocolatier_suisse": { "name": "Chocolatier suisse", "emoji": "🍫", "description": "Chocolat patissier fin importe de Belgique" }
+  },
+  "supplier_upgrades": {
+    "cremerie_normande_rate": { "name": "Livraison express beurre", "emoji": "🧈", "description": "x3 debit max - Cremerie normande" },
+    "cremerie_normande_cost": { "name": "Contrat cremerie", "emoji": "🧈", "description": "x0,8 cout - Cremerie normande" },
+    "minoterie_rate": { "name": "Mouture fine", "emoji": "🌾", "description": "x3 debit max - Minoterie" },
+    "minoterie_cost": { "name": "Contrat minoterie", "emoji": "🌾", "description": "x0,8 cout - Minoterie" },
+    "chocolatier_suisse_rate": { "name": "Cacao grand cru", "emoji": "🍫", "description": "x3 debit max - Chocolatier suisse" },
+    "chocolatier_suisse_cost": { "name": "Contrat chocolatier", "emoji": "🍫", "description": "x0,8 cout - Chocolatier suisse" }
+  }
+}

@@ -17,22 +17,22 @@ const BOUTIQUE = buildingId('boutique')
 // ─── Resources ─────────────────────────────────────────────────
 const resources: Record<string, ResourceData> = {
   [BEURRE as string]: {
-    id: BEURRE, name: 'Beurre', emoji: '🧈',
+    id: BEURRE, name: 'resources.beurre.name', emoji: 'resources.beurre.emoji',
     category: 'ingredient', initiallyUnlocked: true,
     initialAmount: new Decimal(10), scope: 'croissants',
   },
   [FARINE as string]: {
-    id: FARINE, name: 'Farine', emoji: '🌾',
+    id: FARINE, name: 'resources.farine.name', emoji: 'resources.farine.emoji',
     category: 'ingredient', initiallyUnlocked: true,
     initialAmount: new Decimal(20), scope: 'croissants',
   },
   [PATE_FEUILLETEE as string]: {
-    id: PATE_FEUILLETEE, name: 'Pâte feuilletée', emoji: '🫓',
+    id: PATE_FEUILLETEE, name: 'resources.pate_feuilletee.name', emoji: 'resources.pate_feuilletee.emoji',
     category: 'intermediaire', initiallyUnlocked: true,
     initialAmount: new Decimal(0), scope: 'croissants',
   },
   [CROISSANTS as string]: {
-    id: CROISSANTS, name: 'Croissants', emoji: '🥐',
+    id: CROISSANTS, name: 'shared_resources.croissants.name', emoji: 'shared_resources.croissants.emoji',
     category: 'produit_fini', initiallyUnlocked: true,
     initialAmount: new Decimal(0), scope: 'croissants',
   },
@@ -41,36 +41,36 @@ const resources: Record<string, ResourceData> = {
 // ─── Buildings ─────────────────────────────────────────────────
 const buildings: Record<string, BuildingData> = {
   [FOURNIL as string]: {
-    id: FOURNIL, name: 'Fournil', emoji: '🏠',
-    description: 'Cuit automatiquement la pâte en croissants',
+    id: FOURNIL, name: 'buildings.fournil.name', emoji: 'buildings.fournil.emoji',
+    description: 'buildings.fournil.description',
     baseCost: new Decimal(15), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.4),
     producedResource: CROISSANTS, pipelineRole: 'cuisson', scope: 'croissants',
     aura: {
       effectType: 'production_bonus', bonusPerBuilding: new Decimal(0.01),
-      targetProduct: 'croissants', description: '+1% production croissants par fournil',
+      targetProduct: 'croissants', description: 'buildings.fournil.aura_description',
     },
   },
   [PETRIN as string]: {
-    id: PETRIN, name: 'Pétrin mécanique', emoji: '⚙️',
-    description: 'Pétrit automatiquement le beurre et la farine en pâte',
+    id: PETRIN, name: 'buildings.petrin.name', emoji: 'buildings.petrin.emoji',
+    description: 'buildings.petrin.description',
     baseCost: new Decimal(30), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.5),
     producedResource: PATE_FEUILLETEE, pipelineRole: 'petrissage', scope: 'croissants',
     aura: {
       effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.02),
-      targetRecipe: 'petrissage_croissant', description: '+2% vitesse pétrissage croissant par pétrin',
+      targetRecipe: 'petrissage_croissant', description: 'buildings.petrin.aura_description',
     },
   },
   [BOUTIQUE as string]: {
-    id: BOUTIQUE, name: 'Boutique', emoji: '🏪',
-    description: 'Vend automatiquement les croissants',
+    id: BOUTIQUE, name: 'buildings.boutique.name', emoji: 'buildings.boutique.emoji',
+    description: 'buildings.boutique.description',
     baseCost: new Decimal(500), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'croissants',
     aura: {
       effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.05),
-      targetProduct: 'croissants', description: '+5% prix de vente croissants par boutique',
+      targetProduct: 'croissants', description: 'buildings.boutique.aura_description',
     },
   },
 }
@@ -115,8 +115,8 @@ const CUISSON_CROISSANT = craftingRecipeId('cuisson_croissant')
 
 const craftingRecipes: Record<string, CraftingRecipeData> = {
   [PETRISSAGE_CROISSANT as string]: {
-    id: PETRISSAGE_CROISSANT, name: 'Pétrissage', emoji: '🤲',
-    verb: 'Pétrir',
+    id: PETRISSAGE_CROISSANT, name: 'crafting.petrissage_croissant.name', emoji: 'crafting.petrissage_croissant.emoji',
+    verb: 'crafting.petrissage_croissant.verb',
     inputs: [
       { resource: BEURRE, amount: new Decimal(2) },
       { resource: FARINE, amount: new Decimal(3) },
@@ -127,8 +127,8 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
     linkedBuildingId: PETRIN,
   },
   [CUISSON_CROISSANT as string]: {
-    id: CUISSON_CROISSANT, name: 'Cuisson', emoji: '🔥',
-    verb: 'Cuire',
+    id: CUISSON_CROISSANT, name: 'crafting.cuisson_croissant.name', emoji: 'crafting.cuisson_croissant.emoji',
+    verb: 'crafting.cuisson_croissant.verb',
     inputs: [
       { resource: PATE_FEUILLETEE, amount: new Decimal(2) },
     ],
@@ -142,80 +142,80 @@ const craftingRecipes: Record<string, CraftingRecipeData> = {
 // ─── Upgrades ──────────────────────────────────────────────────
 const upgrades: Record<string, UpgradeData> = {
   petrissage_rapide: {
-    id: upgradeId('petrissage_rapide'), name: 'Pétrissage rapide',
-    description: 'Pétrissage 2x plus rapide', emoji: '⚡',
+    id: upgradeId('petrissage_rapide'), name: 'upgrades.petrissage_rapide.name',
+    description: 'upgrades.petrissage_rapide.description', emoji: 'upgrades.petrissage_rapide.emoji',
     cost: new Decimal(20), costResource: PANTINS_COINS_ID,
     effect: { type: 'crafting_speed', targetRecipe: PETRISSAGE_CROISSANT, multiplier: new Decimal(2) },
     unlockCondition: { type: 'resource_threshold', resourceId: PATE_FEUILLETEE, threshold: new Decimal(5) },
     scope: 'croissants',
   },
   cuisson_rapide: {
-    id: upgradeId('cuisson_rapide'), name: 'Cuisson rapide',
-    description: 'Cuisson 2x plus rapide', emoji: '⚡',
+    id: upgradeId('cuisson_rapide'), name: 'upgrades.cuisson_rapide.name',
+    description: 'upgrades.cuisson_rapide.description', emoji: 'upgrades.cuisson_rapide.emoji',
     cost: new Decimal(30), costResource: PANTINS_COINS_ID,
     effect: { type: 'crafting_speed', targetRecipe: CUISSON_CROISSANT, multiplier: new Decimal(2) },
     unlockCondition: { type: 'resource_threshold', resourceId: CROISSANTS, threshold: new Decimal(10) },
     scope: 'croissants',
   },
   meilleur_prix: {
-    id: upgradeId('meilleur_prix'), name: 'Meilleur prix',
-    description: 'x2 paintines coins par croissant vendu', emoji: '💰',
+    id: upgradeId('meilleur_prix'), name: 'upgrades.meilleur_prix.name',
+    description: 'upgrades.meilleur_prix.description', emoji: 'upgrades.meilleur_prix.emoji',
     cost: new Decimal(50), costResource: PANTINS_COINS_ID,
     effect: { type: 'sell_multiplier', multiplier: new Decimal(2) },
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(30) },
     scope: 'croissants',
   },
   beurre_aop_1: {
-    id: upgradeId('beurre_aop_1'), name: 'Beurre AOP Charentes',
-    description: 'x2 production des pétrins', emoji: '🧈',
+    id: upgradeId('beurre_aop_1'), name: 'upgrades.beurre_aop_1.name',
+    description: 'upgrades.beurre_aop_1.description', emoji: 'upgrades.beurre_aop_1.emoji',
     cost: new Decimal(100), costResource: PANTINS_COINS_ID,
     effect: { type: 'building_multiplier', targetBuilding: PETRIN, multiplier: new Decimal(2) },
     unlockCondition: { type: 'building_count', buildingId: PETRIN, threshold: new Decimal(5) },
     scope: 'croissants',
   },
   croissant_dore: {
-    id: upgradeId('croissant_dore'), name: 'Croissant bien doré',
-    description: 'x2 production des fournils', emoji: '✨',
+    id: upgradeId('croissant_dore'), name: 'upgrades.croissant_dore.name',
+    description: 'upgrades.croissant_dore.description', emoji: 'upgrades.croissant_dore.emoji',
     cost: new Decimal(150), costResource: PANTINS_COINS_ID,
     effect: { type: 'building_multiplier', targetBuilding: FOURNIL, multiplier: new Decimal(2) },
     unlockCondition: { type: 'building_count', buildingId: FOURNIL, threshold: new Decimal(5) },
     scope: 'croissants',
   },
   farine_tradition: {
-    id: upgradeId('farine_tradition'), name: 'Farine de tradition',
-    description: 'x1,5 production de tous les bâtiments', emoji: '🌾',
+    id: upgradeId('farine_tradition'), name: 'upgrades.farine_tradition.name',
+    description: 'upgrades.farine_tradition.description', emoji: 'upgrades.farine_tradition.emoji',
     cost: new Decimal(300), costResource: PANTINS_COINS_ID,
     effect: { type: 'global_multiplier', multiplier: new Decimal(1.5) },
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(150) },
     scope: 'croissants',
   },
   achat_en_gros: {
-    id: upgradeId('achat_en_gros'), name: 'Achat en gros',
-    description: 'Bâtiments 15% moins chers', emoji: '📦',
+    id: upgradeId('achat_en_gros'), name: 'upgrades.achat_en_gros.name',
+    description: 'upgrades.achat_en_gros.description', emoji: 'upgrades.achat_en_gros.emoji',
     cost: new Decimal(500), costResource: PANTINS_COINS_ID,
     effect: { type: 'cost_reduction', multiplier: new Decimal(0.85) },
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(250) },
     scope: 'croissants',
   },
   marketing: {
-    id: upgradeId('marketing'), name: 'Marketing',
-    description: 'x3 paintines coins par croissant vendu', emoji: '📢',
+    id: upgradeId('marketing'), name: 'upgrades.marketing.name',
+    description: 'upgrades.marketing.description', emoji: 'upgrades.marketing.emoji',
     cost: new Decimal(2_000), costResource: PANTINS_COINS_ID,
     effect: { type: 'sell_multiplier', multiplier: new Decimal(3) },
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(1_000) },
     scope: 'croissants',
   },
   vitrine_refrigeree: {
-    id: upgradeId('vitrine_refrigeree'), name: 'Vitrine réfrigérée',
-    description: 'x2 ventes de la boutique', emoji: '🧊',
+    id: upgradeId('vitrine_refrigeree'), name: 'upgrades.vitrine_refrigeree.name',
+    description: 'upgrades.vitrine_refrigeree.description', emoji: 'upgrades.vitrine_refrigeree.emoji',
     cost: new Decimal(5_000), costResource: PANTINS_COINS_ID,
     effect: { type: 'building_multiplier', targetBuilding: BOUTIQUE, multiplier: new Decimal(2) },
     unlockCondition: { type: 'building_count', buildingId: BOUTIQUE, threshold: new Decimal(5) },
     scope: 'croissants',
   },
   negociation_fournisseurs: {
-    id: upgradeId('negociation_fournisseurs'), name: 'Négociation fournisseurs',
-    description: 'Bâtiments 15% encore moins chers', emoji: '🤝',
+    id: upgradeId('negociation_fournisseurs'), name: 'upgrades.negociation_fournisseurs.name',
+    description: 'upgrades.negociation_fournisseurs.description', emoji: 'upgrades.negociation_fournisseurs.emoji',
     cost: new Decimal(10_000), costResource: PANTINS_COINS_ID,
     effect: { type: 'cost_reduction', multiplier: new Decimal(0.85) },
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(5_000) },
@@ -229,15 +229,15 @@ const MOULIN_A_FARINE = supplierId('moulin_a_farine')
 
 const suppliers: Record<string, SupplierData> = {
   [BEURRIER_ARTISANAL as string]: {
-    id: BEURRIER_ARTISANAL, name: 'Beurrier artisanal', emoji: '🧈',
-    description: 'Petit producteur local de beurre frais',
+    id: BEURRIER_ARTISANAL, name: 'suppliers.beurrier_artisanal.name', emoji: 'suppliers.beurrier_artisanal.emoji',
+    description: 'suppliers.beurrier_artisanal.description',
     producedResource: BEURRE,
     baseMaxRate: new Decimal(2), baseCostPerSecond: new Decimal(0.4),
     contractCost: new Decimal(50), scope: 'croissants',
   },
   [MOULIN_A_FARINE as string]: {
-    id: MOULIN_A_FARINE, name: 'Moulin a farine', emoji: '🌾',
-    description: 'Moulin traditionnel produisant de la farine de qualite',
+    id: MOULIN_A_FARINE, name: 'suppliers.moulin_a_farine.name', emoji: 'suppliers.moulin_a_farine.emoji',
+    description: 'suppliers.moulin_a_farine.description',
     producedResource: FARINE,
     baseMaxRate: new Decimal(3), baseCostPerSecond: new Decimal(0.6),
     contractCost: new Decimal(80), scope: 'croissants',
@@ -249,8 +249,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   // ── Beurrier artisanal (baseCost=10, costGrowth=1.8, costResource=PATE_FEUILLETEE) ──
   [supplierUpgradeId('beurrier_artisanal_rate_1') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_rate_1'),
-    name: 'Beurre premium', emoji: '🧈',
-    description: 'x3 debit max - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_rate.name', emoji: 'supplier_upgrades.beurrier_artisanal_rate.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_rate.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(10), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -258,8 +258,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_cost_1') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_cost_1'),
-    name: 'Négociation beurre', emoji: '🧈',
-    description: 'x0,8 cout - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_cost.name', emoji: 'supplier_upgrades.beurrier_artisanal_cost.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_cost.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(18), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -267,8 +267,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_rate_2') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_rate_2'),
-    name: 'Beurre premium II', emoji: '🧈',
-    description: 'x3 debit max - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_rate.name', emoji: 'supplier_upgrades.beurrier_artisanal_rate.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_rate.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(32), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -276,8 +276,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_cost_2') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_cost_2'),
-    name: 'Négociation beurre II', emoji: '🧈',
-    description: 'x0,8 cout - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_cost.name', emoji: 'supplier_upgrades.beurrier_artisanal_cost.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_cost.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(58), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -285,8 +285,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_rate_3') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_rate_3'),
-    name: 'Beurre premium III', emoji: '🧈',
-    description: 'x3 debit max - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_rate.name', emoji: 'supplier_upgrades.beurrier_artisanal_rate.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_rate.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(105), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -294,8 +294,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_cost_3') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_cost_3'),
-    name: 'Négociation beurre III', emoji: '🧈',
-    description: 'x0,8 cout - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_cost.name', emoji: 'supplier_upgrades.beurrier_artisanal_cost.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_cost.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(189), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -303,8 +303,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_rate_4') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_rate_4'),
-    name: 'Beurre premium IV', emoji: '🧈',
-    description: 'x3 debit max - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_rate.name', emoji: 'supplier_upgrades.beurrier_artisanal_rate.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_rate.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(340), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -312,8 +312,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_cost_4') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_cost_4'),
-    name: 'Négociation beurre IV', emoji: '🧈',
-    description: 'x0,8 cout - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_cost.name', emoji: 'supplier_upgrades.beurrier_artisanal_cost.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_cost.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(612), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -321,8 +321,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_rate_5') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_rate_5'),
-    name: 'Beurre premium V', emoji: '🧈',
-    description: 'x3 debit max - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_rate.name', emoji: 'supplier_upgrades.beurrier_artisanal_rate.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_rate.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(1102), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -330,8 +330,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_cost_5') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_cost_5'),
-    name: 'Négociation beurre V', emoji: '🧈',
-    description: 'x0,8 cout - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_cost.name', emoji: 'supplier_upgrades.beurrier_artisanal_cost.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_cost.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(1984), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -339,8 +339,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('beurrier_artisanal_rate_6') as string]: {
     id: supplierUpgradeId('beurrier_artisanal_rate_6'),
-    name: 'Beurre premium VI', emoji: '🧈',
-    description: 'x3 debit max - Beurrier artisanal',
+    name: 'supplier_upgrades.beurrier_artisanal_rate.name', emoji: 'supplier_upgrades.beurrier_artisanal_rate.emoji',
+    description: 'supplier_upgrades.beurrier_artisanal_rate.description',
     targetSupplier: BEURRIER_ARTISANAL,
     cost: new Decimal(3570), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -350,8 +350,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   // ── Moulin a farine (baseCost=15, costGrowth=2.0, costResource=PATE_FEUILLETEE) ──
   [supplierUpgradeId('moulin_a_farine_rate_1') as string]: {
     id: supplierUpgradeId('moulin_a_farine_rate_1'),
-    name: 'Moulin ameliore', emoji: '🌾',
-    description: 'x3 debit max - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_rate.name', emoji: 'supplier_upgrades.moulin_a_farine_rate.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_rate.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(15), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -359,8 +359,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_cost_1') as string]: {
     id: supplierUpgradeId('moulin_a_farine_cost_1'),
-    name: 'Négociation farine', emoji: '🌾',
-    description: 'x0,8 cout - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_cost.name', emoji: 'supplier_upgrades.moulin_a_farine_cost.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_cost.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(30), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -368,8 +368,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_rate_2') as string]: {
     id: supplierUpgradeId('moulin_a_farine_rate_2'),
-    name: 'Moulin ameliore II', emoji: '🌾',
-    description: 'x3 debit max - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_rate.name', emoji: 'supplier_upgrades.moulin_a_farine_rate.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_rate.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(60), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -377,8 +377,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_cost_2') as string]: {
     id: supplierUpgradeId('moulin_a_farine_cost_2'),
-    name: 'Négociation farine II', emoji: '🌾',
-    description: 'x0,8 cout - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_cost.name', emoji: 'supplier_upgrades.moulin_a_farine_cost.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_cost.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(120), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -386,8 +386,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_rate_3') as string]: {
     id: supplierUpgradeId('moulin_a_farine_rate_3'),
-    name: 'Moulin ameliore III', emoji: '🌾',
-    description: 'x3 debit max - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_rate.name', emoji: 'supplier_upgrades.moulin_a_farine_rate.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_rate.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(240), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -395,8 +395,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_cost_3') as string]: {
     id: supplierUpgradeId('moulin_a_farine_cost_3'),
-    name: 'Négociation farine III', emoji: '🌾',
-    description: 'x0,8 cout - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_cost.name', emoji: 'supplier_upgrades.moulin_a_farine_cost.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_cost.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(480), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -404,8 +404,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_rate_4') as string]: {
     id: supplierUpgradeId('moulin_a_farine_rate_4'),
-    name: 'Moulin ameliore IV', emoji: '🌾',
-    description: 'x3 debit max - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_rate.name', emoji: 'supplier_upgrades.moulin_a_farine_rate.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_rate.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(960), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -413,8 +413,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_cost_4') as string]: {
     id: supplierUpgradeId('moulin_a_farine_cost_4'),
-    name: 'Négociation farine IV', emoji: '🌾',
-    description: 'x0,8 cout - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_cost.name', emoji: 'supplier_upgrades.moulin_a_farine_cost.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_cost.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(1920), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -422,8 +422,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_rate_5') as string]: {
     id: supplierUpgradeId('moulin_a_farine_rate_5'),
-    name: 'Moulin ameliore V', emoji: '🌾',
-    description: 'x3 debit max - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_rate.name', emoji: 'supplier_upgrades.moulin_a_farine_rate.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_rate.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(3840), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -431,8 +431,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_cost_5') as string]: {
     id: supplierUpgradeId('moulin_a_farine_cost_5'),
-    name: 'Négociation farine V', emoji: '🌾',
-    description: 'x0,8 cout - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_cost.name', emoji: 'supplier_upgrades.moulin_a_farine_cost.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_cost.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(7680), costResource: PATE_FEUILLETEE,
     effectType: 'cost_reduction', effectValue: new Decimal(0.8),
@@ -440,8 +440,8 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
   },
   [supplierUpgradeId('moulin_a_farine_rate_6') as string]: {
     id: supplierUpgradeId('moulin_a_farine_rate_6'),
-    name: 'Moulin ameliore VI', emoji: '🌾',
-    description: 'x3 debit max - Moulin a farine',
+    name: 'supplier_upgrades.moulin_a_farine_rate.name', emoji: 'supplier_upgrades.moulin_a_farine_rate.emoji',
+    description: 'supplier_upgrades.moulin_a_farine_rate.description',
     targetSupplier: MOULIN_A_FARINE,
     cost: new Decimal(15360), costResource: PATE_FEUILLETEE,
     effectType: 'max_rate_bonus', effectValue: new Decimal(3),
@@ -493,8 +493,8 @@ const allMilestoneUpgrades: Record<string, UpgradeData> = {
 export const CROISSANTS_BUNDLE: ProductBundle = {
   definition: {
     id: 'croissants',
-    name: 'Croissants',
-    emoji: '🥐',
+    name: 'definition.name',
+    emoji: 'definition.emoji',
     color: 'amber',
     unlockCondition: null, // unlocked from start
   },

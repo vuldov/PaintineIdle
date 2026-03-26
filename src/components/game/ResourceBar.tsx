@@ -6,6 +6,8 @@ import { PRODUCT_REGISTRY, PRODUCT_ORDER } from '@/lib/products/registry'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { PANTINS_COINS_ID } from '@/types'
 import type { ProductId } from '@/types'
+import {useTranslation} from "react-i18next";
+import i18n from '@/i18n';
 
 // ─── Color ring for active product ──────────────────────────────
 
@@ -26,6 +28,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
   const setActiveProduct = useProductStore((s) => s.setActiveProduct)
   const viewMode = useProductStore((s) => s.viewMode)
   const setViewMode = useProductStore((s) => s.setViewMode)
+  const { t } = useTranslation('common')
 
   // Track header height for sticky children below
   const headerRef = useRef<HTMLElement>(null)
@@ -62,8 +65,8 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
           {/* Paintines Coins */}
           {coinsResource && coinsData && (
             <div className="flex items-center gap-1.5 text-amber-900 rounded-lg px-2.5 py-1 min-w-[100px]">
-              <span className="text-xl shrink-0" role="img" aria-label={coinsData.name}>
-                {coinsData.emoji}
+              <span className="text-xl shrink-0" role="img" aria-label={t(coinsData.name)}>
+                {t(coinsData.emoji)}
               </span>
               <div className="flex flex-col leading-tight tabular-nums">
                 <span className="font-bold text-sm">
@@ -91,7 +94,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
               <button
                 key={id}
                 onClick={() => setActiveProduct(id as ProductId)}
-                title={`${bundle.definition.name} — Cliquez pour afficher`}
+                title={`${i18n.t(bundle.definition.name, { ns: `products/${id}` })} — ${t('synergy_panel.click_to_show')}`}
                 className={`
                   flex items-center gap-1.5 text-amber-900 rounded-lg px-2.5 py-1 transition-all cursor-pointer min-w-[100px]
                   ${isActive
@@ -100,8 +103,8 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
                   }
                 `}
               >
-                <span className="text-xl shrink-0" role="img" aria-label={finishedData.name}>
-                  {finishedData.emoji}
+                <span className="text-xl shrink-0" role="img" aria-label={i18n.t(finishedData.name, { ns: `products/${id}` })}>
+                  {i18n.t(finishedData.emoji, { ns: `products/${id}` })}
                 </span>
                 <div className="flex flex-col leading-tight tabular-nums">
                   <span className="font-bold text-sm">
@@ -121,7 +124,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
           {visibleProducts.length > 0 && (
             <button
               onClick={() => setViewMode(viewMode === 'synergies' ? 'product' : 'synergies')}
-              title="Synergies & Bonus"
+              title={t('sections.synergies')}
               className={`
                 w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer
                 ${viewMode === 'synergies'
@@ -135,7 +138,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
           )}
           <button
             onClick={onOpenSettings}
-            title="Options"
+            title={t('settings.title', { ns: 'settings' })}
             className="w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer hover:bg-white/40 text-amber-900"
           >
             <span className="text-lg">&#9881;</span>

@@ -1,0 +1,52 @@
+{
+  "definition": { "name": "Croissants", "emoji": "🥐" },
+  "resources": {
+    "beurre": { "name": "Beurre", "emoji": "🧈" },
+    "farine": { "name": "Farine", "emoji": "🌾" },
+    "pate_feuilletee": { "name": "Pâte feuilletée", "emoji": "🫓" },
+    "croissants": { "name": "Croissants", "emoji": "🥐" }
+  },
+  "buildings": {
+    "fournil": {
+      "name": "Fournil", "emoji": "🏠",
+      "description": "Cuit automatiquement la pâte en croissants",
+      "aura_description": "+1% production croissants par fournil"
+    },
+    "petrin": {
+      "name": "Pétrin mécanique", "emoji": "⚙️",
+      "description": "Pétrit automatiquement le beurre et la farine en pâte",
+      "aura_description": "+2% vitesse pétrissage croissant par pétrin"
+    },
+    "boutique": {
+      "name": "Boutique", "emoji": "🏪",
+      "description": "Vend automatiquement les croissants",
+      "aura_description": "+5% prix de vente croissants par boutique"
+    }
+  },
+  "crafting": {
+    "petrissage_croissant": { "name": "Pétrissage", "emoji": "🤲", "verb": "Pétrir" },
+    "cuisson_croissant": { "name": "Cuisson", "emoji": "🔥", "verb": "Cuire" }
+  },
+  "upgrades": {
+    "petrissage_rapide": { "name": "Pétrissage rapide", "emoji": "⚡", "description": "Pétrissage 2x plus rapide" },
+    "cuisson_rapide": { "name": "Cuisson rapide", "emoji": "⚡", "description": "Cuisson 2x plus rapide" },
+    "meilleur_prix": { "name": "Meilleur prix", "emoji": "💰", "description": "x2 paintines coins par croissant vendu" },
+    "beurre_aop_1": { "name": "Beurre AOP Charentes", "emoji": "🧈", "description": "x2 production des pétrins" },
+    "croissant_dore": { "name": "Croissant bien doré", "emoji": "✨", "description": "x2 production des fournils" },
+    "farine_tradition": { "name": "Farine de tradition", "emoji": "🌾", "description": "x1,5 production de tous les bâtiments" },
+    "achat_en_gros": { "name": "Achat en gros", "emoji": "📦", "description": "Bâtiments 15% moins chers" },
+    "marketing": { "name": "Marketing", "emoji": "📢", "description": "x3 paintines coins par croissant vendu" },
+    "vitrine_refrigeree": { "name": "Vitrine réfrigérée", "emoji": "🧊", "description": "x2 ventes de la boutique" },
+    "negociation_fournisseurs": { "name": "Négociation fournisseurs", "emoji": "🤝", "description": "Bâtiments 15% encore moins chers" }
+  },
+  "suppliers": {
+    "beurrier_artisanal": { "name": "Beurrier artisanal", "emoji": "🧈", "description": "Petit producteur local de beurre frais" },
+    "moulin_a_farine": { "name": "Moulin a farine", "emoji": "🌾", "description": "Moulin traditionnel produisant de la farine de qualite" }
+  },
+  "supplier_upgrades": {
+    "beurrier_artisanal_rate": { "name": "Beurre premium", "emoji": "🧈", "description": "x3 debit max - Beurrier artisanal" },
+    "beurrier_artisanal_cost": { "name": "Négociation beurre", "emoji": "🧈", "description": "x0,8 cout - Beurrier artisanal" },
+    "moulin_a_farine_rate": { "name": "Moulin ameliore", "emoji": "🌾", "description": "x3 debit max - Moulin a farine" },
+    "moulin_a_farine_cost": { "name": "Négociation farine", "emoji": "🌾", "description": "x0,8 cout - Moulin a farine" }
+  }
+}

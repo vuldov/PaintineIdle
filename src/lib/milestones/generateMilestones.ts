@@ -1,7 +1,6 @@
 import Decimal from 'decimal.js'
 import type { BuildingId, PipelineRole, MilestoneData, MilestoneEffect, MilestoneThreshold, UpgradeData, ResourceId, EntityScope, UpgradeEffectType } from '@/types'
 import { MILESTONE_THRESHOLDS, upgradeId, PANTINS_COINS_ID } from '@/types'
-
 // ─── Templates per role ──────────────────────────────────────────
 
 type EffectTemplate = { effects: Array<{ type: MilestoneEffect['type']; value: number }> }
@@ -65,21 +64,6 @@ function getTemplate(role: PipelineRole): Record<MilestoneThreshold, EffectTempl
     case 'vente': return VENTE_TEMPLATE
     default: return BALANCED_TEMPLATE
   }
-}
-
-// ─── French milestone name/description generators ────────────────
-
-const THRESHOLD_NAMES: Record<MilestoneThreshold, string> = {
-  1: 'Premier pas',
-  5: 'Apprenti',
-  10: 'Confirme',
-  25: 'Expert',
-  50: 'Maitre',
-  75: 'Virtuose',
-  100: 'Legendaire',
-  150: 'Mythique',
-  200: 'Transcendant',
-  250: 'Ultime',
 }
 
 function effectDescription(e: { type: MilestoneEffect['type']; value: number }): string {
@@ -148,6 +132,11 @@ export function generateMilestones(
   const milestones: MilestoneData[] = []
   const upgrades: Record<string, UpgradeData> = {}
   const upgradeOrder: string[] = []
+  const THRESHOLD_NAMES: Record<MilestoneThreshold, string> = {
+    1: 'Apprenti', 5: 'Compagnon', 10: 'Artisan',
+    25: 'Expert', 50: 'Maitre', 75: 'Grand Maitre',
+    100: 'Legendaire', 150: 'Mythique', 200: 'Transcendant', 250: 'Divin',
+  }
 
   for (const threshold of MILESTONE_THRESHOLDS) {
     const entry = template[threshold]
@@ -158,13 +147,14 @@ export function generateMilestones(
 
     const effectDescs = entry.effects.map(effectDescription).join(' + ')
     const id = `milestone_${bId as string}_${threshold}`
+    const thresholdName = THRESHOLD_NAMES[threshold]
 
     // MilestoneData for dots
     milestones.push({
       id,
       buildingId: bId,
       threshold,
-      name: `${THRESHOLD_NAMES[threshold]} - ${buildingName}`,
+      name: `${thresholdName} - ${buildingName}`,
       description: `${threshold} ${buildingName} : ${effectDescs}`,
       effects,
     })
@@ -191,7 +181,7 @@ export function generateMilestones(
     // Build the upgrade effect
     const upgradeData: UpgradeData = {
       id: upgradeId(id),
-      name: `${THRESHOLD_NAMES[threshold]} - ${buildingName}`,
+      name: `${thresholdName} - ${buildingName}`,
       description: `${threshold} ${buildingName} : ${effectDescs}`,
       emoji: '🏆',
       cost,

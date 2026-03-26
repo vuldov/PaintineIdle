@@ -7,6 +7,7 @@ import { CraftingPanel } from './CraftingPanel'
 import { UpgradePanel } from './UpgradePanel'
 import { BatimentCard, BuyModeSelector } from './BatimentCard'
 import { useBuildingStore } from '@/store/buildingStore'
+import {useTranslation} from "react-i18next";
 
 export function ProductPage() {
   const activeProduct = useProductStore((s) => s.activeProduct)
@@ -15,11 +16,12 @@ export function ProductPage() {
   const hasUnlockedBuilding = bundle?.buildingOrder.some(
     (id) => buildings?.[id as string]?.unlocked
   )
+  const { t } = useTranslation('common')
 
   if (!bundle) return null
 
   return (
-    <ProductProvider productId={activeProduct} bundle={bundle}>
+    <ProductProvider key={activeProduct} productId={activeProduct} bundle={bundle}>
       <IngredientPanel />
 
       <SupplierPanel />
@@ -31,7 +33,7 @@ export function ProductPage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-amber-800">
-            Batiments
+              {t('sections.buildings')}
           </h2>
           <BuyModeSelector />
         </div>
@@ -43,7 +45,7 @@ export function ProductPage() {
           </div>
         ) : (
           <p className="text-sm text-amber-600 text-center py-4">
-            Produisez des ressources pour debloquer vos premiers batiments.
+              {t('building_card.no_buildings_hint')}
           </p>
         )}
       </section>

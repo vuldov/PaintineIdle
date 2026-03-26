@@ -1,0 +1,40 @@
+{
+  "title": "Options",
+  "tabs": {
+    "save": "Sauvegarde",
+    "cheats": "Cheats",
+    "language": "Langue"
+  },
+  "save": {
+    "manual_title": "Sauvegarde manuelle",
+    "save_now": "Sauvegarder maintenant",
+    "last_save": "Dernière sauvegarde : {{time}}",
+    "just_now": "à l'instant",
+    "seconds_ago": "il y a {{seconds}} s",
+    "minutes_ago": "il y a {{minutes}} min",
+    "export_title": "Exporter",
+    "export_button": "Copier la sauvegarde",
+    "exported": "Copié dans le presse-papier !",
+    "import_title": "Importer",
+    "import_placeholder": "Collez votre sauvegarde ici...",
+    "import_empty_error": "Collez votre sauvegarde ici.",
+    "import_invalid": "Sauvegarde invalide.",
+    "import_button": "Importer la sauvegarde",
+    "danger_zone": "Zone dangereuse",
+    "delete_button": "Supprimer la sauvegarde",
+    "confirm_delete": "Confirmer la suppression",
+    "delete_warning": "Cette action est irréversible ! Cliquez à nouveau pour confirmer."
+  },
+  "cheats": {
+    "disclaimer": "Mode triche — pour tester le jeu uniquement.",
+    "amount_label": "Quantité à ajouter",
+    "add_resources": "Ajouter des ressources",
+    "unlock_all": "Tout débloquer",
+    "buy_all_upgrades": "Acheter tous les upgrades"
+  },
+  "language": {
+    "coming_soon": "Le choix de la langue sera disponible prochainement.",
+    "current": "Actuellement : Français uniquement"
+  },
+  "close": "Fermer"
+}

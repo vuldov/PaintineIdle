@@ -1,0 +1,128 @@
+{
+  "app": {
+    "title": "Paintine Idle",
+    "subtitle": "Arriverez vous à saucer les saucisses ?",
+    "footer": "Fait avec ❤ par Lucas Antonelli",
+    "wip_banner": "Version alpha — Jeu en cours de dev"
+  },
+  "sections": {
+    "buildings": "Bâtiments",
+    "upgrades": "Améliorations",
+    "workshop": "Atelier",
+    "ingredients": "Ingrédients",
+    "suppliers": "Fournisseurs",
+    "synergies": "Synergies & Bonus"
+  },
+  "actions": {
+    "sell": "Vendre",
+    "buy": "Acheter",
+    "sign_contract": "Signer le contrat",
+    "continue_playing": "Continuer à jouer"
+  },
+  "buy_modes": {
+    "1": "×1",
+    "10": "×10",
+    "next": "Palier",
+    "max": "Max"
+  },
+  "status": {
+    "active": "Actif",
+    "locked": "Verrouillé",
+    "achieved": "Atteint",
+    "max_tier": "Contrat au rang maximum"
+  },
+  "supplier": {
+    "produces": "Produit",
+    "rate": "Débit",
+    "cost": "Coût",
+    "upgrade_contract": "Améliorer contrat",
+    "sign_contract_label": "Signer le contrat",
+    "sign_contracts_hint": "Signez des contrats avec vos fournisseurs pour approvisionner automatiquement vos ingrédients."
+  },
+  "sell_panel": {
+    "title": "Vendre",
+    "sell_for_coins": "Vendez vos {{product}} pour des Paintines Coins",
+    "no_product": "Aucun(e) {{product}} à vendre",
+    "sell_button": "Vendre {{amount}} {{emoji}} → {{value}} 🪙"
+  },
+  "crafting": {
+    "auto_craft_enable": "Activer le crafting automatique",
+    "auto_craft_disable": "Désactiver le crafting automatique"
+  },
+  "toasts": {
+    "product_unlocked": "Nouveau produit débloqué : {{name}} !"
+  },
+  "building_card": {
+    "sell_tooltip": "Vendre 1 (50% remboursé)",
+    "total": "Total :",
+    "next_milestone": "Prochain palier : {{threshold}} ({{effect}})",
+    "no_buildings_hint": "Produisez des ressources pour débloquer vos premiers bâtiments.",
+    "aura_per_building": "+{{value}}%/bat.",
+    "aura_total": "Total : +{{value}}%"
+  },
+  "synergy_panel": {
+    "no_bonus": "Aucun bonus de synergie actif pour le moment.",
+    "buy_buildings_hint": "Achetez des bâtiments pour activer vos premières auras !",
+    "no_auras": "Achetez des bâtiments pour activer les auras.",
+    "no_synergy_upgrades": "Aucune amélioration de synergie achetée.",
+    "auras_title": "Auras des bâtiments",
+    "active_count": "{{count}} actives",
+    "synergy_upgrades_title": "Améliorations de synergie",
+    "purchased_title": "Améliorations achetées",
+    "subtitle": "Bonus automatiques de vos bâtiments, combos et améliorations",
+    "currently": "Actuellement : {{value}}",
+    "target": "Cible : {{name}}",
+    "click_to_show": "Cliquez pour afficher",
+    "combo_title": "Combo Boulangerie",
+    "scaling_bonus": "+{{value}}% {{type}} ({{count}} tranches)",
+    "scaling_progress": "{{count}}/{{divisor}} pour 1 tranche",
+    "scaling_effect": "+{{value}}% ({{count}} source)"
+  },
+  "aura_categories": {
+    "production": "Production",
+    "sell": "Vente",
+    "speed": "Vitesse",
+    "ingredients": "Ingrédients",
+    "cross_product": "Cross-produit"
+  },
+  "bonus_types": {
+    "sell": "vente",
+    "production": "prod.",
+    "global": "global",
+    "prod_global": "Prod. globale",
+    "sell_global": "Vente globale",
+    "prod_product": "Prod. {{name}}",
+    "sell_product": "Vente {{name}}",
+    "speed_global": "Vitesse globale",
+    "speed_product": "Vitesse {{name}}",
+    "ingredient_global": "Ingr. global",
+    "ingredient_product": "Ingr. {{name}}"
+  },
+  "upgrade_categories": {
+    "specialization": "Spécialisation",
+    "synergy": "Synergie",
+    "scaling": "Combo",
+    "combo": "Combo",
+    "combined": "Combiné",
+    "supplier": "Fournisseur",
+    "milestone": "Palier",
+    "ultimate": "Ultime",
+    "global": "Global",
+    "product": "Produit"
+  },
+  "shared_resources": {
+    "paintins_coins": { "name": "Paintines Coins", "emoji": "🪙" },
+    "croissants": { "name": "Croissants", "emoji": "🥐" },
+    "curry_wurst": { "name": "Curry Wurst végé", "emoji": "🌭" },
+    "pains_au_chocolat": { "name": "Chocolatines", "emoji": "🍫" },
+    "pizzas": { "name": "Pizzas", "emoji": "🍕" }
+  },
+  "victory": {
+    "title": "Paintinification planétaire !",
+    "saucisse" : "La saucisse a été saucée.",
+    "subtitle": "Vous l'avez fait. Vous avez vraiment saucé la saucisse.\nPersonne ne pensait que c'était possible, et pourtant\nvous voilà, au sommet de la chaine alimentaire.",
+    "subtitle2": "La communauté internationale est sous le choc.\nLes Nations Unies ont declaré un jour férié mondial\nen l'honneur de votre saucisse.",
+    "thanks": "Merci d'avoir saucé la saucisse sur Paintine Idle !",
+    "continue": "Continuer à jouer"
+  }
+}

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { ULTIMATE_UPGRADE_ID } from '@/lib/synergies/synergyUpgrades'
+import {useTranslation} from "react-i18next";
 
 export function VictoryModal() {
+  const { t } = useTranslation('common')
   const purchased = useUpgradeStore(
     (s) => s.upgrades[ULTIMATE_UPGRADE_ID as string]?.purchased ?? false,
   )
@@ -21,37 +23,33 @@ export function VictoryModal() {
         {/* Title */}
         <div className="text-center px-6 pb-4">
           <h2 className="text-3xl font-extrabold text-amber-900 mb-2">
-            Paintinification planetaire
+            {t('victory.title')}
           </h2>
           <p className="text-amber-700 text-lg font-medium">
-            La saucisse a ete saucee.
+            {t('victory.saucisse')}
           </p>
         </div>
 
         {/* Message */}
         <div className="px-6 pb-6 space-y-3 text-center">
           <p className="text-amber-800">
-            Vous l'avez fait. Vous avez vraiment sauce la saucisse.
-            Personne ne pensait que c'etait possible, et pourtant
-            vous voila, au sommet de la chaine alimentaire.
+            {t('victory.subtitle')}
           </p>
           <p className="text-amber-800">
-            La communaute internationale est sous le choc.
-            Les Nations Unies ont declare un jour ferie mondial
-            en l'honneur de votre saucisse.
+            {t('victory.subtitle2')}
           </p>
           <p className="text-amber-600 text-sm italic mt-4">
-            Merci d'avoir sauce la saucisse sur Paintine Idle !
+            {t('victory.thanks')}
           </p>
           <p className="text-amber-500 text-xs">
-            Fait avec amour par Lucas Antonelli
+            {t('app.footer')}
           </p>
 
           <button
             onClick={() => setDismissed(true)}
             className="mt-4 px-6 py-2 bg-amber-800 text-amber-50 rounded-lg font-semibold hover:bg-amber-700 transition-colors cursor-pointer"
           >
-            Continuer a jouer
+            {t('victory.continue')}
           </button>
         </div>
 

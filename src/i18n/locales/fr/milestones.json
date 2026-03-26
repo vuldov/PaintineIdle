@@ -1,0 +1,20 @@
+{
+  "threshold_names": {
+    "1": "Premier pas",
+    "5": "Apprenti",
+    "10": "Confirmé",
+    "25": "Expert",
+    "50": "Maître",
+    "75": "Virtuose",
+    "100": "Légendaire",
+    "150": "Mythique",
+    "200": "Transcendant",
+    "250": "Ultime"
+  },
+  "effects": {
+    "building_production_multiplier": "x{{value}} production",
+    "crafting_ratio_bonus": "x{{value}} rendement crafting",
+    "crafting_duration_reduction": "x{{value}} durée crafting",
+    "crafting_auto_unlock": "Crafting automatique débloqué"
+  }
+}

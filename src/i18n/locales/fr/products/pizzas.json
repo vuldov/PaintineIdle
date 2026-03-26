@@ -1,0 +1,87 @@
+{
+  "definition": { "name": "Pizzas", "emoji": "🍕" },
+  "resources": {
+    "tomates_fraiches": { "name": "Tomates fraîches", "emoji": "🍅" },
+    "basilic": { "name": "Basilic", "emoji": "🌿" },
+    "farine_pizza": { "name": "Farine pizza", "emoji": "🌾" },
+    "levure": { "name": "Levure", "emoji": "🧫" },
+    "mozzarella": { "name": "Mozzarella", "emoji": "🧀" },
+    "sauce_tomate": { "name": "Sauce tomate", "emoji": "🫕" },
+    "pate_a_pizza": { "name": "Pâte à pizza", "emoji": "🫓" },
+    "pate_etalee": { "name": "Pâte étalée", "emoji": "🔵" },
+    "pizza_garnie": { "name": "Pizza garnie", "emoji": "🍕" },
+    "pizzas": { "name": "Pizzas", "emoji": "🍕" }
+  },
+  "buildings": {
+    "potager": {
+      "name": "Potager", "emoji": "🍅",
+      "description": "Prépare la sauce tomate maison avec tomates et basilic",
+      "aura_description": "+5% génération ingrédients globale par potager"
+    },
+    "petrin_pizza": {
+      "name": "Pétrin à pizza", "emoji": "⚙️",
+      "description": "Mélange farine et levure en pâte à pizza",
+      "aura_description": "+3% vitesse pétrissage globale par pétrin pizza"
+    },
+    "plan_de_travail": {
+      "name": "Plan de travail", "emoji": "🪵",
+      "description": "Étale la pâte à pizza à la bonne épaisseur",
+      "aura_description": "+2% vitesse étalage globale par plan de travail"
+    },
+    "table_garniture": {
+      "name": "Table de garniture", "emoji": "🤲",
+      "description": "Garni la pizza avec sauce, mozzarella et garnitures",
+      "aura_description": "+3% génération mozzarella par table de garniture"
+    },
+    "four_a_bois": {
+      "name": "Four à bois", "emoji": "🔥",
+      "description": "Cuisson authentique au feu de bois",
+      "aura_description": "+3% prix de vente pizzas par four à bois"
+    },
+    "pizzeria": {
+      "name": "Pizzeria", "emoji": "🏪",
+      "description": "Vend automatiquement les pizzas",
+      "aura_description": "+1% prix de vente tous produits par pizzeria"
+    }
+  },
+  "crafting": {
+    "preparation_sauce_pizza": { "name": "Préparer la sauce", "emoji": "🍅", "verb": "Préparer" },
+    "petrissage_pizza": { "name": "Pétrissage", "emoji": "🤲", "verb": "Pétrir" },
+    "etalage_pizza": { "name": "Étalage", "emoji": "🪵", "verb": "Étaler" },
+    "garnissage_pizza": { "name": "Garnissage", "emoji": "🧀", "verb": "Garnir" },
+    "cuisson_pizza": { "name": "Cuisson", "emoji": "🔥", "verb": "Cuire" }
+  },
+  "upgrades": {
+    "pizza_sauce_rapide": { "name": "Sauce express", "emoji": "⚡", "description": "Préparation sauce 2x plus rapide" },
+    "pizza_petrissage_rapide": { "name": "Pétrissage rapide (Pizza)", "emoji": "⚡", "description": "Pétrissage 2x plus rapide" },
+    "pizza_etalage_rapide": { "name": "Étalage rapide", "emoji": "⚡", "description": "Étalage 2x plus rapide" },
+    "pizza_garnissage_rapide": { "name": "Garnissage rapide (Pizza)", "emoji": "⚡", "description": "Garnissage 2x plus rapide" },
+    "pizza_cuisson_rapide": { "name": "Cuisson rapide (Pizza)", "emoji": "⚡", "description": "Cuisson 2x plus rapide" },
+    "pizza_meilleur_prix": { "name": "Livraison premium", "emoji": "💰", "description": "x2 prix de vente des pizzas" },
+    "pizza_potager_boost": { "name": "Potager amélioré", "emoji": "🍅", "description": "x2 production du potager" },
+    "pizza_petrin_boost": { "name": "Pétrin renforcé", "emoji": "⚙️", "description": "x2 production du pétrin à pizza" },
+    "pizza_plan_travail_boost": { "name": "Plan de travail en marbre", "emoji": "🪵", "description": "x2 production du plan de travail" },
+    "pizza_four_bois_boost": { "name": "Bois de chêne", "emoji": "🔥", "description": "x2 production du four à bois" },
+    "pizza_global": { "name": "Recette napolitaine", "emoji": "🇮🇹", "description": "x1,5 production de tous les bâtiments" },
+    "pizza_achat_en_gros": { "name": "Fournisseur italien", "emoji": "📦", "description": "Bâtiments 15% moins chers" }
+  },
+  "suppliers": {
+    "maraicher_italien": { "name": "Maraicher italien", "emoji": "🍅", "description": "Tomates San Marzano fraiches du Vesuve" },
+    "fromagerie_napolitaine": { "name": "Fromagerie napolitaine", "emoji": "🧀", "description": "Mozzarella di bufala fraiche du jour" },
+    "moulin_sicilien": { "name": "Moulin sicilien", "emoji": "🌾", "description": "Farine Tipo 00 moulue a la meule de pierre" },
+    "herboriste": { "name": "Herboriste", "emoji": "🌿", "description": "Basilic frais cultive en serre" },
+    "levurerie": { "name": "Levurerie", "emoji": "🧫", "description": "Levure de boulanger fraiche livree quotidiennement" }
+  },
+  "supplier_upgrades": {
+    "maraicher_italien_rate": { "name": "Serres du Vesuve", "emoji": "🍅", "description": "x3 debit max - Maraicher italien" },
+    "maraicher_italien_cost": { "name": "Contrat maraicher", "emoji": "🍅", "description": "x0,8 cout - Maraicher italien" },
+    "fromagerie_napolitaine_rate": { "name": "Bufflonnes selectionnees", "emoji": "🧀", "description": "x3 debit max - Fromagerie napolitaine" },
+    "fromagerie_napolitaine_cost": { "name": "Contrat fromagerie", "emoji": "🧀", "description": "x0,8 cout - Fromagerie napolitaine" },
+    "moulin_sicilien_rate": { "name": "Ble ancien sicilien", "emoji": "🌾", "description": "x3 debit max - Moulin sicilien" },
+    "moulin_sicilien_cost": { "name": "Contrat moulin", "emoji": "🌾", "description": "x0,8 cout - Moulin sicilien" },
+    "herboriste_rate": { "name": "Serre hydroponique", "emoji": "🌿", "description": "x3 debit max - Herboriste" },
+    "herboriste_cost": { "name": "Contrat herboriste", "emoji": "🌿", "description": "x0,8 cout - Herboriste" },
+    "levurerie_rate": { "name": "Culture optimisee", "emoji": "🧫", "description": "x3 debit max - Levurerie" },
+    "levurerie_cost": { "name": "Contrat levurerie", "emoji": "🧫", "description": "x0,8 cout - Levurerie" }
+  }
+}

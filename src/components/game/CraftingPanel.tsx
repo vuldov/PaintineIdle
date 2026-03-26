@@ -1,4 +1,5 @@
 import Decimal from 'decimal.js'
+import { useTranslation } from 'react-i18next'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 import { useCraftingStore } from '@/store/craftingStore'
@@ -13,6 +14,8 @@ import type { CraftingRecipeId, Resource } from '@/types'
 
 function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
   const { productId, bundle } = useProduct()
+  const { t } = useTranslation('common')
+  const { t: tp } = useTranslation(`products/${productId}`)
   const rid = recipeId as string
   const recipe = bundle.craftingRecipes[rid]
 
@@ -46,21 +49,21 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
       <div className="flex items-center gap-3 mb-2">
-        <span className="text-2xl">{recipe.emoji}</span>
+        <span className="text-2xl">{tp(recipe.emoji)}</span>
         <div>
-          <h3 className="font-semibold text-amber-900 text-sm">{recipe.name}</h3>
+          <h3 className="font-semibold text-amber-900 text-sm">{tp(recipe.name)}</h3>
           <p className="text-xs text-amber-600">
             {recipe.inputs.map((inp, i) => {
               const resData = ALL_RESOURCES[inp.resource as string]
               return (
                 <span key={inp.resource as string}>
                   {i > 0 && ' + '}
-                  <NumberDisplay value={inp.amount} /> {resData?.emoji}
+                  <NumberDisplay value={inp.amount} /> {resData ? tp(resData.emoji) : ''}
                 </span>
               )
             })}
             {' \u2192 '}
-            <NumberDisplay value={recipe.output.amount} /> {ALL_RESOURCES[recipe.output.resource as string]?.emoji}
+            <NumberDisplay value={recipe.output.amount} /> {(() => { const r = ALL_RESOURCES[recipe.output.resource as string]; return r ? tp(r.emoji) : '' })()}
           </p>
         </div>
       </div>
@@ -87,14 +90,14 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
             }
           `}
         >
-          {isActive ? `${recipe.verb}... ${Math.floor(progress * 100)}%` : recipe.verb}
+          {isActive ? `${tp(recipe.verb)}... ${Math.floor(progress * 100)}%` : tp(recipe.verb)}
         </button>
 
         {/* Auto-craft toggle — visible only when milestone unlocked */}
         {autoUnlocked && (
           <button
             onClick={() => toggleAutoCraft(recipeId)}
-            title={autoCraft ? 'Desactiver le crafting automatique' : 'Activer le crafting automatique'}
+            title={autoCraft ? t('crafting.auto_craft_disable') : t('crafting.auto_craft_enable')}
             className={`
               shrink-0 w-9 h-9 rounded-lg border-2 flex items-center justify-center transition-colors cursor-pointer
               ${autoCraft
@@ -114,7 +117,9 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
 // ─── Sell button ────────────────────────────────────────────────
 
 function SellButton() {
+  const { t } = useTranslation('common')
   const { productId, bundle } = useProduct()
+  const { t: tp } = useTranslation(`products/${productId}`)
   const finishedId = bundle.finishedProductId
   const finishedRid = finishedId as string
 
@@ -132,7 +137,8 @@ function SellButton() {
   const sellAmount = hasProduct ? productAmount.floor() : new Decimal(0)
   const sellValue = calcSellValue(sellAmount, scopedUpgrades, bundle.baseSellRate)
 
-  const finishedEmoji = ALL_RESOURCES[finishedRid]?.emoji ?? bundle.definition.emoji
+  const finishedResData = ALL_RESOURCES[finishedRid]
+  const finishedEmoji = finishedResData ? tp(finishedResData.emoji) : tp(bundle.definition.emoji)
 
   const handleSell = () => {
     if (!hasProduct) return
@@ -152,9 +158,9 @@ function SellButton() {
       <div className="flex items-center gap-3 mb-3">
         <span className="text-2xl">💰</span>
         <div>
-          <h3 className="font-semibold text-green-900 text-sm">Vendre</h3>
+          <h3 className="font-semibold text-green-900 text-sm">{t('actions.sell')}</h3>
           <p className="text-xs text-green-600">
-            Vendez vos {bundle.definition.name.toLowerCase()} pour des Paintines Coins
+            {t('sell_panel.sell_for_coins', { product: tp(bundle.definition.name).toLowerCase() })}
           </p>
         </div>
       </div>
@@ -172,7 +178,7 @@ function SellButton() {
       >
         {hasProduct
           ? <>Vendre <NumberDisplay value={sellAmount} /> {finishedEmoji} {'\u2192'} <NumberDisplay value={sellValue} /> 🪙</>
-          : `Aucun(e) ${bundle.definition.name.toLowerCase()} a vendre`
+          : t('sell_panel.no_product', { product: tp(bundle.definition.name).toLowerCase() })
         }
       </button>
     </div>
@@ -182,11 +188,12 @@ function SellButton() {
 // ─── Panel ──────────────────────────────────────────────────────
 
 export function CraftingPanel() {
+  const { t } = useTranslation('common')
   const { bundle } = useProduct()
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-amber-800">Atelier</h2>
+      <h2 className="text-xl font-semibold text-amber-800">{t('sections.workshop')}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {bundle.craftingOrder.map((id) => (
           <CraftingButton key={id as string} recipeId={id} />

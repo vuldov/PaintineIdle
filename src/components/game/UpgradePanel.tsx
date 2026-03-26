@@ -1,4 +1,6 @@
 import Decimal from 'decimal.js'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { useUpgradeStore, isUpgradeVisible } from '@/store/upgradeStore'
 import { useResourceStore } from '@/store/resourceStore'
 import { useBuildingStore } from '@/store/buildingStore'
@@ -13,13 +15,13 @@ import type { UpgradeId, SupplierUpgradeId, Resource, UpgradeData, ResourceCost 
 
 // ─── Category badge styles ──────────────────────────────────────
 
-const CATEGORY_BADGE: Record<string, { bg: string; text: string; label: string; border: string }> = {
-  specialization: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Specialisation', border: 'border-amber-400' },
-  synergy:        { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Synergie', border: 'border-purple-400' },
-  scaling:        { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Combo', border: 'border-blue-400' },
-  supplier:       { bg: 'bg-teal-100', text: 'text-teal-800', label: 'Fournisseur', border: 'border-teal-400' },
-  milestone:      { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Palier', border: 'border-orange-400' },
-  ultimate:       { bg: 'bg-red-100', text: 'text-red-800', label: 'Ultime', border: 'border-red-400' },
+const CATEGORY_BADGE: Record<string, { bg: string; text: string; labelKey: string; border: string }> = {
+  specialization: { bg: 'bg-amber-100', text: 'text-amber-800', labelKey: 'upgrade_categories.specialization', border: 'border-amber-400' },
+  synergy:        { bg: 'bg-purple-100', text: 'text-purple-800', labelKey: 'upgrade_categories.synergy', border: 'border-purple-400' },
+  scaling:        { bg: 'bg-blue-100', text: 'text-blue-800', labelKey: 'upgrade_categories.scaling', border: 'border-blue-400' },
+  supplier:       { bg: 'bg-teal-100', text: 'text-teal-800', labelKey: 'upgrade_categories.supplier', border: 'border-teal-400' },
+  milestone:      { bg: 'bg-orange-100', text: 'text-orange-800', labelKey: 'upgrade_categories.milestone', border: 'border-orange-400' },
+  ultimate:       { bg: 'bg-red-100', text: 'text-red-800', labelKey: 'upgrade_categories.ultimate', border: 'border-red-400' },
 }
 
 // ─── Dynamic value computation ──────────────────────────────────
@@ -90,13 +92,15 @@ interface UpgradeItem {
 
 // ─── Cost helpers ───────────────────────────────────────────────
 
-function buildCosts(costResource: string, cost: Decimal, extraCosts?: ResourceCost[]): CostDisplay[] {
+function buildCosts(costResource: string, cost: Decimal, extraCosts?: ResourceCost[], resolve?: (key: string) => string): CostDisplay[] {
+  const r = (key: string) => resolve ? resolve(key) : key
   const costs: CostDisplay[] = [
-    { amount: cost, emoji: ALL_RESOURCES[costResource]?.emoji ?? '🪙' },
+    { amount: cost, emoji: (() => { const res = ALL_RESOURCES[costResource]; return res ? r(res.emoji) : '🪙' })() },
   ]
   if (extraCosts) {
     for (const ec of extraCosts) {
-      costs.push({ amount: ec.amount, emoji: ALL_RESOURCES[ec.resource as string]?.emoji ?? '🪙' })
+      const res = ALL_RESOURCES[ec.resource as string]
+      costs.push({ amount: ec.amount, emoji: res ? r(res.emoji) : '🪙' })
     }
   }
   return costs
@@ -120,7 +124,9 @@ function canAffordAll(
 // ─── Main panel ─────────────────────────────────────────────────
 
 export function UpgradePanel() {
-  const { bundle } = useProduct()
+  const { t } = useTranslation('common')
+  const { productId, bundle } = useProduct()
+  const { t: tp } = useTranslation(`products/${productId}`)
   const upgrades = useUpgradeStore((s) => s.upgrades)
   const buyUpgrade = useUpgradeStore((s) => s.buyUpgrade)
   const globalResources = useResourceStore((s) => s.globalResources)
@@ -160,8 +166,8 @@ export function UpgradePanel() {
       // Milestone upgrade: show ALL whose threshold is reached
       if (state.purchased) {
         milestonePurchasedItems.push({
-          key: uid, emoji: data.emoji, name: data.name, description: data.description,
-          costs: buildCosts(data.costResource as string, data.cost, data.extraCosts),
+          key: uid, emoji: tp(data.emoji), name: tp(data.name), description: tp(data.description),
+          costs: buildCosts(data.costResource as string, data.cost, data.extraCosts, tp),
           badge: CATEGORY_BADGE.milestone,
           affordable: false, purchased: true, onBuy: () => {},
         })
@@ -172,8 +178,8 @@ export function UpgradePanel() {
       if (!visible) continue
 
       milestoneAvailableItems.push({
-        key: uid, emoji: data.emoji, name: data.name, description: data.description,
-        costs: buildCosts(data.costResource as string, data.cost, data.extraCosts),
+        key: uid, emoji: tp(data.emoji), name: tp(data.name), description: tp(data.description),
+        costs: buildCosts(data.costResource as string, data.cost, data.extraCosts, tp),
         badge: CATEGORY_BADGE.milestone,
         affordable: canAffordAll(canAfford, data.costResource, data.cost, data.extraCosts),
         purchased: false,
@@ -185,10 +191,10 @@ export function UpgradePanel() {
       if (!visible) continue
       regularProductItems.push({
         key: uid,
-        emoji: data.emoji,
-        name: data.name,
-        description: data.description,
-        costs: buildCosts(data.costResource as string, data.cost, data.extraCosts),
+        emoji: tp(data.emoji),
+        name: tp(data.name),
+        description: tp(data.description),
+        costs: buildCosts(data.costResource as string, data.cost, data.extraCosts, tp),
         affordable: canAffordAll(canAfford, data.costResource, data.cost, data.extraCosts),
         purchased: state.purchased,
         onBuy: () => buyUpgrade(id as UpgradeId),
@@ -216,9 +222,9 @@ export function UpgradePanel() {
 
     if (state.purchased) {
       purchasedSupplierItems.push({
-        key: uid, emoji: data.emoji, name: data.name, description: data.description,
-        subtitle: supplierData?.name,
-        costs: [{ amount: data.cost, emoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '' }],
+        key: uid, emoji: tp(data.emoji), name: tp(data.name), description: tp(data.description),
+        subtitle: supplierData ? tp(supplierData.name) : undefined,
+        costs: [{ amount: data.cost, emoji: (() => { const r = ALL_RESOURCES[data.costResource as string]; return r ? tp(r.emoji) : '' })() }],
         badge: CATEGORY_BADGE.supplier, affordable: false, purchased: true,
         onBuy: () => {},
       })
@@ -230,9 +236,9 @@ export function UpgradePanel() {
     shownSuppliers.add(sid)
 
     supplierItems.push({
-      key: uid, emoji: data.emoji, name: data.name, description: data.description,
-      subtitle: supplierData?.name,
-      costs: [{ amount: data.cost, emoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '' }],
+      key: uid, emoji: tp(data.emoji), name: tp(data.name), description: tp(data.description),
+      subtitle: supplierData ? tp(supplierData.name) : undefined,
+      costs: [{ amount: data.cost, emoji: (() => { const r = ALL_RESOURCES[data.costResource as string]; return r ? tp(r.emoji) : '' })() }],
       badge: CATEGORY_BADGE.supplier,
       affordable: canAfford(data.costResource, data.cost),
       purchased: false,
@@ -241,6 +247,15 @@ export function UpgradePanel() {
   }
 
   // ── 3. Synergy upgrades ──
+  const ts = (key: string) => i18n.t(key, { ns: 'synergies' })
+  // Scope-aware resolver for cost emojis (resources can come from any product)
+  const resolveResourceEmoji = (key: string, resId: string): string => {
+    const res = ALL_RESOURCES[resId]
+    if (!res) return '🪙'
+    const scope = res.scope
+    if (scope === 'global') return i18n.t(res.emoji, { ns: 'common' })
+    return i18n.t(res.emoji, { ns: `products/${scope}` })
+  }
   const synergyItems: UpgradeItem[] = SYNERGY_UPGRADE_ORDER.map((id): UpgradeItem | null => {
     const uid = id as string
     const data = SYNERGY_UPGRADES[uid]
@@ -249,12 +264,22 @@ export function UpgradePanel() {
     const visible = state.purchased || isUpgradeVisible(uid, allResources, allBuildings, upgrades)
     if (!visible) return null
     const category = data.category ?? 'synergy'
+    // Build costs with scope-aware emoji resolution
+    const mainRes = ALL_RESOURCES[data.costResource as string]
+    const synergyCosts: CostDisplay[] = [
+      { amount: data.cost, emoji: mainRes ? resolveResourceEmoji(mainRes.emoji, data.costResource as string) : '🪙' },
+    ]
+    if (data.extraCosts) {
+      for (const ec of data.extraCosts) {
+        synergyCosts.push({ amount: ec.amount, emoji: resolveResourceEmoji('', ec.resource as string) })
+      }
+    }
     return {
       key: uid,
-      emoji: data.emoji,
-      name: data.name,
-      description: data.description,
-      costs: buildCosts(data.costResource as string, data.cost, data.extraCosts),
+      emoji: ts(data.emoji),
+      name: ts(data.name),
+      description: ts(data.description),
+      costs: synergyCosts,
       badge: CATEGORY_BADGE[category],
       dynamicLabel: computeDynamicLabel(data, allBuildings, totalBuildingCount, totalUpgradeCount),
       affordable: canAffordAll(canAfford, data.costResource, data.cost, data.extraCosts),
@@ -273,7 +298,7 @@ export function UpgradePanel() {
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
       <h2 className="text-xl font-semibold text-amber-800 mb-4">
-        Ameliorations
+        {t('sections.upgrades')}
       </h2>
 
       {available.length > 0 && (
@@ -301,17 +326,17 @@ export function UpgradePanel() {
                     <h3 className="font-semibold text-amber-900 text-sm">{item.name}</h3>
                     {item.badge && (
                       <span className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border ${item.badge.bg} ${item.badge.border} ${item.badge.text}`}>
-                        {item.badge.label}
+                        {t(item.badge.labelKey)}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-amber-600">{item.description}</p>
                   {item.subtitle && (
-                    <p className="text-[10px] text-amber-400">Cible : {item.subtitle}</p>
+                    <p className="text-[10px] text-amber-400">{t('synergy_panel.target', { name: item.subtitle })}</p>
                   )}
                   {item.dynamicLabel && (
                     <p className="text-xs text-green-700 font-medium mt-0.5">
-                      Actuellement : {item.dynamicLabel}
+                      {t('synergy_panel.currently', { value: item.dynamicLabel })}
                     </p>
                   )}
                   <p className="text-xs text-amber-800 font-medium mt-1 flex items-center gap-2 flex-wrap">

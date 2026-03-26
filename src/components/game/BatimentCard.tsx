@@ -1,4 +1,5 @@
 import Decimal from 'decimal.js'
+import { useTranslation } from 'react-i18next'
 import { useBuildingStore, type BuyMode } from '@/store/buildingStore'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
@@ -26,6 +27,7 @@ const AURA_EMOJIS: Record<string, string> = {
 }
 
 function AuraBadge({ aura, count }: { aura: BuildingAura; count: number }) {
+  const { t } = useTranslation('common')
   const perBuilding = aura.bonusPerBuilding
   const totalBonus = perBuilding.mul(count)
   const emoji = AURA_EMOJIS[aura.effectType] ?? '✨'
@@ -34,11 +36,11 @@ function AuraBadge({ aura, count }: { aura: BuildingAura; count: number }) {
     <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 border border-amber-200/60 text-[11px]">
       <span>{emoji}</span>
       <span className="text-amber-700">
-        +{formatNumber(perBuilding.mul(100))}%/bat.
+        {t('building_card.aura_per_building', { value: formatNumber(perBuilding.mul(100)) })}
       </span>
       {count > 0 && (
         <span className="text-green-700 font-semibold">
-          Total : +{formatNumber(totalBonus.mul(100))}%
+          {t('building_card.aura_total', { value: formatNumber(totalBonus.mul(100)) })}
         </span>
       )}
     </div>
@@ -48,6 +50,7 @@ function AuraBadge({ aura, count }: { aura: BuildingAura; count: number }) {
 // ─── Milestone dots ──────────────────────────────────────────────
 
 function MilestoneDots({ milestones, buildingCount }: { milestones: MilestoneData[]; buildingCount: number }) {
+  const { t } = useTranslation('common')
   const { nextThreshold } = getMilestoneProgress(buildingCount)
   const nextMilestone = getNextMilestone(milestones, buildingCount)
 
@@ -71,7 +74,7 @@ function MilestoneDots({ milestones, buildingCount }: { milestones: MilestoneDat
                   <div className="bg-gray-900 text-white text-[10px] rounded-md px-2 py-1.5 whitespace-nowrap shadow-lg">
                     <div className="font-semibold">{milestone.name}</div>
                     <div className="text-gray-300">{milestone.description}</div>
-                    {isAchieved && <div className="text-green-400 mt-0.5">Atteint</div>}
+                    {isAchieved && <div className="text-green-400 mt-0.5">{t('status.achieved')}</div>}
                   </div>
                 </div>
               )}
@@ -81,7 +84,7 @@ function MilestoneDots({ milestones, buildingCount }: { milestones: MilestoneDat
       </div>
       {nextMilestone && nextThreshold !== null && (
         <p className="text-[10px] text-amber-600 mt-1">
-          Prochain palier : {nextThreshold} ({nextMilestone.description.split(' : ').slice(1).join(' : ')})
+          {t('building_card.next_milestone', { threshold: nextThreshold, effect: nextMilestone.description.split(' : ').slice(1).join(' : ') })}
         </p>
       )}
     </div>
@@ -90,20 +93,16 @@ function MilestoneDots({ milestones, buildingCount }: { milestones: MilestoneDat
 
 // ─── Buy mode selector (shared across all cards) ─────────────────
 
-const BUY_MODES: { value: BuyMode; label: string }[] = [
-  { value: '1', label: '×1' },
-  { value: '10', label: '×10' },
-  { value: 'next', label: 'Palier' },
-  { value: 'max', label: 'Max' },
-]
+const BUY_MODE_KEYS: BuyMode[] = ['1', '10', 'next', 'max']
 
 export function BuyModeSelector() {
+  const { t } = useTranslation('common')
   const buyMode = useBuildingStore((s) => s.buyMode)
   const setBuyMode = useBuildingStore((s) => s.setBuyMode)
 
   return (
     <div className="flex gap-1 bg-amber-50 rounded-lg p-0.5 border border-amber-200">
-      {BUY_MODES.map(({ value, label }) => (
+      {BUY_MODE_KEYS.map((value) => (
         <button
           key={value}
           onClick={() => setBuyMode(value)}
@@ -113,7 +112,7 @@ export function BuyModeSelector() {
               : 'text-amber-700 hover:bg-amber-100'
           }`}
         >
-          {label}
+          {t(`buy_modes.${value}`)}
         </button>
       ))}
     </div>
@@ -127,7 +126,9 @@ interface BatimentCardProps {
 }
 
 export function BatimentCard({ buildingId }: BatimentCardProps) {
+  const { t } = useTranslation('common')
   const { productId, bundle } = useProduct()
+  const { t: tp } = useTranslation(`products/${productId}`)
   const bid = buildingId as string
 
   const building = useBuildingStore((state) => state.buildings[productId]?.[bid])
@@ -187,7 +188,8 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
   const synergySellMult = (synergyBonuses.sellMultipliers[productId] ?? new Decimal(1))
     .mul(synergyBonuses.globalSellMultiplier ?? new Decimal(1))
 
-  const costEmoji = ALL_RESOURCES[building.costResource as string]?.emoji ?? '🪙'
+  const costResData = ALL_RESOURCES[building.costResource as string]
+  const costEmoji = costResData ? tp(costResData.emoji) : '🪙'
   const { produces, consumes } = calcBuildingRates(
     data,
     bundle.pipelineConfig.stages,
@@ -208,12 +210,12 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-2xl" role="img" aria-label={data.name}>
-            {data.emoji}
+          <span className="text-2xl" role="img" aria-label={tp(data.name)}>
+            {tp(data.emoji)}
           </span>
           <div>
-            <h3 className="font-semibold text-amber-900 text-sm">{data.name}</h3>
-            <p className="text-xs text-amber-600">{data.description}</p>
+            <h3 className="font-semibold text-amber-900 text-sm">{tp(data.name)}</h3>
+            <p className="text-xs text-amber-600">{tp(data.description)}</p>
           </div>
         </div>
         <span className="text-lg font-bold text-amber-800 bg-amber-100 rounded-full w-8 h-8 flex items-center justify-center shrink-0">
@@ -229,7 +231,7 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
           return (
             <span key={`p-${p.resource as string}`} className="flex items-center gap-1 text-green-700">
               <span>+<NumberDisplay value={total} />/s</span>
-              <span>{resData?.emoji} {resData?.name}</span>
+              <span>{resData ? tp(resData.emoji) : ''} {resData ? tp(resData.name) : ''}</span>
             </span>
           )
         })}
@@ -239,7 +241,7 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
           return (
             <span key={`c-${c.resource as string}`} className="flex items-center gap-1 text-red-500">
               <span>-<NumberDisplay value={total} />/s</span>
-              <span>{resData?.emoji} {resData?.name}</span>
+              <span>{resData ? tp(resData.emoji) : ''} {resData ? tp(resData.name) : ''}</span>
             </span>
           )
         })}
@@ -264,9 +266,9 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
             onClick={() => sellBuilding(buildingId)}
             className="px-2 py-1.5 rounded-lg text-xs font-medium transition-colors
               text-red-600 hover:bg-red-50 border border-red-200 cursor-pointer"
-            title="Vendre 1 (50% remboursé)"
+            title={t('building_card.sell_tooltip')}
           >
-            Vendre
+            {t('actions.sell')}
           </button>
         )}
         <button

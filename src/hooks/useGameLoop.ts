@@ -23,6 +23,7 @@ import {
   getAllBuildingUnlockThresholds,
 } from '@/lib/products/registry'
 import { useToastStore } from '@/store/toastStore'
+import i18n from '@/i18n'
 
 // ─── Unlock checks ──────────────────────────────────────────────
 
@@ -68,10 +69,12 @@ function checkProductUnlocks() {
     if (!bundle.definition.unlockCondition) continue
     if (totalCoins.gte(bundle.definition.unlockCondition.amount)) {
       productStore.unlockProduct(productId)
-      const { name, emoji } = bundle.definition
+      const ns = `products/${productId}`
+      const resolvedName = i18n.t(bundle.definition.name, { ns })
+      const resolvedEmoji = i18n.t(bundle.definition.emoji, { ns })
       useToastStore.getState().addToast(
-        `Nouveau produit debloque : ${name} !`,
-        emoji,
+        i18n.t('toasts.product_unlocked', { ns: 'common', name: resolvedName }),
+        resolvedEmoji,
       )
     }
   }

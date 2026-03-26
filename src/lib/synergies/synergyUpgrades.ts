@@ -15,9 +15,9 @@ const PIZZAS = resourceId('pizzas')
 const SPECIALIZATION_UPGRADES: Record<string, UpgradeData> = {
   beurre_aop_specialise: {
     id: upgradeId('beurre_aop_specialise'),
-    name: 'Beurre AOP spécialisé',
-    description: 'x2 production croissants + 0,5% production globale par tranche de 50 pétrins',
-    emoji: '🧈',
+    name: 'upgrades.beurre_aop_specialise.name',
+    description: 'upgrades.beurre_aop_specialise.description',
+    emoji: 'upgrades.beurre_aop_specialise.emoji',
     cost: new Decimal(500),
     costResource: CROISSANTS,
     effect: {
@@ -41,9 +41,9 @@ const SPECIALIZATION_UPGRADES: Record<string, UpgradeData> = {
   },
   chocolat_suisse_specialise: {
     id: upgradeId('chocolat_suisse_specialise'),
-    name: 'Chocolat suisse spécialisé',
-    description: 'x2 production chocolatines + 1% prix curry wurst par tranche de 50 malaxeurs',
-    emoji: '🍫',
+    name: 'upgrades.chocolat_suisse_specialise.name',
+    description: 'upgrades.chocolat_suisse_specialise.description',
+    emoji: 'upgrades.chocolat_suisse_specialise.emoji',
     cost: new Decimal(500),
     costResource: PAINS_AU_CHOCOLAT,
     effect: {
@@ -67,9 +67,9 @@ const SPECIALIZATION_UPGRADES: Record<string, UpgradeData> = {
   },
   recette_napolitaine_specialise: {
     id: upgradeId('recette_napolitaine_specialise'),
-    name: 'Recette napolitaine spécialisée',
-    description: 'x2 production pizzas + 5% prix tous produits par tranche de 50 pétrins pizza',
-    emoji: '🍕',
+    name: 'upgrades.recette_napolitaine_specialise.name',
+    description: 'upgrades.recette_napolitaine_specialise.description',
+    emoji: 'upgrades.recette_napolitaine_specialise.emoji',
     cost: new Decimal(500),
     costResource: PIZZAS,
     effect: {
@@ -98,9 +98,9 @@ const SPECIALIZATION_UPGRADES: Record<string, UpgradeData> = {
 const CROSS_PRODUCT_UPGRADES: Record<string, UpgradeData> = {
   petit_dejeuner_francais: {
     id: upgradeId('petit_dejeuner_francais'),
-    name: 'Petit-déjeuner français',
-    description: 'Chaque tranche de 100 croissants (total) augmente le prix des chocolatines de 2%',
-    emoji: '🥐',
+    name: 'upgrades.petit_dejeuner_francais.name',
+    description: 'upgrades.petit_dejeuner_francais.description',
+    emoji: 'upgrades.petit_dejeuner_francais.emoji',
     cost: new Decimal(1_000),
     costResource: CROISSANTS,
     effect: {
@@ -125,9 +125,9 @@ const CROSS_PRODUCT_UPGRADES: Record<string, UpgradeData> = {
   },
   alliance_beurre_chocolat: {
     id: upgradeId('alliance_beurre_chocolat'),
-    name: 'Alliance beurre-chocolat',
-    description: 'Chaque pétrin augmente la production de chocolat de 1%',
-    emoji: '🤝',
+    name: 'upgrades.alliance_beurre_chocolat.name',
+    description: 'upgrades.alliance_beurre_chocolat.description',
+    emoji: 'upgrades.alliance_beurre_chocolat.emoji',
     cost: new Decimal(500),
     costResource: PAINS_AU_CHOCOLAT,
     effect: {
@@ -151,9 +151,9 @@ const CROSS_PRODUCT_UPGRADES: Record<string, UpgradeData> = {
   },
   menu_boulangerie: {
     id: upgradeId('menu_boulangerie'),
-    name: 'Menu boulangerie',
-    description: 'Si 4 produits produisent : +25% vente globale',
-    emoji: '📋',
+    name: 'upgrades.menu_boulangerie.name',
+    description: 'upgrades.menu_boulangerie.description',
+    emoji: 'upgrades.menu_boulangerie.emoji',
     cost: new Decimal(5_000),
     costResource: CROISSANTS,
     effect: {
@@ -182,9 +182,9 @@ const CROSS_PRODUCT_UPGRADES: Record<string, UpgradeData> = {
 const SCALING_UPGRADES: Record<string, UpgradeData> = {
   industrialisation: {
     id: upgradeId('industrialisation'),
-    name: 'Industrialisation',
-    description: '+0,5% production globale par bâtiment possédé',
-    emoji: '🏭',
+    name: 'upgrades.industrialisation.name',
+    description: 'upgrades.industrialisation.description',
+    emoji: 'upgrades.industrialisation.emoji',
     cost: new Decimal(2_000),
     costResource: CROISSANTS,
     effect: {
@@ -207,9 +207,9 @@ const SCALING_UPGRADES: Record<string, UpgradeData> = {
   },
   franchise_nationale_scaling: {
     id: upgradeId('franchise_nationale_scaling'),
-    name: 'Franchise nationale',
-    description: '+2% vente par boutique',
-    emoji: '🗺️',
+    name: 'upgrades.franchise_nationale_scaling.name',
+    description: 'upgrades.franchise_nationale_scaling.description',
+    emoji: 'upgrades.franchise_nationale_scaling.emoji',
     cost: new Decimal(1_500),
     costResource: CROISSANTS,
     effect: {
@@ -240,9 +240,9 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 
   brunch_dominical: {
     id: upgradeId('brunch_dominical'),
-    name: 'Brunch dominical',
-    description: '+15% vente croissants et chocolatines',
-    emoji: '☀️',
+    name: 'upgrades.brunch_dominical.name',
+    description: 'upgrades.brunch_dominical.description',
+    emoji: 'upgrades.brunch_dominical.emoji',
     cost: new Decimal(800),
     costResource: CROISSANTS,
     extraCosts: [{ resource: PAINS_AU_CHOCOLAT, amount: new Decimal(400) }],
@@ -268,9 +268,9 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 
   gouter_gourmand: {
     id: upgradeId('gouter_gourmand'),
-    name: 'Gouter gourmand',
-    description: '+20% production chocolatines et curry wurst',
-    emoji: '🍬',
+    name: 'upgrades.gouter_gourmand.name',
+    description: 'upgrades.gouter_gourmand.description',
+    emoji: 'upgrades.gouter_gourmand.emoji',
     cost: new Decimal(600),
     costResource: PAINS_AU_CHOCOLAT,
     extraCosts: [{ resource: resourceId('curry_wurst'), amount: new Decimal(300) }],
@@ -296,9 +296,9 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 
   apero_mixte: {
     id: upgradeId('apero_mixte'),
-    name: 'Apero mixte',
-    description: '+25% vente pizzas, +10% vente croissants',
-    emoji: '🥂',
+    name: 'upgrades.apero_mixte.name',
+    description: 'upgrades.apero_mixte.description',
+    emoji: 'upgrades.apero_mixte.emoji',
     cost: new Decimal(1_500),
     costResource: CROISSANTS,
     extraCosts: [{ resource: PIZZAS, amount: new Decimal(300) }],
@@ -324,9 +324,9 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 
   fusion_choco_pizza: {
     id: upgradeId('fusion_choco_pizza'),
-    name: 'Fusion choco-pizza',
-    description: '+1,5% production globale par tranche de 25 batiments',
-    emoji: '🔥',
+    name: 'upgrades.fusion_choco_pizza.name',
+    description: 'upgrades.fusion_choco_pizza.description',
+    emoji: 'upgrades.fusion_choco_pizza.emoji',
     cost: new Decimal(500),
     costResource: resourceId('curry_wurst'),
     extraCosts: [{ resource: PIZZAS, amount: new Decimal(500) }],
@@ -353,9 +353,9 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 
   buffet_francais: {
     id: upgradeId('buffet_francais'),
-    name: 'Buffet francais',
-    description: '+30% vente globale',
-    emoji: '🇫🇷',
+    name: 'upgrades.buffet_francais.name',
+    description: 'upgrades.buffet_francais.description',
+    emoji: 'upgrades.buffet_francais.emoji',
     cost: new Decimal(2_000),
     costResource: CROISSANTS,
     extraCosts: [
@@ -383,9 +383,9 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 
   tour_du_monde: {
     id: upgradeId('tour_du_monde'),
-    name: 'Tour du monde',
-    description: '+2% production globale par amelioration achetee',
-    emoji: '🌍',
+    name: 'upgrades.tour_du_monde.name',
+    description: 'upgrades.tour_du_monde.description',
+    emoji: 'upgrades.tour_du_monde.emoji',
     cost: new Decimal(1_500),
     costResource: PAINS_AU_CHOCOLAT,
     extraCosts: [
@@ -415,9 +415,9 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 
   carte_complete: {
     id: upgradeId('carte_complete'),
-    name: 'Carte complete',
-    description: '+50% production globale et +25% vente globale',
-    emoji: '👨‍🍳',
+    name: 'upgrades.carte_complete.name',
+    description: 'upgrades.carte_complete.description',
+    emoji: 'upgrades.carte_complete.emoji',
     cost: new Decimal(5_000),
     costResource: CROISSANTS,
     extraCosts: [
@@ -446,9 +446,9 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
 
   empire_gastronomique: {
     id: upgradeId('empire_gastronomique'),
-    name: 'Empire gastronomique',
-    description: '+3% vente globale par batiment possede',
-    emoji: '👑',
+    name: 'upgrades.empire_gastronomique.name',
+    description: 'upgrades.empire_gastronomique.description',
+    emoji: 'upgrades.empire_gastronomique.emoji',
     cost: new Decimal(10_000),
     costResource: CROISSANTS,
     extraCosts: [
@@ -483,9 +483,9 @@ export const ULTIMATE_UPGRADE_ID = upgradeId('croissantification_planetaire')
 const ULTIMATE_UPGRADE: Record<string, UpgradeData> = {
   croissantification_planetaire: {
     id: ULTIMATE_UPGRADE_ID,
-    name: 'Croissantification planetaire',
-    description: 'Transformer la Terre entiere en un croissant geant. Il n\'y a plus rien a prouver.',
-    emoji: '🌍🥐',
+    name: 'upgrades.croissantification_planetaire.name',
+    description: 'upgrades.croissantification_planetaire.description',
+    emoji: 'upgrades.croissantification_planetaire.emoji',
     cost: new Decimal(10_000_000),
     costResource: CROISSANTS,
     extraCosts: [

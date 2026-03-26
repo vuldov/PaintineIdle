@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import Decimal from 'decimal.js'
 import { saveGame, exportSave, importSave, hardResetGame, getLastSaveTimestamp } from '@/hooks/useAutoSave'
 import { useResourceStore } from '@/store/resourceStore'
@@ -11,13 +12,6 @@ import type { ResourceId, BuildingId, ProductId } from '@/types'
 // ─── Types ─────────────────────────────────────────────────────
 
 type Tab = 'sauvegarde' | 'cheats' | 'langue'
-
-function formatSaveAgo(ts: number): string {
-  const seconds = Math.floor((Date.now() - ts) / 1000)
-  if (seconds < 5) return 'a l\'instant'
-  if (seconds < 60) return `il y a ${seconds} s`
-  return `il y a ${Math.floor(seconds / 60)} min`
-}
 
 interface SettingsModalProps {
   open: boolean
@@ -44,6 +38,7 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
 // ─── Sauvegarde Tab ────────────────────────────────────────────
 
 function SaveTab({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation('settings')
   const [copied, setCopied] = useState(false)
   const [importError, setImportError] = useState('')
   const [confirmReset, setConfirmReset] = useState(false)
@@ -56,6 +51,13 @@ function SaveTab({ onClose }: { onClose: () => void }) {
     const id = setInterval(() => forceUpdate((n) => n + 1), 1000)
     return () => clearInterval(id)
   }, [])
+
+  const formatSaveAgo = (ts: number): string => {
+    const seconds = Math.floor((Date.now() - ts) / 1000)
+    if (seconds < 5) return t('save.just_now')
+    if (seconds < 60) return t('save.seconds_ago', { seconds })
+    return t('save.minutes_ago', { minutes: Math.floor(seconds / 60) })
+  }
 
   const handleSave = () => {
     saveGame()
@@ -72,12 +74,12 @@ function SaveTab({ onClose }: { onClose: () => void }) {
   const handleImport = async () => {
     const value = importRef.current?.value?.trim()
     if (!value) {
-      setImportError('Collez votre sauvegarde ici.')
+      setImportError(t('save.import_empty_error'))
       return
     }
     const ok = await importSave(value)
     if (!ok) {
-      setImportError('Sauvegarde invalide.')
+      setImportError(t('save.import_invalid'))
     }
   }
 
@@ -94,17 +96,17 @@ function SaveTab({ onClose }: { onClose: () => void }) {
     <div className="space-y-4">
       {/* Manual save */}
       <div>
-        <h3 className="text-sm font-semibold text-amber-800 mb-2">Sauvegarde manuelle</h3>
+        <h3 className="text-sm font-semibold text-amber-800 mb-2">{t('save.manual_title')}</h3>
         <div className="flex items-center gap-3">
           <button
             onClick={handleSave}
             className="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
           >
-            Sauvegarder maintenant
+            {t('save.save_now')}
           </button>
           {lastSave > 0 && (
             <span className="text-xs text-amber-600">
-              Derniere sauvegarde : {formatSaveAgo(lastSave)}
+              {t('save.last_save', { time: formatSaveAgo(lastSave) })}
             </span>
           )}
         </div>
@@ -112,21 +114,21 @@ function SaveTab({ onClose }: { onClose: () => void }) {
 
       {/* Export */}
       <div>
-        <h3 className="text-sm font-semibold text-amber-800 mb-2">Exporter</h3>
+        <h3 className="text-sm font-semibold text-amber-800 mb-2">{t('save.export_title')}</h3>
         <button
           onClick={handleExport}
           className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
         >
-          {copied ? 'Copie dans le presse-papier !' : 'Copier la sauvegarde'}
+          {copied ? t('save.exported') : t('save.export_button')}
         </button>
       </div>
 
       {/* Import */}
       <div>
-        <h3 className="text-sm font-semibold text-amber-800 mb-2">Importer</h3>
+        <h3 className="text-sm font-semibold text-amber-800 mb-2">{t('save.import_title')}</h3>
         <textarea
           ref={importRef}
-          placeholder="Collez votre sauvegarde ici..."
+          placeholder={t('save.import_placeholder')}
           className="w-full h-20 border border-amber-300 rounded-lg p-2 text-xs font-mono resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
         />
         {importError && <p className="text-red-500 text-xs mt-1">{importError}</p>}
@@ -134,13 +136,13 @@ function SaveTab({ onClose }: { onClose: () => void }) {
           onClick={handleImport}
           className="mt-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
         >
-          Importer la sauvegarde
+          {t('save.import_button')}
         </button>
       </div>
 
       {/* Hard reset */}
       <div className="pt-2 border-t border-amber-200">
-        <h3 className="text-sm font-semibold text-red-700 mb-2">Zone dangereuse</h3>
+        <h3 className="text-sm font-semibold text-red-700 mb-2">{t('save.danger_zone')}</h3>
         <button
           onClick={handleReset}
           className={`px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
@@ -149,11 +151,11 @@ function SaveTab({ onClose }: { onClose: () => void }) {
               : 'bg-red-100 hover:bg-red-200 text-red-700 border border-red-300'
           }`}
         >
-          {confirmReset ? 'Confirmer la suppression' : 'Supprimer la sauvegarde'}
+          {confirmReset ? t('save.confirm_delete') : t('save.delete_button')}
         </button>
         {confirmReset && (
           <p className="text-red-500 text-xs mt-1">
-            Cette action est irreversible ! Cliquez a nouveau pour confirmer.
+            {t('save.delete_warning')}
           </p>
         )}
       </div>
@@ -164,6 +166,7 @@ function SaveTab({ onClose }: { onClose: () => void }) {
 // ─── Cheats Tab ────────────────────────────────────────────────
 
 function CheatsTab() {
+  const { t } = useTranslation('settings')
   const addResource = useResourceStore((s) => s.addResource)
   const unlockResource = useResourceStore((s) => s.unlockResource)
   const unlockBuilding = useBuildingStore((s) => s.unlockBuilding)
@@ -212,13 +215,13 @@ function CheatsTab() {
     <div className="space-y-4">
       <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3">
         <p className="text-yellow-800 text-xs font-medium">
-          Mode triche -- pour tester le jeu uniquement.
+          {t('cheats.disclaimer')}
         </p>
       </div>
 
       {/* Amount selector */}
       <div>
-        <label className="text-sm font-semibold text-amber-800 block mb-1">Quantite a ajouter</label>
+        <label className="text-sm font-semibold text-amber-800 block mb-1">{t('cheats.amount_label')}</label>
         <div className="flex gap-2 flex-wrap">
           {['100', '1000', '1e6', '1e9', '1e15'].map((val) => (
             <button
@@ -238,7 +241,7 @@ function CheatsTab() {
 
       {/* Add resources */}
       <div>
-        <h3 className="text-sm font-semibold text-amber-800 mb-2">Ajouter des ressources</h3>
+        <h3 className="text-sm font-semibold text-amber-800 mb-2">{t('cheats.add_resources')}</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {resourceEntries.map(([id, data]) => (
             <button
@@ -258,13 +261,13 @@ function CheatsTab() {
           onClick={handleUnlockAll}
           className="bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
         >
-          Tout debloquer
+          {t('cheats.unlock_all')}
         </button>
         <button
           onClick={handleBuyAllUpgrades}
           className="bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
         >
-          Acheter tous les upgrades
+          {t('cheats.buy_all_upgrades')}
         </button>
       </div>
     </div>
@@ -274,14 +277,15 @@ function CheatsTab() {
 // ─── Langue Tab ────────────────────────────────────────────────
 
 function LangueTab() {
+  const { t } = useTranslation('settings')
   return (
     <div className="space-y-4">
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
         <p className="text-amber-700 text-sm">
-          Le choix de la langue sera disponible prochainement.
+          {t('language.coming_soon')}
         </p>
         <p className="text-amber-500 text-xs mt-2">
-          Actuellement : Francais uniquement
+          {t('language.current')}
         </p>
       </div>
     </div>
@@ -291,6 +295,7 @@ function LangueTab() {
 // ─── Main Modal ────────────────────────────────────────────────
 
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
+  const { t } = useTranslation('settings')
   const [activeTab, setActiveTab] = useState<Tab>('sauvegarde')
 
   if (!open) return null
@@ -307,11 +312,11 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       <div className="relative bg-amber-50 rounded-xl shadow-xl border border-amber-300 w-full max-w-lg mx-4 max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <h2 className="text-xl font-bold text-amber-900">Options</h2>
+          <h2 className="text-xl font-bold text-amber-900">{t('title')}</h2>
           <button
             onClick={onClose}
             className="text-amber-500 hover:text-amber-700 text-2xl leading-none cursor-pointer transition-colors"
-            aria-label="Fermer"
+            aria-label={t('close')}
           >
             &times;
           </button>
@@ -319,9 +324,9 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
         {/* Tabs */}
         <div className="flex gap-1 px-5">
-          <TabButton label="Sauvegarde" active={activeTab === 'sauvegarde'} onClick={() => setActiveTab('sauvegarde')} />
-          <TabButton label="Cheats" active={activeTab === 'cheats'} onClick={() => setActiveTab('cheats')} />
-          <TabButton label="Langue" active={activeTab === 'langue'} onClick={() => setActiveTab('langue')} />
+          <TabButton label={t('tabs.save')} active={activeTab === 'sauvegarde'} onClick={() => setActiveTab('sauvegarde')} />
+          <TabButton label={t('tabs.cheats')} active={activeTab === 'cheats'} onClick={() => setActiveTab('cheats')} />
+          <TabButton label={t('tabs.language')} active={activeTab === 'langue'} onClick={() => setActiveTab('langue')} />
         </div>
 
         {/* Content */}
