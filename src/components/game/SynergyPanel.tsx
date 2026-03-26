@@ -176,6 +176,7 @@ function BonusSummary() {
 
 function ComboSection() {
   const { t } = useTranslation('common')
+  const { t: ts } = useTranslation('synergies')
   const { getName, getEmoji } = useProductLookups()
   const activeCombos = useSynergyStore((s) => s.bonuses.activeCombos)
   const activeIds = new Set(activeCombos.map(c => c.id))
@@ -212,7 +213,7 @@ function ComboSection() {
               {/* Info */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-amber-900">{combo.name}</span>
+                  <span className="font-semibold text-sm text-amber-900">{ts(combo.name)}</span>
                   {isActive ? (
                     <span className="text-[10px] uppercase tracking-wider font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
                       {t('status.active')}
@@ -223,7 +224,7 @@ function ComboSection() {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-amber-600 mt-0.5">{combo.description}</p>
+                <p className="text-xs text-amber-600 mt-0.5">{ts(combo.description)}</p>
               </div>
 
               {/* Bonus */}
@@ -351,6 +352,7 @@ function AuraSection() {
 
 function UpgradeSynergySection() {
   const { t } = useTranslation('common')
+  const { t: ts } = useTranslation('synergies')
   const upgrades = useUpgradeStore((s) => s.upgrades)
   const buildingsByProduct = useBuildingStore((s) => s.buildings)
   const allBuildings = useMemo(() => {
@@ -428,15 +430,15 @@ function UpgradeSynergySection() {
               key={uidStr}
               className={`flex items-center gap-3 p-3 rounded-lg border bg-white ${colors.border}`}
             >
-              <span className="text-xl shrink-0">{data.emoji}</span>
+              <span className="text-xl shrink-0">{ts(data.emoji)}</span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-sm text-amber-900">{data.name}</span>
+                  <span className="font-semibold text-sm text-amber-900">{ts(data.name)}</span>
                   <span className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${colors.badge}`}>
                     {t(`upgrade_categories.${cat}`)}
                   </span>
                 </div>
-                <p className="text-xs text-amber-600 mt-0.5">{data.description}</p>
+                <p className="text-xs text-amber-600 mt-0.5">{ts(data.description)}</p>
                 {dynamicText && (
                   <p className="text-xs text-green-700 mt-1 font-medium">{dynamicText}</p>
                 )}
