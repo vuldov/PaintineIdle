@@ -249,7 +249,7 @@ export function UpgradePanel() {
   // ── 3. Synergy upgrades ──
   const ts = (key: string) => i18n.t(key, { ns: 'synergies' })
   // Scope-aware resolver for cost emojis (resources can come from any product)
-  const resolveResourceEmoji = (key: string, resId: string): string => {
+  const resolveResourceEmoji = (resId: string): string => {
     const res = ALL_RESOURCES[resId]
     if (!res) return '🪙'
     const scope = res.scope
@@ -267,11 +267,11 @@ export function UpgradePanel() {
     // Build costs with scope-aware emoji resolution
     const mainRes = ALL_RESOURCES[data.costResource as string]
     const synergyCosts: CostDisplay[] = [
-      { amount: data.cost, emoji: mainRes ? resolveResourceEmoji(mainRes.emoji, data.costResource as string) : '🪙' },
+      { amount: data.cost, emoji: mainRes ? resolveResourceEmoji(data.costResource as string) : '🪙' },
     ]
     if (data.extraCosts) {
       for (const ec of data.extraCosts) {
-        synergyCosts.push({ amount: ec.amount, emoji: resolveResourceEmoji('', ec.resource as string) })
+        synergyCosts.push({ amount: ec.amount, emoji: resolveResourceEmoji(ec.resource as string) })
       }
     }
     return {

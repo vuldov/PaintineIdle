@@ -75,15 +75,7 @@ function Section({
   )
 }
 
-// ─── Helpers for product name/emoji via i18n ─────────────────────
 
-function useProductLabel(productId: ProductId | string): { name: string; emoji: string } {
-  const { t } = useTranslation(`products/${productId}`)
-  return {
-    name: t('definition.name'),
-    emoji: t('definition.emoji'),
-  }
-}
 
 // Hook that returns lookup functions for product names/emojis
 function useProductLookups() {
