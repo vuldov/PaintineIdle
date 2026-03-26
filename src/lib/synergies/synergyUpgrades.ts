@@ -42,7 +42,7 @@ const SPECIALIZATION_UPGRADES: Record<string, UpgradeData> = {
   chocolat_suisse_specialise: {
     id: upgradeId('chocolat_suisse_specialise'),
     name: 'Chocolat suisse spécialisé',
-    description: 'x2 production PAC + 1% prix curry wurst par tranche de 50 malaxeurs',
+    description: 'x2 production chocolatines + 1% prix curry wurst par tranche de 50 malaxeurs',
     emoji: '🍫',
     cost: new Decimal(500),
     costResource: PAINS_AU_CHOCOLAT,
@@ -99,7 +99,7 @@ const CROSS_PRODUCT_UPGRADES: Record<string, UpgradeData> = {
   petit_dejeuner_francais: {
     id: upgradeId('petit_dejeuner_francais'),
     name: 'Petit-déjeuner français',
-    description: 'Chaque tranche de 100 croissants (total) augmente le prix des PAC de 2%',
+    description: 'Chaque tranche de 100 croissants (total) augmente le prix des chocolatines de 2%',
     emoji: '🥐',
     cost: new Decimal(1_000),
     costResource: CROISSANTS,
@@ -241,7 +241,7 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
   brunch_dominical: {
     id: upgradeId('brunch_dominical'),
     name: 'Brunch dominical',
-    description: '+15% vente croissants et PAC',
+    description: '+15% vente croissants et chocolatines',
     emoji: '☀️',
     cost: new Decimal(800),
     costResource: CROISSANTS,
@@ -269,7 +269,7 @@ const COMBINED_SYNERGY_UPGRADES: Record<string, UpgradeData> = {
   gouter_gourmand: {
     id: upgradeId('gouter_gourmand'),
     name: 'Gouter gourmand',
-    description: '+20% production PAC et curry wurst',
+    description: '+20% production chocolatines et curry wurst',
     emoji: '🍬',
     cost: new Decimal(600),
     costResource: PAINS_AU_CHOCOLAT,

@@ -9,7 +9,7 @@ export const COMBO_DEFINITIONS: ComboBoulangerie[] = [
   {
     id: 'duo_classique',
     name: 'Duo classique',
-    description: 'Croissants + Pains au chocolat : +10% prix de vente',
+    description: 'Croissants + Chocolatines : +10% prix de vente',
     requiredProducts: ['croissants', 'pains_au_chocolat'],
     bonusType: 'sell',
     bonusMultiplier: new Decimal(0.10),
@@ -17,7 +17,7 @@ export const COMBO_DEFINITIONS: ComboBoulangerie[] = [
   {
     id: 'trio_boulangerie',
     name: 'Trio boulangerie',
-    description: 'Croissants + PAC + Curry Wurst : +20% production',
+    description: 'Croissants + chocolatines + Curry Wurst : +20% production',
     requiredProducts: ['croissants', 'pains_au_chocolat', 'curry_wurst'],
     bonusType: 'production',
     bonusMultiplier: new Decimal(0.20),

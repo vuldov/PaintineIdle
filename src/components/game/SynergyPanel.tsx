@@ -23,7 +23,7 @@ const PRODUCT_EMOJIS: Record<ProductId, string> = {
 
 const PRODUCT_NAMES: Record<ProductId, string> = {
   croissants: 'Croissants',
-  pains_au_chocolat: 'Pains au chocolat',
+  pains_au_chocolat: 'Chocolatines',
   curry_wurst: 'Curry Wurst végé',
   pizzas: 'Pizzas',
 }

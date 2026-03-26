@@ -45,7 +45,7 @@ const resources: Record<string, ResourceData> = {
     initialAmount: new Decimal(0), scope: 'pains_au_chocolat',
   },
   [PAINS_AU_CHOCOLAT as string]: {
-    id: PAINS_AU_CHOCOLAT, name: 'Pains au chocolat', emoji: '🍫',
+    id: PAINS_AU_CHOCOLAT, name: 'Chocolatines', emoji: '🍫',
     category: 'produit_fini', initiallyUnlocked: true,
     initialAmount: new Decimal(0), scope: 'pains_au_chocolat',
   },
@@ -72,12 +72,12 @@ const buildings: Record<string, BuildingData> = {
     producedResource: PATON_CHOCOLAT, pipelineRole: 'garnissage', scope: 'pains_au_chocolat',
     aura: {
       effectType: 'production_bonus', bonusPerBuilding: new Decimal(0.03),
-      targetProduct: 'pains_au_chocolat', description: '+3% production pains au chocolat par garnisseur',
+      targetProduct: 'pains_au_chocolat', description: '+3% production chocolatines par garnisseur',
     },
   },
   [FOUR_VENTILE as string]: {
     id: FOUR_VENTILE, name: 'Four ventile', emoji: '🔥',
-    description: 'Cuisson homogene pour des pains au chocolat parfaits',
+    description: 'Cuisson homogene pour des chocolatines parfaits',
     baseCost: new Decimal(600), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.8),
     producedResource: PAINS_AU_CHOCOLAT, pipelineRole: 'cuisson', scope: 'pains_au_chocolat',
@@ -88,7 +88,7 @@ const buildings: Record<string, BuildingData> = {
   },
   [CHOCOLATERIE as string]: {
     id: CHOCOLATERIE, name: 'Chocolaterie', emoji: '🏪',
-    description: 'Vend automatiquement les pains au chocolat',
+    description: 'Vend automatiquement les chocolatines',
     baseCost: new Decimal(1_500), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.9),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pains_au_chocolat',
@@ -102,8 +102,8 @@ const buildings: Record<string, BuildingData> = {
 // ─── Pipeline config ───────────────────────────────────────────
 //  Petrissage: beurre + farine -> pate feuilletee
 //  Garnissage: pate + chocolat -> paton au chocolat
-//  Cuisson:    paton -> pains au chocolat
-//  Vente:      pains au chocolat -> coins
+//  Cuisson:    paton -> chocolatines
+//  Vente:      chocolatines -> coins
 const pipelineConfig: { stages: PipelineStageConfig[] } = {
   stages: [
     {
@@ -250,7 +250,7 @@ const upgrades: Record<string, UpgradeData> = {
   },
   pac_farine_premium: {
     id: upgradeId('pac_farine_premium'), name: 'Farine premium',
-    description: 'x1,5 production de tous les batiments PAC', emoji: '🌾',
+    description: 'x1,5 production de tous les batiments chocolatines', emoji: '🌾',
     cost: new Decimal(4_000), costResource: PANTINS_COINS_ID,
     effect: { type: 'global_multiplier', multiplier: new Decimal(1.5) },
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(2_000) },
@@ -258,7 +258,7 @@ const upgrades: Record<string, UpgradeData> = {
   },
   pac_achat_en_gros: {
     id: upgradeId('pac_achat_en_gros'), name: 'Achats groupes',
-    description: 'Batiments PAC 15% moins chers', emoji: '📦',
+    description: 'Batiments chocolatines 15% moins chers', emoji: '📦',
     cost: new Decimal(7_000), costResource: PANTINS_COINS_ID,
     effect: { type: 'cost_reduction', multiplier: new Decimal(0.85) },
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(4_000) },
@@ -659,7 +659,7 @@ const allPacMilestoneUpgrades: Record<string, UpgradeData> = {
 export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
   definition: {
     id: 'pains_au_chocolat',
-    name: 'Pains au chocolat',
+    name: 'Chocolatines',
     emoji: '🍫',
     color: 'orange',
     unlockCondition: { resource: PANTINS_COINS_ID, amount: new Decimal(10_000) },
