@@ -11,7 +11,6 @@ import { SYNERGY_UPGRADES, SYNERGY_UPGRADE_ORDER } from '@/lib/synergies/synergy
 import { ALL_BUILDINGS as ALL_BUILDING_DATA, PRODUCT_REGISTRY, ALL_SUPPLIER_UPGRADES } from '@/lib/products/registry'
 import i18n from '@/i18n'
 import { formatNumber } from '@/lib/formatNumber'
-import type { ProductId } from '@/types'
 import type { AuraEffectType } from '@/types/synergies'
 
 // ─── Constants ──────────────────────────────────────────────────
