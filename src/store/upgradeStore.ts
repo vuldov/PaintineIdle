@@ -16,6 +16,7 @@ function createInitialUpgrades(): Record<string, Upgrade> {
       purchased: false,
       cost: data.cost,
       costResource: data.costResource,
+      extraCosts: data.extraCosts,
       effect: data.effect,
       unlockCondition: data.unlockCondition,
       scope: data.scope,
@@ -48,9 +49,22 @@ export const useUpgradeStore = create<UpgradeStore>((set, get) => ({
     if (!upgrade || upgrade.purchased) return false
 
     const resourceStore = useResourceStore.getState()
-    if (!resourceStore.canAfford(upgrade.costResource, upgrade.cost)) return false
 
+    // Check all costs
+    if (!resourceStore.canAfford(upgrade.costResource, upgrade.cost)) return false
+    if (upgrade.extraCosts) {
+      for (const ec of upgrade.extraCosts) {
+        if (!resourceStore.canAfford(ec.resource, ec.amount)) return false
+      }
+    }
+
+    // Spend all costs
     resourceStore.spendResource(upgrade.costResource, upgrade.cost)
+    if (upgrade.extraCosts) {
+      for (const ec of upgrade.extraCosts) {
+        resourceStore.spendResource(ec.resource, ec.amount)
+      }
+    }
 
     set((state) => ({
       upgrades: {

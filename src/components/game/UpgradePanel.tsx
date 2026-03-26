@@ -9,7 +9,7 @@ import { ALL_RESOURCES, ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES } from '@/lib/produ
 import { SYNERGY_UPGRADES, SYNERGY_UPGRADE_ORDER } from '@/lib/synergies/synergyUpgrades'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { formatNumber } from '@/lib/formatNumber'
-import type { UpgradeId, SupplierUpgradeId, Resource, UpgradeData } from '@/types'
+import type { UpgradeId, SupplierUpgradeId, Resource, UpgradeData, ResourceCost } from '@/types'
 
 // ─── Category badge styles ──────────────────────────────────────
 
@@ -19,6 +19,7 @@ const CATEGORY_BADGE: Record<string, { bg: string; text: string; label: string; 
   scaling:        { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Combo', border: 'border-blue-400' },
   supplier:       { bg: 'bg-teal-100', text: 'text-teal-800', label: 'Fournisseur', border: 'border-teal-400' },
   milestone:      { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Palier', border: 'border-orange-400' },
+  ultimate:       { bg: 'bg-red-100', text: 'text-red-800', label: 'Ultime', border: 'border-red-400' },
 }
 
 // ─── Dynamic value computation ──────────────────────────────────
@@ -68,19 +69,52 @@ function computeDynamicLabel(
 
 // ─── Unified upgrade item type ──────────────────────────────────
 
+interface CostDisplay {
+  amount: Decimal
+  emoji: string
+}
+
 interface UpgradeItem {
   key: string
   emoji: string
   name: string
   description: string
   subtitle?: string
-  cost: Decimal
-  costEmoji: string
+  costs: CostDisplay[]
   badge?: typeof CATEGORY_BADGE[string]
   dynamicLabel?: string | null
   affordable: boolean
   purchased: boolean
   onBuy: () => unknown
+}
+
+// ─── Cost helpers ───────────────────────────────────────────────
+
+function buildCosts(costResource: string, cost: Decimal, extraCosts?: ResourceCost[]): CostDisplay[] {
+  const costs: CostDisplay[] = [
+    { amount: cost, emoji: ALL_RESOURCES[costResource]?.emoji ?? '🪙' },
+  ]
+  if (extraCosts) {
+    for (const ec of extraCosts) {
+      costs.push({ amount: ec.amount, emoji: ALL_RESOURCES[ec.resource as string]?.emoji ?? '🪙' })
+    }
+  }
+  return costs
+}
+
+function canAffordAll(
+  canAfford: (r: import('@/types').ResourceId, a: Decimal) => boolean,
+  costResource: import('@/types').ResourceId,
+  cost: Decimal,
+  extraCosts?: ResourceCost[],
+): boolean {
+  if (!canAfford(costResource, cost)) return false
+  if (extraCosts) {
+    for (const ec of extraCosts) {
+      if (!canAfford(ec.resource, ec.amount)) return false
+    }
+  }
+  return true
 }
 
 // ─── Main panel ─────────────────────────────────────────────────
@@ -127,8 +161,7 @@ export function UpgradePanel() {
       if (state.purchased) {
         milestonePurchasedItems.push({
           key: uid, emoji: data.emoji, name: data.name, description: data.description,
-          cost: data.cost,
-          costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
+          costs: buildCosts(data.costResource as string, data.cost, data.extraCosts),
           badge: CATEGORY_BADGE.milestone,
           affordable: false, purchased: true, onBuy: () => {},
         })
@@ -140,10 +173,9 @@ export function UpgradePanel() {
 
       milestoneAvailableItems.push({
         key: uid, emoji: data.emoji, name: data.name, description: data.description,
-        cost: data.cost,
-        costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
+        costs: buildCosts(data.costResource as string, data.cost, data.extraCosts),
         badge: CATEGORY_BADGE.milestone,
-        affordable: canAfford(data.costResource, data.cost),
+        affordable: canAffordAll(canAfford, data.costResource, data.cost, data.extraCosts),
         purchased: false,
         onBuy: () => buyUpgrade(id as UpgradeId),
       })
@@ -156,9 +188,8 @@ export function UpgradePanel() {
         emoji: data.emoji,
         name: data.name,
         description: data.description,
-        cost: data.cost,
-        costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
-        affordable: canAfford(data.costResource, data.cost),
+        costs: buildCosts(data.costResource as string, data.cost, data.extraCosts),
+        affordable: canAffordAll(canAfford, data.costResource, data.cost, data.extraCosts),
         purchased: state.purchased,
         onBuy: () => buyUpgrade(id as UpgradeId),
       })
@@ -186,8 +217,8 @@ export function UpgradePanel() {
     if (state.purchased) {
       purchasedSupplierItems.push({
         key: uid, emoji: data.emoji, name: data.name, description: data.description,
-        subtitle: supplierData?.name, cost: data.cost,
-        costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '',
+        subtitle: supplierData?.name,
+        costs: [{ amount: data.cost, emoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '' }],
         badge: CATEGORY_BADGE.supplier, affordable: false, purchased: true,
         onBuy: () => {},
       })
@@ -200,8 +231,8 @@ export function UpgradePanel() {
 
     supplierItems.push({
       key: uid, emoji: data.emoji, name: data.name, description: data.description,
-      subtitle: supplierData?.name, cost: data.cost,
-      costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '',
+      subtitle: supplierData?.name,
+      costs: [{ amount: data.cost, emoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '' }],
       badge: CATEGORY_BADGE.supplier,
       affordable: canAfford(data.costResource, data.cost),
       purchased: false,
@@ -223,11 +254,10 @@ export function UpgradePanel() {
       emoji: data.emoji,
       name: data.name,
       description: data.description,
-      cost: data.cost,
-      costEmoji: ALL_RESOURCES[data.costResource as string]?.emoji ?? '🪙',
+      costs: buildCosts(data.costResource as string, data.cost, data.extraCosts),
       badge: CATEGORY_BADGE[category],
       dynamicLabel: computeDynamicLabel(data, allBuildings, totalBuildingCount, totalUpgradeCount),
-      affordable: canAfford(data.costResource, data.cost),
+      affordable: canAffordAll(canAfford, data.costResource, data.cost, data.extraCosts),
       purchased: state.purchased,
       onBuy: () => buyUpgrade(id as UpgradeId),
     }
@@ -284,8 +314,12 @@ export function UpgradePanel() {
                       Actuellement : {item.dynamicLabel}
                     </p>
                   )}
-                  <p className="text-xs text-amber-800 font-medium mt-1">
-                    <NumberDisplay value={item.cost} /> {item.costEmoji}
+                  <p className="text-xs text-amber-800 font-medium mt-1 flex items-center gap-2 flex-wrap">
+                    {item.costs.map((c, i) => (
+                      <span key={i} className="inline-flex items-center gap-0.5">
+                        <NumberDisplay value={c.amount} /> {c.emoji}
+                      </span>
+                    ))}
                   </p>
                 </div>
               </button>

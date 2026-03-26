@@ -7,6 +7,7 @@ import { ProductPage } from '@/components/game/ProductPage'
 import { SynergyPanel } from '@/components/game/SynergyPanel'
 import { SettingsModal } from '@/components/game/SettingsModal'
 import { ToastContainer } from '@/components/ui/ToastContainer'
+import { VictoryModal } from '@/components/game/VictoryModal'
 
 function App() {
   useGameLoop()
@@ -44,6 +45,7 @@ function App() {
       </footer>
 
       <ToastContainer />
+      <VictoryModal />
     </div>
   )
 }

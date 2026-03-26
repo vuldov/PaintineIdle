@@ -226,6 +226,11 @@ export interface UnlockCondition {
   threshold: Decimal
 }
 
+export interface ResourceCost {
+  resource: ResourceId
+  amount: Decimal
+}
+
 export interface UpgradeData {
   id: UpgradeId
   name: string
@@ -233,10 +238,12 @@ export interface UpgradeData {
   emoji: string
   cost: Decimal
   costResource: ResourceId
+  /** Additional costs (for multi-resource upgrades) */
+  extraCosts?: ResourceCost[]
   effect: UpgradeEffect
   unlockCondition: UnlockCondition
   scope: EntityScope
-  category?: 'specialization' | 'synergy' | 'scaling' | 'milestone'
+  category?: 'specialization' | 'synergy' | 'scaling' | 'milestone' | 'ultimate'
 }
 
 // ─── Supplier data (definition, not state) ──────────────────────
@@ -348,10 +355,11 @@ export interface Upgrade {
   purchased: boolean
   cost: Decimal
   costResource: ResourceId
+  extraCosts?: ResourceCost[]
   effect: UpgradeEffect
   unlockCondition: UnlockCondition
   scope: EntityScope
-  category?: 'specialization' | 'synergy' | 'scaling' | 'milestone'
+  category?: 'specialization' | 'synergy' | 'scaling' | 'milestone' | 'ultimate'
 }
 
 // ─── Stats ───────────────────────────────────────────────────────
