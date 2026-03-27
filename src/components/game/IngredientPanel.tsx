@@ -6,7 +6,7 @@ import {useTranslation} from "react-i18next";
 export function IngredientPanel() {
   const { productId, bundle } = useProduct()
   const { t } = useTranslation(`products/${productId}`)
-  const { t: tc } = useTranslation('common')
+
   const productResources = useResourceStore((state) => state.productResources[productId])
 
   if (!productResources) return null
