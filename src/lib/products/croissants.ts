@@ -19,12 +19,12 @@ const resources: Record<string, ResourceData> = {
   [BEURRE as string]: {
     id: BEURRE, name: 'resources.beurre.name', emoji: 'resources.beurre.emoji',
     category: 'ingredient', initiallyUnlocked: true,
-    initialAmount: new Decimal(10), scope: 'croissants',
+    initialAmount: new Decimal(200), scope: 'croissants',
   },
   [FARINE as string]: {
     id: FARINE, name: 'resources.farine.name', emoji: 'resources.farine.emoji',
     category: 'ingredient', initiallyUnlocked: true,
-    initialAmount: new Decimal(20), scope: 'croissants',
+    initialAmount: new Decimal(300), scope: 'croissants',
   },
   [PATE_FEUILLETEE as string]: {
     id: PATE_FEUILLETEE, name: 'resources.pate_feuilletee.name', emoji: 'resources.pate_feuilletee.emoji',

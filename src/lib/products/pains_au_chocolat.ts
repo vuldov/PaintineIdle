@@ -56,7 +56,7 @@ const buildings: Record<string, BuildingData> = {
   [MALAXEUR as string]: {
     id: MALAXEUR, name: 'buildings.malaxeur.name', emoji: 'buildings.malaxeur.emoji',
     description: 'buildings.malaxeur.description',
-    baseCost: new Decimal(50), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(1_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.45),
     producedResource: PATE_LEVEE_FEUILLETEE, pipelineRole: 'petrissage', scope: 'pains_au_chocolat',
     aura: {
@@ -67,7 +67,7 @@ const buildings: Record<string, BuildingData> = {
   [GARNISSEUR as string]: {
     id: GARNISSEUR, name: 'buildings.garnisseur.name', emoji: 'buildings.garnisseur.emoji',
     description: 'buildings.garnisseur.description',
-    baseCost: new Decimal(80), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(800), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.35),
     producedResource: PATON_CHOCOLAT, pipelineRole: 'garnissage', scope: 'pains_au_chocolat',
     aura: {
@@ -78,7 +78,7 @@ const buildings: Record<string, BuildingData> = {
   [FOUR_VENTILE as string]: {
     id: FOUR_VENTILE, name: 'buildings.four_ventile.name', emoji: 'buildings.four_ventile.emoji',
     description: 'buildings.four_ventile.description',
-    baseCost: new Decimal(600), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(1_600), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.8),
     producedResource: PAINS_AU_CHOCOLAT, pipelineRole: 'cuisson', scope: 'pains_au_chocolat',
     aura: {
@@ -89,7 +89,7 @@ const buildings: Record<string, BuildingData> = {
   [CHOCOLATERIE as string]: {
     id: CHOCOLATERIE, name: 'buildings.chocolaterie.name', emoji: 'buildings.chocolaterie.emoji',
     description: 'buildings.chocolaterie.description',
-    baseCost: new Decimal(1_500), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(2_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.9),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pains_au_chocolat',
     aura: {

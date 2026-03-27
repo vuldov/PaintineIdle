@@ -69,7 +69,7 @@ const buildings: Record<string, BuildingData> = {
   [MELANGEUR_EPICES as string]: {
     id: MELANGEUR_EPICES, name: 'buildings.melangeur_epices.name', emoji: 'buildings.melangeur_epices.emoji',
     description: 'buildings.melangeur_epices.description',
-    baseCost: new Decimal(200), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(10_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.4),
     producedResource: GEWURZ_KETCHUP, pipelineRole: 'petrissage', scope: 'curry_wurst',
     aura: {
@@ -80,7 +80,7 @@ const buildings: Record<string, BuildingData> = {
   [SAUCIER as string]: {
     id: SAUCIER, name: 'buildings.saucier.name', emoji: 'buildings.saucier.emoji',
     description: 'buildings.saucier.description',
-    baseCost: new Decimal(400), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(12_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.3),
     producedResource: SAUCISSE_SAUCEE, pipelineRole: 'garnissage', scope: 'curry_wurst',
     aura: {
@@ -91,7 +91,7 @@ const buildings: Record<string, BuildingData> = {
   [GARNISSEUSE as string]: {
     id: GARNISSEUSE, name: 'buildings.garnisseuse.name', emoji: 'buildings.garnisseuse.emoji',
     description: 'buildings.garnisseuse.description',
-    baseCost: new Decimal(2_500), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(20_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.6),
     producedResource: WURST_GARNIE, pipelineRole: 'dorure', scope: 'curry_wurst',
     aura: {
@@ -102,7 +102,7 @@ const buildings: Record<string, BuildingData> = {
   [GRILL_VEGETAL as string]: {
     id: GRILL_VEGETAL, name: 'buildings.grill_vegetal.name', emoji: 'buildings.grill_vegetal.emoji',
     description: 'buildings.grill_vegetal.description',
-    baseCost: new Decimal(5_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(30_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.5),
     producedResource: CURRY_WURST, pipelineRole: 'cuisson', scope: 'curry_wurst',
     aura: {
@@ -113,7 +113,7 @@ const buildings: Record<string, BuildingData> = {
   [IMBISS as string]: {
     id: IMBISS, name: 'buildings.imbiss.name', emoji: 'buildings.imbiss.emoji',
     description: 'buildings.imbiss.description',
-    baseCost: new Decimal(10_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(50_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.8),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'curry_wurst',
     aura: {

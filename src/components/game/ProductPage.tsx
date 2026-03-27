@@ -22,6 +22,7 @@ export function ProductPage() {
 
   return (
     <ProductProvider key={activeProduct} productId={activeProduct} bundle={bundle}>
+      <h2 className="text-xl font-semibold text-amber-800">{t('sections.ingredients')}</h2>
       <IngredientPanel />
 
       <SupplierPanel />

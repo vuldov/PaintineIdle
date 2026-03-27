@@ -20,8 +20,6 @@ export function IngredientPanel() {
 
   return (
     <div className="sticky z-[5] bg-white rounded-xl border border-amber-200 shadow-sm p-2 sm:p-4" style={{ top: 'var(--header-h, 3rem)' }}>
-      <h2 className="hidden sm:block text-sm font-semibold text-amber-800 mb-3">{tc('sections.ingredients')}</h2>
-
       {/* Mobile: horizontal scroll strip — fixed-width cards so the last one peeks out */}
       <div className="flex sm:hidden gap-2 overflow-x-auto scrollbar-hide">
         {visible.map(([id, data]) => {

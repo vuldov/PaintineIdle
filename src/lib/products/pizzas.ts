@@ -82,7 +82,7 @@ const buildings: Record<string, BuildingData> = {
   [POTAGER as string]: {
     id: POTAGER, name: 'buildings.potager.name', emoji: 'buildings.potager.emoji',
     description: 'buildings.potager.description',
-    baseCost: new Decimal(1_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(100_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.25),
     producedResource: SAUCE_TOMATE, pipelineRole: 'preparation_sauce', scope: 'pizzas',
     aura: {
@@ -93,7 +93,7 @@ const buildings: Record<string, BuildingData> = {
   [PETRIN_PIZZA as string]: {
     id: PETRIN_PIZZA, name: 'buildings.petrin_pizza.name', emoji: 'buildings.petrin_pizza.emoji',
     description: 'buildings.petrin_pizza.description',
-    baseCost: new Decimal(2_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(120_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.35),
     producedResource: PATE_A_PIZZA, pipelineRole: 'petrissage', scope: 'pizzas',
     aura: {
@@ -104,7 +104,7 @@ const buildings: Record<string, BuildingData> = {
   [PLAN_DE_TRAVAIL as string]: {
     id: PLAN_DE_TRAVAIL, name: 'buildings.plan_de_travail.name', emoji: 'buildings.plan_de_travail.emoji',
     description: 'buildings.plan_de_travail.description',
-    baseCost: new Decimal(5_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(150_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.5),
     producedResource: PATE_ETALEE, pipelineRole: 'etalage', scope: 'pizzas',
     aura: {
@@ -115,7 +115,7 @@ const buildings: Record<string, BuildingData> = {
   [TABLE_GARNITURE as string]: {
     id: TABLE_GARNITURE, name: 'buildings.table_garniture.name', emoji: 'buildings.table_garniture.emoji',
     description: 'buildings.table_garniture.description',
-    baseCost: new Decimal(8_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(170_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.4),
     producedResource: PIZZA_GARNIE, pipelineRole: 'garnissage', scope: 'pizzas',
     aura: {
@@ -126,7 +126,7 @@ const buildings: Record<string, BuildingData> = {
   [FOUR_A_BOIS as string]: {
     id: FOUR_A_BOIS, name: 'buildings.four_a_bois.name', emoji: 'buildings.four_a_bois.emoji',
     description: 'buildings.four_a_bois.description',
-    baseCost: new Decimal(15_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(180_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(1.2),
     producedResource: PIZZAS, pipelineRole: 'cuisson', scope: 'pizzas',
     aura: {
@@ -137,7 +137,7 @@ const buildings: Record<string, BuildingData> = {
   [PIZZERIA as string]: {
     id: PIZZERIA, name: 'buildings.pizzeria.name', emoji: 'buildings.pizzeria.emoji',
     description: 'buildings.pizzeria.description',
-    baseCost: new Decimal(40_000), costResource: PANTINS_COINS_ID,
+    baseCost: new Decimal(200_000), costResource: PANTINS_COINS_ID,
     costMultiplier: 1.15, baseProduction: new Decimal(0.7),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pizzas',
     aura: {
