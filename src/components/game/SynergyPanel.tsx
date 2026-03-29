@@ -12,6 +12,7 @@ import { ALL_BUILDINGS as ALL_BUILDING_DATA, PRODUCT_REGISTRY, ALL_SUPPLIER_UPGR
 import i18n from '@/i18n'
 import { formatNumber } from '@/lib/formatNumber'
 import type { AuraEffectType } from '@/types/synergies'
+import { GameEmoji } from '@/components/ui/GameEmoji'
 
 // ─── Constants ──────────────────────────────────────────────────
 
@@ -159,7 +160,7 @@ function BonusSummary() {
           key={i}
           className="flex items-center gap-2 bg-white rounded-lg border border-amber-200 px-3 py-2 shadow-sm"
         >
-          <span className="text-lg">{item.emoji}</span>
+          <span className="text-lg"><GameEmoji value={item.emoji} /></span>
           <div className="min-w-0 flex-1">
             <p className="text-xs text-amber-600 truncate">{item.label}</p>
             <p className="text-sm font-bold text-green-700">
@@ -205,7 +206,7 @@ function ComboSection() {
               <div className="flex items-center gap-0.5 shrink-0">
                 {combo.requiredProducts.map((pid) => (
                   <span key={pid} className="text-lg" title={getName(pid)}>
-                    {getEmoji(pid)}
+                    <GameEmoji value={getEmoji(pid)} />
                   </span>
                 ))}
               </div>
@@ -326,7 +327,7 @@ function AuraSection() {
                       key={`${category.key}-${i}`}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-100 text-sm"
                     >
-                      <span className="text-base">{aura.buildingEmoji}</span>
+                      <span className="text-base"><GameEmoji value={aura.buildingEmoji} /></span>
                       <span className="text-amber-900 font-medium">{aura.buildingName}</span>
                       <span className="text-amber-400 text-xs">(x{aura.count})</span>
                       <span className="text-amber-300 mx-0.5">→</span>
@@ -430,7 +431,7 @@ function UpgradeSynergySection() {
               key={uidStr}
               className={`flex items-center gap-3 p-3 rounded-lg border bg-white ${colors.border}`}
             >
-              <span className="text-xl shrink-0">{ts(data.emoji)}</span>
+              <span className="text-xl shrink-0"><GameEmoji value={ts(data.emoji)} /></span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-sm text-amber-900">{ts(data.name)}</span>
@@ -502,7 +503,7 @@ function PurchasedUpgradesSection() {
             key={item.key}
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-amber-50 text-amber-700 border border-amber-200"
           >
-            {item.emoji} {item.name}
+            <GameEmoji value={item.emoji} /> {item.name}
           </span>
         ))}
       </div>

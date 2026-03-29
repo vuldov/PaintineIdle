@@ -114,7 +114,7 @@
     "paintins_coins": { "name": "Paintines Coins", "emoji": "🪙" },
     "croissants": { "name": "Croissants", "emoji": "🥐" },
     "curry_wurst": { "name": "Curry Wurst végé", "emoji": "🌭" },
-    "pains_au_chocolat": { "name": "Chocolatines", "emoji": "🍫" },
+    "pains_au_chocolat": { "name": "Chocolatines", "emoji": "/images/chocolatine.png" },
     "pizzas": { "name": "Pizzas", "emoji": "🍕" }
   },
   "victory": {

@@ -2,6 +2,7 @@ import { useResourceStore } from '@/store/resourceStore'
 import { useProduct } from './ProductContext'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import {useTranslation} from "react-i18next";
+import { GameEmoji } from '@/components/ui/GameEmoji';
 
 export function IngredientPanel() {
   const { productId, bundle } = useProduct()
@@ -29,7 +30,7 @@ export function IngredientPanel() {
           return (
             <div key={id} className="flex items-center gap-1.5 bg-amber-50 rounded-lg px-2 py-1.5 shrink-0 w-28">
               <span className="text-base" role="img" aria-label={t(data.name)}>
-                {t(data.emoji)}
+                <GameEmoji value={t(data.emoji)} />
               </span>
               <div className="flex flex-col leading-tight min-w-0">
                 <span className="text-xs font-bold text-amber-900 tabular-nums truncate">
@@ -54,7 +55,7 @@ export function IngredientPanel() {
           return (
             <div key={id} className="flex items-center gap-2 bg-amber-50 rounded-lg px-3 py-2">
               <span className="text-xl shrink-0" role="img" aria-label={t(data.name)}>
-                {t(data.emoji)}
+                <GameEmoji value={t(data.emoji)} />
               </span>
               <div className="min-w-0">
                 <div className="text-xs text-amber-700 truncate">{t(data.name)}</div>

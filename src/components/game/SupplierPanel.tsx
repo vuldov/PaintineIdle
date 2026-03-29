@@ -8,6 +8,7 @@ import { useResourceStore } from '@/store/resourceStore'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES } from '@/lib/products/registry'
 import { SUPPLIER_CONTRACT_TIERS } from '@/lib/constants'
+import { GameEmoji } from '@/components/ui/GameEmoji'
 import { calcEffectiveMaxRate, calcEffectiveCostPerSecond, calcSupplierProduction, calcSupplierCostPerSecond, calcContractUpgradeCost } from '@/mechanics/supplierMechanics'
 
 // ─── Single supplier card ────────────────────────────────────────
@@ -46,14 +47,14 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
     return (
       <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 shadow-sm opacity-80">
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-2xl grayscale">{tp(data.emoji)}</span>
+          <span className="text-2xl grayscale"><GameEmoji value={tp(data.emoji)} /></span>
           <div className="min-w-0">
             <h3 className="font-semibold text-gray-700 text-sm">{tp(data.name)}</h3>
             <p className="text-xs text-gray-500">{tp(data.description)}</p>
           </div>
         </div>
         <div className="text-xs text-gray-500 mb-3">
-          {tc('supplier.produces')} : {resourceEmoji} {resourceName} (max <NumberDisplay value={effectiveMax} />/s)
+          {tc('supplier.produces')} : <GameEmoji value={resourceEmoji} /> {resourceName} (max <NumberDisplay value={effectiveMax} />/s)
         </div>
         <button
           onClick={() => buyContract(data.id)}
@@ -84,7 +85,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
     <div className="rounded-xl border p-4 shadow-sm transition-colors bg-amber-50 border-amber-300">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-2xl">{tp(data.emoji)}</span>
+          <span className="text-2xl"><GameEmoji value={tp(data.emoji)} /></span>
           <div className="min-w-0">
             <h3 className="font-semibold text-amber-900 text-sm">{tp(data.name)}</h3>
             <p className="text-xs text-amber-600">{tp(data.description)}</p>
@@ -99,7 +100,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
 
       {/* Resource info */}
       <div className="text-xs text-amber-700 mb-3">
-        {resourceEmoji} {resourceName} — max <NumberDisplay value={effectiveMax} />/s
+        <GameEmoji value={resourceEmoji} /> {resourceName} — max <NumberDisplay value={effectiveMax} />/s
       </div>
 
       {/* Rate slider */}

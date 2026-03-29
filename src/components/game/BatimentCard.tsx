@@ -13,6 +13,7 @@ import { formatNumber } from '@/lib/formatNumber'
 import type { BuildingId, MilestoneData } from '@/types'
 import { MILESTONE_THRESHOLDS } from '@/types'
 import type { BuildingAura } from '@/types/synergies'
+import { GameEmoji } from '@/components/ui/GameEmoji'
 
 // ─── Aura effect type emojis ─────────────────────────────────────
 
@@ -211,7 +212,7 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-2xl" role="img" aria-label={tp(data.name)}>
-            {tp(data.emoji)}
+            <GameEmoji value={tp(data.emoji)} />
           </span>
           <div>
             <h3 className="font-semibold text-amber-900 text-sm">{tp(data.name)}</h3>
@@ -231,7 +232,7 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
           return (
             <span key={`p-${p.resource as string}`} className="flex items-center gap-1 text-green-700">
               <span>+<NumberDisplay value={total} />/s</span>
-              <span>{resData ? tp(resData.emoji) : ''} {resData ? tp(resData.name) : ''}</span>
+              <span>{resData ? <GameEmoji value={tp(resData.emoji)} /> : ''} {resData ? tp(resData.name) : ''}</span>
             </span>
           )
         })}
@@ -241,7 +242,7 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
           return (
             <span key={`c-${c.resource as string}`} className="flex items-center gap-1 text-red-500">
               <span>-<NumberDisplay value={total} />/s</span>
-              <span>{resData ? tp(resData.emoji) : ''} {resData ? tp(resData.name) : ''}</span>
+              <span>{resData ? <GameEmoji value={tp(resData.emoji)} /> : ''} {resData ? tp(resData.name) : ''}</span>
             </span>
           )
         })}
@@ -283,7 +284,7 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
           `}
         >
           {buyLabel && <span className="mr-1 text-amber-200 text-xs">{buyLabel}</span>}
-          {cost ? <NumberDisplay value={cost} /> : '—'} {costEmoji}
+          {cost ? <NumberDisplay value={cost} /> : '—'} <GameEmoji value={costEmoji} />
         </button>
       </div>
     </div>

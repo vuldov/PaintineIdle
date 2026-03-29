@@ -6,7 +6,7 @@
     "farine_pizza": { "name": "Farine pizza", "emoji": "🌾" },
     "levure": { "name": "Levure", "emoji": "🧫" },
     "mozzarella": { "name": "Mozzarella", "emoji": "🧀" },
-    "sauce_tomate": { "name": "Sauce tomate", "emoji": "🫕" },
+    "sauce_tomate": { "name": "Sauce tomate", "emoji": "\uD83E\uDD6B" },
     "pate_a_pizza": { "name": "Pâte à pizza", "emoji": "🫓" },
     "pate_etalee": { "name": "Pâte étalée", "emoji": "🔵" },
     "pizza_garnie": { "name": "Pizza garnie", "emoji": "🍕" },

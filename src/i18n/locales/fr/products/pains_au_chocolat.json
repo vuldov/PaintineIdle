@@ -1,12 +1,12 @@
 {
-  "definition": { "name": "Chocolatines", "emoji": "🍫" },
+  "definition": { "name": "Chocolatines", "emoji": "/images/chocolatine.png" },
   "resources": {
     "beurre_doux": { "name": "Beurre doux", "emoji": "🧈" },
     "farine_qualite": { "name": "Farine de qualite", "emoji": "🌾" },
     "chocolat_patissier": { "name": "Chocolat patissier", "emoji": "🍫" },
     "pate_levee_feuilletee": { "name": "Pate levee feuilletee", "emoji": "🫓" },
     "paton_chocolat": { "name": "Paton au chocolat", "emoji": "🟫" },
-    "pains_au_chocolat": { "name": "Chocolatines", "emoji": "🍫" }
+    "pains_au_chocolat": { "name": "Chocolatines", "emoji": "/images/chocolatine.png" }
   },
   "buildings": {
     "malaxeur": {

@@ -8,6 +8,7 @@ import { PANTINS_COINS_ID } from '@/types'
 import type { ProductId } from '@/types'
 import {useTranslation} from "react-i18next";
 import i18n from '@/i18n';
+import { GameEmoji } from '@/components/ui/GameEmoji';
 
 // ─── Color ring for active product ──────────────────────────────
 
@@ -66,7 +67,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
           {coinsResource && coinsData && (
             <div className="flex items-center gap-1.5 text-amber-900 rounded-lg px-2 py-1 shrink-0 min-w-[80px] sm:min-w-[100px]">
               <span className="text-xl shrink-0" role="img" aria-label={t(coinsData.name)}>
-                {t(coinsData.emoji)}
+                <GameEmoji value={t(coinsData.emoji)} />
               </span>
               <div className="flex flex-col leading-tight tabular-nums">
                 <span className="font-bold text-sm">
@@ -104,7 +105,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
                 `}
               >
                 <span className="text-xl shrink-0" role="img" aria-label={i18n.t(finishedData.name, { ns: `products/${id}` })}>
-                  {i18n.t(finishedData.emoji, { ns: `products/${id}` })}
+                  <GameEmoji value={i18n.t(finishedData.emoji, { ns: `products/${id}` })} />
                 </span>
                 <div className="flex flex-col leading-tight tabular-nums">
                   <span className="font-bold text-sm">

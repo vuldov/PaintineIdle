@@ -12,6 +12,7 @@ import { SYNERGY_UPGRADES, SYNERGY_UPGRADE_ORDER } from '@/lib/synergies/synergy
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { formatNumber } from '@/lib/formatNumber'
 import type { UpgradeId, SupplierUpgradeId, Resource, UpgradeData, ResourceCost } from '@/types'
+import { GameEmoji } from '@/components/ui/GameEmoji'
 
 // ─── Category badge styles ──────────────────────────────────────
 
@@ -320,7 +321,7 @@ export function UpgradePanel() {
                   }
                 `}
               >
-                <span className="text-2xl shrink-0 mt-0.5">{item.emoji}</span>
+                <span className="text-2xl shrink-0 mt-0.5"><GameEmoji value={item.emoji} /></span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold text-amber-900 text-sm">{item.name}</h3>
@@ -342,7 +343,7 @@ export function UpgradePanel() {
                   <p className="text-xs text-amber-800 font-medium mt-1 flex items-center gap-2 flex-wrap">
                     {item.costs.map((c, i) => (
                       <span key={i} className="inline-flex items-center gap-0.5">
-                        <NumberDisplay value={c.amount} /> {c.emoji}
+                        <NumberDisplay value={c.amount} /> <GameEmoji value={c.emoji} />
                       </span>
                     ))}
                   </p>

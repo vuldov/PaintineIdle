@@ -9,6 +9,7 @@ import { isMilestoneAutoCraftUnlocked } from '@/mechanics/milestoneMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { ALL_RESOURCES } from '@/lib/products/registry'
 import type { CraftingRecipeId, Resource } from '@/types'
+import { GameEmoji } from '@/components/ui/GameEmoji'
 
 // ─── Crafting button ────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
   return (
     <div className="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
       <div className="flex items-center gap-3 mb-2">
-        <span className="text-2xl">{tp(recipe.emoji)}</span>
+        <span className="text-2xl"><GameEmoji value={tp(recipe.emoji)} /></span>
         <div>
           <h3 className="font-semibold text-amber-900 text-sm">{tp(recipe.name)}</h3>
           <p className="text-xs text-amber-600">
@@ -58,12 +59,12 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
               return (
                 <span key={inp.resource as string}>
                   {i > 0 && ' + '}
-                  <NumberDisplay value={inp.amount} /> {resData ? tp(resData.emoji) : ''}
+                  <NumberDisplay value={inp.amount} /> {resData ? <GameEmoji value={tp(resData.emoji)} /> : ''}
                 </span>
               )
             })}
             {' \u2192 '}
-            <NumberDisplay value={recipe.output.amount} /> {(() => { const r = ALL_RESOURCES[recipe.output.resource as string]; return r ? tp(r.emoji) : '' })()}
+            <NumberDisplay value={recipe.output.amount} /> {(() => { const r = ALL_RESOURCES[recipe.output.resource as string]; return r ? <GameEmoji value={tp(r.emoji)} /> : '' })()}
           </p>
         </div>
       </div>
@@ -177,7 +178,7 @@ function SellButton() {
         `}
       >
         {hasProduct
-          ? <>Vendre <NumberDisplay value={sellAmount} /> {finishedEmoji} {'\u2192'} <NumberDisplay value={sellValue} /> 🪙</>
+          ? <>Vendre <NumberDisplay value={sellAmount} /> <GameEmoji value={finishedEmoji} /> {'\u2192'} <NumberDisplay value={sellValue} /> 🪙</>
           : t('sell_panel.no_product', { product: tp(bundle.definition.name).toLowerCase() })
         }
       </button>
