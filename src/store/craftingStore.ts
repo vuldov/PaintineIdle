@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import Decimal from 'decimal.js'
 import type { CraftingRecipeId, CraftingTask, ProductId } from '@/types'
 import { ALL_CRAFTING } from '@/lib/products/registry'
 import { canStartCrafting, calcCraftingDuration } from '@/mechanics/craftingMechanics'

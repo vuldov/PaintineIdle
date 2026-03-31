@@ -1,4 +1,3 @@
-import Decimal from 'decimal.js'
 import type { MilestoneData, Upgrade } from '@/types'
 import { MILESTONE_THRESHOLDS } from '@/types'
 
