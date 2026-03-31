@@ -5,6 +5,16 @@
     "footer": "Fait avec ❤ par Lucas Antonelli",
     "wip_banner": "Version alpha — Jeu en cours de dev"
   },
+  "welcome": {
+    "title": "Bienvenue dans Paintine Idle !",
+    "intro": "Vous êtes un paintinier avec un rêve : créer le plus grand empire culinaire au monde.",
+    "how_to_play": "Comment jouer ?",
+    "tip_buildings": "Construisez des <strong>bâtiments</strong> pour produire automatiquement vos produits",
+    "tip_upgrades": "Achetez des <strong>améliorations</strong> pour booster votre production",
+    "tip_suppliers": "Signez des <strong>contrats fournisseurs</strong> pour vos apports en matières premières",
+    "tip_unlock": "Débloquez de <strong>nouveaux produits</strong> en progressant",
+    "cta": "Commencer à saucer !"
+  },
   "sections": {
     "buildings": "Bâtiments",
     "upgrades": "Améliorations",

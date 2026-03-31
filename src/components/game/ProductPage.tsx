@@ -8,6 +8,7 @@ import { UpgradePanel } from './UpgradePanel'
 import { BatimentCard, BuyModeSelector } from './BatimentCard'
 import { useBuildingStore } from '@/store/buildingStore'
 import {useTranslation} from "react-i18next";
+import {GameEmoji} from "@/components/ui/GameEmoji.tsx";
 
 export function ProductPage() {
   const activeProduct = useProductStore((s) => s.activeProduct)
@@ -16,12 +17,22 @@ export function ProductPage() {
   const hasUnlockedBuilding = bundle?.buildingOrder.some(
     (id) => buildings?.[id as string]?.unlocked
   )
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
 
   if (!bundle) return null
 
+  const tp = (key: string) => i18n.t(key, { ns: `products/${activeProduct}` })
+
   return (
     <ProductProvider key={activeProduct} productId={activeProduct} bundle={bundle}>
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-amber-900">
+          <GameEmoji value={tp('definition.emoji')} /> {tp('definition.name')}
+        </h1>
+        <p className="text-amber-700 mt-2">
+          {tp('definition.subtitle')}
+        </p>
+      </div>
       <h2 className="text-xl font-semibold text-amber-800">{t('sections.ingredients')}</h2>
       <IngredientPanel />
 

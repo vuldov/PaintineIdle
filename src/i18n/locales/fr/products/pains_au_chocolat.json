@@ -1,5 +1,9 @@
 {
-  "definition": { "name": "Chocolatines", "emoji": "/images/chocolatine.png" },
+  "definition": {
+    "name": "Chocolatines",
+    "emoji": "/images/chocolatine.png",
+    "subtitle" : "Bien meilleur que des pains au chocolat !"
+  },
   "resources": {
     "beurre_doux": { "name": "Beurre doux", "emoji": "🧈" },
     "farine_qualite": { "name": "Farine de qualité", "emoji": "🌾" },

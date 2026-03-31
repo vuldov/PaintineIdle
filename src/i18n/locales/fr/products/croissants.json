@@ -1,5 +1,9 @@
 {
-  "definition": { "name": "Croissants", "emoji": "🥐" },
+  "definition": {
+    "name": "Croissants",
+    "emoji": "🥐",
+    "subtitle" : "Il faut bien commencer quelque part !"
+  },
   "resources": {
     "beurre": { "name": "Beurre", "emoji": "🧈" },
     "farine": { "name": "Farine", "emoji": "🌾" },

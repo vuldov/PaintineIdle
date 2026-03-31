@@ -9,6 +9,7 @@ import { SettingsModal } from '@/components/game/SettingsModal'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { VictoryModal } from '@/components/game/VictoryModal'
 import {useTranslation} from "react-i18next";
+import {WelcomeModal} from "@/components/game/WelcomeModal.tsx";
 
 function App() {
   useGameLoop()
@@ -21,23 +22,14 @@ function App() {
   return (
     <div className="min-h-screen bg-amber-50">
       {/* WIP Banner */}
-      <div className="bg-yellow-400 text-yellow-900 text-center py-2 text-sm font-semibold border-b border-yellow-500">
-          {t('app.wip_banner')}
-      </div>
+      {/*<div className="bg-yellow-400 text-yellow-900 text-center py-2 text-sm font-semibold border-b border-yellow-500">*/}
+      {/*    {t('app.wip_banner')}*/}
+      {/*</div>*/}
 
       <ResourceBar onOpenSettings={() => setSettingsOpen(true)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-amber-900">
-              {t('app.title')}
-          </h1>
-          <p className="text-amber-700 mt-2">
-              {t('app.subtitle')}
-          </p>
-        </div>
-
         {viewMode === 'product' && <ProductPage />}
         {viewMode === 'synergies' && <SynergyPanel />}
       </main>
@@ -48,6 +40,7 @@ function App() {
 
       <ToastContainer />
       <VictoryModal />
+      <WelcomeModal />
     </div>
   )
 }

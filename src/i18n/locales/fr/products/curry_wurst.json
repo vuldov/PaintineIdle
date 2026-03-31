@@ -1,7 +1,8 @@
 {
   "definition": {
-    "name": "Curry Wurst végé",
-    "emoji": "/images/currywurst.png"
+    "name": "Currywursts végétariennes",
+    "emoji": "/images/currywurst.png",
+    "subtitle" : "Est-ce que les saucisses sont bien saucées ?"
   },
   "resources": {
     "saucisse_vege": { "name": "Saucisse végé", "emoji": "/images/saucisse.png" },

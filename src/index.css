@@ -24,6 +24,28 @@
   animation: spin-slow 6s linear infinite;
 }
 
+@utility animate-spin-slow-reverse {
+  animation: spin-slow 6s linear infinite reverse;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+}
+
+@keyframes wiggle-reverse {
+  0%, 100% { transform: rotate(12deg); }
+  50% { transform: rotate(-12deg); }
+}
+
+@utility animate-wiggle {
+  animation: wiggle 0.6s ease-in-out infinite;
+}
+
+@utility animate-wiggle-reverse {
+  animation: wiggle-reverse 0.6s ease-in-out infinite;
+}
+
 @keyframes shimmer {
   0%, 100% { background-position: 200% 0; }
   50% { background-position: -200% 0; }

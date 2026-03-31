@@ -1,5 +1,9 @@
 {
-  "definition": { "name": "Pizzas", "emoji": "🍕" },
+  "definition": {
+    "name": "Pizzas",
+    "emoji": "🍕",
+    "subtitle" : "Moins viril qu'un bon BBQ !"
+  },
   "resources": {
     "tomates_fraiches": { "name": "Tomates fraîches", "emoji": "🍅" },
     "basilic": { "name": "Basilic", "emoji": "🌿" },
