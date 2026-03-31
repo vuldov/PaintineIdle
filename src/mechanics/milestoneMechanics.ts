@@ -13,65 +13,6 @@ export function getUnlockedMilestones(
 }
 
 /**
- * Calculate the cumulative crafting ratio bonus from purchased milestone upgrades
- * targeting the given building.
- */
-export function calcMilestoneCraftingRatioBonus(
-  upgrades: Record<string, Upgrade>,
-  buildingId: string,
-): Decimal {
-  let mult = new Decimal(1)
-  for (const upgrade of Object.values(upgrades)) {
-    if (!upgrade.purchased) continue
-    if (upgrade.category !== 'milestone') continue
-    if ((upgrade.effect.targetBuilding as string) !== buildingId) continue
-    if (upgrade.effect.type === 'crafting_ratio_bonus') {
-      mult = mult.mul(upgrade.effect.multiplier)
-    }
-  }
-  return mult
-}
-
-/**
- * Calculate the cumulative crafting duration multiplier from purchased milestone upgrades
- * targeting the given building.
- * Result < 1 means faster crafting.
- */
-export function calcMilestoneCraftingDurationMultiplier(
-  upgrades: Record<string, Upgrade>,
-  buildingId: string,
-): Decimal {
-  let mult = new Decimal(1)
-  for (const upgrade of Object.values(upgrades)) {
-    if (!upgrade.purchased) continue
-    if (upgrade.category !== 'milestone') continue
-    if ((upgrade.effect.targetBuilding as string) !== buildingId) continue
-    if (upgrade.effect.type === 'crafting_duration_reduction') {
-      mult = mult.mul(upgrade.effect.multiplier)
-    }
-  }
-  return mult
-}
-
-/**
- * Check if auto-craft is unlocked via purchased milestone upgrades for this building.
- */
-export function isMilestoneAutoCraftUnlocked(
-  upgrades: Record<string, Upgrade>,
-  buildingId: string,
-): boolean {
-  for (const upgrade of Object.values(upgrades)) {
-    if (!upgrade.purchased) continue
-    if (upgrade.category !== 'milestone') continue
-    if ((upgrade.effect.targetBuilding as string) !== buildingId) continue
-    if (upgrade.effect.type === 'crafting_auto_unlock') {
-      return true
-    }
-  }
-  return false
-}
-
-/**
  * Get the next milestone that hasn't been reached yet.
  */
 export function getNextMilestone(

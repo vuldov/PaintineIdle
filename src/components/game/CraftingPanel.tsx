@@ -5,7 +5,6 @@ import { useUpgradeStore } from '@/store/upgradeStore'
 import { useCraftingStore } from '@/store/craftingStore'
 import { useProduct } from './ProductContext'
 import { canStartCrafting, calcSellValue } from '@/mechanics/craftingMechanics'
-import { isMilestoneAutoCraftUnlocked } from '@/mechanics/milestoneMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { ALL_RESOURCES } from '@/lib/products/registry'
 import type { CraftingRecipeId, Resource } from '@/types'
@@ -15,7 +14,6 @@ import { GameEmoji } from '@/components/ui/GameEmoji'
 
 function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
   const { productId, bundle } = useProduct()
-  const { t } = useTranslation('common')
   const { t: tp } = useTranslation(`products/${productId}`)
   const rid = recipeId as string
   const recipe = bundle.craftingRecipes[rid]
@@ -24,15 +22,8 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
   const productResources = useResourceStore((state) => state.productResources)
   const activeTask = useCraftingStore((state) => state.activeTasks[productId])
   const startCrafting = useCraftingStore((state) => state.startCrafting)
-  const autoCraft = useCraftingStore((state) => state.autoCraft[rid] ?? false)
-  const toggleAutoCraft = useCraftingStore((state) => state.toggleAutoCraft)
-  const upgrades = useUpgradeStore((state) => state.upgrades)
 
   if (!recipe) return null
-
-  // Check if auto-craft milestone is unlocked
-  const linkedBid = recipe.linkedBuildingId as string | undefined
-  const autoUnlocked = linkedBid ? isMilestoneAutoCraftUnlocked(upgrades, linkedBid) : false
 
   // Merge resources for canStartCrafting check (inline, not in selector)
   const allResources: Record<string, Resource> = { ...globalResources }
@@ -94,22 +85,6 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
           {isActive ? `${tp(recipe.verb)}... ${Math.floor(progress * 100)}%` : tp(recipe.verb)}
         </button>
 
-        {/* Auto-craft toggle — visible only when milestone unlocked */}
-        {autoUnlocked && (
-          <button
-            onClick={() => toggleAutoCraft(recipeId)}
-            title={autoCraft ? t('crafting.auto_craft_disable') : t('crafting.auto_craft_enable')}
-            className={`
-              shrink-0 w-9 h-9 rounded-lg border-2 flex items-center justify-center transition-colors cursor-pointer
-              ${autoCraft
-                ? 'bg-green-100 border-green-400 text-green-700'
-                : 'bg-gray-50 border-gray-300 text-gray-400 hover:border-amber-300 hover:text-amber-600'
-              }
-            `}
-          >
-            <span className="text-base">{autoCraft ? '🔄' : '⏸️'}</span>
-          </button>
-        )}
       </div>
     </div>
   )

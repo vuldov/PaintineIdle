@@ -51,9 +51,6 @@ export type MilestoneThreshold = typeof MILESTONE_THRESHOLDS[number]
 
 export type MilestoneEffectType =
   | 'building_production_multiplier'
-  | 'crafting_ratio_bonus'
-  | 'crafting_duration_reduction'
-  | 'crafting_auto_unlock'
 
 export interface MilestoneEffect {
   type: MilestoneEffectType
@@ -177,9 +174,6 @@ export type UpgradeEffectType =
   | 'specialization'
   | 'cross_product_synergy'
   | 'scaling'
-  | 'crafting_ratio_bonus'
-  | 'crafting_duration_reduction'
-  | 'crafting_auto_unlock'
 
 export interface UpgradeEffect {
   type: UpgradeEffectType
@@ -212,8 +206,6 @@ export interface UpgradeEffect {
     bonusPerUnit: Decimal
     scalingDivisor?: number
   }
-  /** For milestone upgrades: additional building production multiplier when primary type is a crafting effect */
-  buildingProductionMultiplier?: Decimal
 }
 
 export type UnlockConditionType = 'resource_threshold' | 'building_count' | 'upgrade_purchased'

@@ -60,10 +60,6 @@ export function calcBuildingRates(
         resourceMultipliers[target] = (resourceMultipliers[target] ?? new Decimal(1)).mul(upgrade.effect.multiplier)
       }
     }
-    // Handle buildingProductionMultiplier on any upgrade type (milestone dual-effects)
-    if (upgrade.effect.buildingProductionMultiplier && (upgrade.effect.targetBuilding as string) === (buildingData.id as string)) {
-      bMult = bMult.mul(upgrade.effect.buildingProductionMultiplier)
-    }
   }
 
   const effectiveProd = baseProduction.mul(bMult).mul(globalMult)
@@ -223,14 +219,6 @@ export function calcProductionForProduct(
       }
       default:
         break
-    }
-    // Handle buildingProductionMultiplier on any upgrade type (milestone dual-effects)
-    if (upgrade.effect.buildingProductionMultiplier) {
-      const target = upgrade.effect.targetBuilding as string | undefined
-      if (target) {
-        const current = buildingMultipliers[target] ?? new Decimal(1)
-        buildingMultipliers[target] = current.mul(upgrade.effect.buildingProductionMultiplier)
-      }
     }
   }
 

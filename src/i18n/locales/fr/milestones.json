@@ -12,9 +12,6 @@
     "250": "Ultime"
   },
   "effects": {
-    "building_production_multiplier": "x{{value}} production",
-    "crafting_ratio_bonus": "x{{value}} rendement crafting",
-    "crafting_duration_reduction": "x{{value}} durée crafting",
-    "crafting_auto_unlock": "Crafting automatique débloqué"
+    "building_production_multiplier": "x{{value}} production"
   }
 }

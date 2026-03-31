@@ -46,7 +46,6 @@ interface SaveDataV3 {
   upgrades: Record<string, { purchased: boolean }>
   suppliers?: Record<string, SerializedSupplier>
   supplierUpgrades?: Record<string, { purchased: boolean }>
-  autoCraft?: Record<string, boolean>
   unlockedProducts: string[]
   activeProduct: string
   version: number
@@ -127,8 +126,6 @@ function serializeSave(): SaveDataV3 {
     serializedSupplierUpgrades[id] = { purchased: upState.purchased }
   }
 
-  const { autoCraft } = useCraftingStore.getState()
-
   return {
     globalResources: serializedGlobal,
     productResources: serializedProductResources,
@@ -136,7 +133,6 @@ function serializeSave(): SaveDataV3 {
     upgrades: serializedUpgrades,
     suppliers: serializedSuppliers,
     supplierUpgrades: serializedSupplierUpgrades,
-    autoCraft: { ...autoCraft },
     unlockedProducts: [...unlockedProducts],
     activeProduct,
     version: GAME_VERSION,
@@ -349,11 +345,6 @@ function restoreFromSaveData(data: SaveDataV3) {
       }
     }
     useSupplierStore.setState({ supplierUpgrades: restoredUpgrades })
-  }
-
-  // Restore auto-craft settings
-  if (data.autoCraft) {
-    useCraftingStore.setState({ autoCraft: { ...data.autoCraft } })
   }
 
   // Restore product store
