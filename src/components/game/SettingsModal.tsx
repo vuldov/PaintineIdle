@@ -11,6 +11,31 @@ import i18n from '@/i18n'
 import type { ResourceId, BuildingId, ProductId } from '@/types'
 import { GameEmoji } from '@/components/ui/GameEmoji'
 
+// ─── Cheat visibility ───────────────────────────────────────────
+
+let _cheatsVisible = false
+const _cheatsListeners = new Set<() => void>()
+
+function setCheatsVisible(v: boolean) {
+  _cheatsVisible = v
+  _cheatsListeners.forEach((fn) => fn())
+}
+
+function useCheatsVisible() {
+  const [visible, setVisible] = useState(_cheatsVisible)
+  useEffect(() => {
+    const listener = () => setVisible(_cheatsVisible)
+    _cheatsListeners.add(listener)
+    return () => { _cheatsListeners.delete(listener) }
+  }, [])
+  return visible
+}
+
+;(window as unknown as Record<string, unknown>).showCheats = () => {
+  setCheatsVisible(true)
+  console.log('%c🔓 Cheats activés !', 'color: #b45309; font-weight: bold; font-size: 14px')
+}
+
 // ─── Types ─────────────────────────────────────────────────────
 
 type Tab = 'sauvegarde' | 'cheats' | 'langue'
@@ -299,6 +324,7 @@ function LangueTab() {
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const { t } = useTranslation('settings')
   const [activeTab, setActiveTab] = useState<Tab>('sauvegarde')
+  const cheatsVisible = useCheatsVisible()
 
   if (!open) return null
 
@@ -327,7 +353,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         {/* Tabs */}
         <div className="flex gap-1 px-5">
           <TabButton label={t('tabs.save')} active={activeTab === 'sauvegarde'} onClick={() => setActiveTab('sauvegarde')} />
-          <TabButton label={t('tabs.cheats')} active={activeTab === 'cheats'} onClick={() => setActiveTab('cheats')} />
+          {cheatsVisible && <TabButton label={t('tabs.cheats')} active={activeTab === 'cheats'} onClick={() => setActiveTab('cheats')} />}
           <TabButton label={t('tabs.language')} active={activeTab === 'langue'} onClick={() => setActiveTab('langue')} />
         </div>
 
