@@ -1,17 +1,17 @@
 {
   "definition": {
     "name": "Curry Wurst végé",
-    "emoji": "🌭"
+    "emoji": "/images/currywurst.png"
   },
   "resources": {
-    "saucisse_vege": { "name": "Saucisse végé", "emoji": "🌱" },
+    "saucisse_vege": { "name": "Saucisse végé", "emoji": "/images/saucisse.png" },
     "ketchup": { "name": "Ketchup", "emoji": "🍅" },
     "epices": { "name": "Épices", "emoji": "🌶️" },
     "frites": { "name": "Frites", "emoji": "🍟" },
     "gewurz_ketchup": { "name": "Gewürz Ketchup", "emoji": "🥫" },
     "saucisse_saucee": { "name": "Saucisse saucée", "emoji": "🌭" },
     "wurst_garnie": { "name": "Wurst garnie", "emoji": "🍽️" },
-    "curry_wurst": { "name": "Curry Wurst végé", "emoji": "🌭" }
+    "curry_wurst": { "name": "Curry Wurst végé", "emoji": "/images/currywurst.png" }
   },
   "buildings": {
     "melangeur_epices": {

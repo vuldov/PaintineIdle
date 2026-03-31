@@ -113,7 +113,7 @@
   "shared_resources": {
     "paintins_coins": { "name": "Paintines Coins", "emoji": "🪙" },
     "croissants": { "name": "Croissants", "emoji": "🥐" },
-    "curry_wurst": { "name": "Curry Wurst végé", "emoji": "🌭" },
+    "curry_wurst": { "name": "Curry Wurst végé", "emoji": "/images/currywurst.png" },
     "pains_au_chocolat": { "name": "Chocolatines", "emoji": "/images/chocolatine.png" },
     "pizzas": { "name": "Pizzas", "emoji": "🍕" }
   },

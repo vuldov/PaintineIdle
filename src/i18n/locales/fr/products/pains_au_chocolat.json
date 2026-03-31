@@ -5,7 +5,7 @@
     "farine_qualite": { "name": "Farine de qualite", "emoji": "🌾" },
     "chocolat_patissier": { "name": "Chocolat patissier", "emoji": "🍫" },
     "pate_levee_feuilletee": { "name": "Pate levee feuilletee", "emoji": "🫓" },
-    "paton_chocolat": { "name": "Paton au chocolat", "emoji": "🟫" },
+    "paton_chocolat": { "name": "Paton au chocolat", "emoji": "/images/paton_chocolat.png" },
     "pains_au_chocolat": { "name": "Chocolatines", "emoji": "/images/chocolatine.png" }
   },
   "buildings": {
