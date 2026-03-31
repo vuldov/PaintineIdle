@@ -229,9 +229,15 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
         {produces.map((p) => {
           const resData = ALL_RESOURCES[p.resource as string]
           const total = p.amount.mul(building.count)
+          const afterBuy = buyAmount > 0 ? p.amount.mul(building.count + buyAmount) : null
           return (
             <span key={`p-${p.resource as string}`} className="flex items-center gap-1 text-green-700">
-              <span>+<NumberDisplay value={total} />/s</span>
+              <span>
+                +<NumberDisplay value={total} />/s
+                {afterBuy && !afterBuy.eq(total) && (
+                  <span className="text-green-500"> → +<NumberDisplay value={afterBuy} />/s</span>
+                )}
+              </span>
               <span>{resData ? <GameEmoji value={tp(resData.emoji)} /> : ''} {resData ? tp(resData.name) : ''}</span>
             </span>
           )
@@ -239,9 +245,15 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
         {consumes.map((c) => {
           const resData = ALL_RESOURCES[c.resource as string]
           const total = c.amount.mul(building.count)
+          const afterBuy = buyAmount > 0 ? c.amount.mul(building.count + buyAmount) : null
           return (
             <span key={`c-${c.resource as string}`} className="flex items-center gap-1 text-red-500">
-              <span>-<NumberDisplay value={total} />/s</span>
+              <span>
+                -<NumberDisplay value={total} />/s
+                {afterBuy && !afterBuy.eq(total) && (
+                  <span className="text-red-400"> → -<NumberDisplay value={afterBuy} />/s</span>
+                )}
+              </span>
               <span>{resData ? <GameEmoji value={tp(resData.emoji)} /> : ''} {resData ? tp(resData.name) : ''}</span>
             </span>
           )
