@@ -17,7 +17,7 @@ export function VictoryModal() {
       <div className="relative max-w-lg w-full bg-gradient-to-b from-amber-100 to-amber-50 rounded-2xl shadow-2xl border-2 border-amber-400 overflow-hidden">
         {/* Saucisse planet */}
         <div className="text-center pt-6 sm:pt-8 pb-2">
-          <span className="text-6xl sm:text-8xl block animate-spin-slow">🌭</span>
+          <img src="/images/saucisse_cuite.png" className="w-16 h-16 mx-auto animate-spin-slow"/>
         </div>
 
         {/* Title */}
@@ -54,10 +54,10 @@ export function VictoryModal() {
         </div>
 
         {/* Floating saucisses decoration — hidden on very small screens */}
-        <div className="hidden sm:block absolute top-2 left-4 text-2xl opacity-40 animate-bounce">🌭</div>
-        <div className="hidden sm:block absolute top-6 right-6 text-xl opacity-30 animate-bounce" style={{ animationDelay: '0.3s' }}>🌭</div>
-        <div className="hidden sm:block absolute bottom-4 left-8 text-lg opacity-25 animate-bounce" style={{ animationDelay: '0.6s' }}>🌭</div>
-        <div className="hidden sm:block absolute bottom-6 right-4 text-2xl opacity-35 animate-bounce" style={{ animationDelay: '0.9s' }}>🌭</div>
+        <div className="hidden sm:block absolute top-2 left-4 text-2xl opacity-40 animate-bounce"><img src="/images/saucisse_cuite.png" className="w-16 h-16"/></div>
+        <div className="hidden sm:block absolute top-6 right-6 text-xl opacity-30 animate-bounce" style={{ animationDelay: '0.3s' }}><img src="/images/saucisse_cuite.png" className="w-16 h-16"/></div>
+        <div className="hidden sm:block absolute bottom-4 left-8 text-lg opacity-25 animate-bounce" style={{ animationDelay: '0.6s' }}><img src="/images/saucisse_cuite.png" className="w-16 h-16"/></div>
+        <div className="hidden sm:block absolute bottom-6 right-4 text-2xl opacity-35 animate-bounce" style={{ animationDelay: '0.9s' }}><img src="/images/saucisse_cuite.png" className="w-16 h-16"/></div>
       </div>
     </div>
   )

@@ -101,6 +101,10 @@ export function calcBulkCost(building: Building, count: number, amount: number, 
   if (amount <= 0) return new Decimal(0)
   const base = building.baseCost
   const r = new Decimal(building.costMultiplier)
+  if (r.eq(1)) {
+    const raw = base.mul(Decimal.pow(r, count)).mul(amount)
+    return costReduction ? raw.mul(costReduction) : raw
+  }
   const raw = base.mul(Decimal.pow(r, count)).mul(Decimal.pow(r, amount).sub(1)).div(r.sub(1))
   return costReduction ? raw.mul(costReduction) : raw
 }
@@ -113,9 +117,10 @@ export function calcMaxAffordable(building: Building, count: number, budget: Dec
   // => r^n = budget * (r-1) / (base * r^count) + 1
   // => n = log_r(budget * (r-1) / (base * r^count) + 1)
   const firstCost = base.mul(Decimal.pow(r, count))
-  if (firstCost.gt(budget)) return 0
+  if (firstCost.isZero() || firstCost.gt(budget)) return 0
+  if (r.eq(1)) return Math.max(0, Math.floor(budget.div(firstCost).toNumber()))
   const inner = budget.mul(r.sub(1)).div(firstCost).add(1)
-  if (inner.lte(0)) return 0
+  if (inner.lte(0) || inner.isNaN()) return 0
   const n = inner.log(r.toNumber())
   return Math.max(0, Math.floor(n.toNumber()))
 }

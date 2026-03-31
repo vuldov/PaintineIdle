@@ -75,7 +75,7 @@ function CraftingButton({ recipeId }: { recipeId: CraftingRecipeId }) {
 
       <div className="relative">
         <div className="flex items-center gap-3 mb-2">
-          <span className={`text-2xl ${isAutomated ? 'animate-[spin_3s_linear_infinite]' : ''}`} style={isAutomated ? { animationDuration: `${animDuration * 2}s` } : undefined}>
+          <span className="text-2xl" style={isAutomated ? { animationDuration: `${animDuration * 2}s` } : undefined}>
             <GameEmoji value={tp(recipe.emoji)} />
           </span>
           <div className="flex-1 min-w-0">

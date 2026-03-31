@@ -234,6 +234,20 @@ export async function hardResetGame() {
   saveGame()
 }
 
+// ─── Safe Decimal parsing ────────────────────────────────────────
+
+function safeDecimal(value: unknown): Decimal {
+  if (value == null || value === '' || value === 'NaN' || value === 'Infinity') {
+    return new Decimal(0)
+  }
+  try {
+    const d = new Decimal(value as string)
+    return d.isNaN() || !d.isFinite() ? new Decimal(0) : d
+  } catch {
+    return new Decimal(0)
+  }
+}
+
 // ─── Load ───────────────────────────────────────────────────────
 
 function restoreFromSaveData(data: SaveDataV3) {
@@ -244,9 +258,9 @@ function restoreFromSaveData(data: SaveDataV3) {
     if (restoredGlobal[id]) {
       restoredGlobal[id] = {
         id: restoredGlobal[id].id,
-        amount: new Decimal(serialized.amount),
-        perSecond: new Decimal(serialized.perSecond),
-        totalEarned: new Decimal(serialized.totalEarned),
+        amount: safeDecimal(serialized.amount),
+        perSecond: safeDecimal(serialized.perSecond),
+        totalEarned: safeDecimal(serialized.totalEarned),
         unlocked: serialized.unlocked,
       }
     }
@@ -262,9 +276,9 @@ function restoreFromSaveData(data: SaveDataV3) {
       if (restoredProducts[pid][id]) {
         restoredProducts[pid][id] = {
           id: restoredProducts[pid][id].id,
-          amount: new Decimal(serialized.amount),
-          perSecond: new Decimal(serialized.perSecond),
-          totalEarned: new Decimal(serialized.totalEarned),
+          amount: safeDecimal(serialized.amount),
+          perSecond: safeDecimal(serialized.perSecond),
+          totalEarned: safeDecimal(serialized.totalEarned),
           unlocked: serialized.unlocked,
         }
       }
@@ -288,10 +302,10 @@ function restoreFromSaveData(data: SaveDataV3) {
         restoredBuildings[pid][id] = {
           id: restoredBuildings[pid][id].id,
           count: serialized.count,
-          baseCost: new Decimal(serialized.baseCost),
+          baseCost: safeDecimal(serialized.baseCost),
           costResource: restoredBuildings[pid][id].costResource,
           costMultiplier: serialized.costMultiplier,
-          baseProduction: new Decimal(serialized.baseProduction),
+          baseProduction: safeDecimal(serialized.baseProduction),
           producedResource: restoredBuildings[pid][id].producedResource,
           unlocked: serialized.unlocked,
         }

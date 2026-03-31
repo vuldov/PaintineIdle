@@ -33,6 +33,9 @@ const SUFFIXES = [
  * formatNumber(new Decimal("1e15"))     // "1,00T"
  */
 export function formatNumber(n: Decimal, { integer = false }: { integer?: boolean } = {}): string {
+  // Cas NaN / invalide
+  if (n.isNaN() || !n.isFinite()) return '0'
+
   // Cas négatif
   if (n.isNeg()) {
     return `-${formatNumber(n.abs())}`
