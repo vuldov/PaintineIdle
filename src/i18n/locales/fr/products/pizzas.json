@@ -66,22 +66,22 @@
     "pizza_achat_en_gros": { "name": "Fournisseur italien", "emoji": "📦", "description": "Bâtiments 15% moins chers" }
   },
   "suppliers": {
-    "maraicher_italien": { "name": "Maraicher italien", "emoji": "🍅", "description": "Tomates San Marzano fraiches du Vesuve" },
+    "maraicher_italien": { "name": "Maraicher italien", "emoji": "🍅", "description": "Tomates San Marzano fraiches du Vésuve" },
     "fromagerie_napolitaine": { "name": "Fromagerie napolitaine", "emoji": "🧀", "description": "Mozzarella di bufala fraiche du jour" },
     "moulin_sicilien": { "name": "Moulin sicilien", "emoji": "🌾", "description": "Farine Tipo 00 moulue a la meule de pierre" },
     "herboriste": { "name": "Herboriste", "emoji": "🌿", "description": "Basilic frais cultive en serre" },
-    "levurerie": { "name": "Levurerie", "emoji": "🧫", "description": "Levure de boulanger fraiche livree quotidiennement" }
+    "levurerie": { "name": "Levurerie", "emoji": "🧫", "description": "Levure de boulanger fraiche livrée quotidiennement" }
   },
   "supplier_upgrades": {
-    "maraicher_italien_rate": { "name": "Serres du Vesuve", "emoji": "🍅", "description": "x3 debit max - Maraicher italien" },
+    "maraicher_italien_rate": { "name": "Serres du Vésuve", "emoji": "🍅", "description": "x3 debit max - Maraicher italien" },
     "maraicher_italien_cost": { "name": "Contrat maraicher", "emoji": "🍅", "description": "x0,8 cout - Maraicher italien" },
-    "fromagerie_napolitaine_rate": { "name": "Bufflonnes selectionnees", "emoji": "🧀", "description": "x3 debit max - Fromagerie napolitaine" },
+    "fromagerie_napolitaine_rate": { "name": "Bufflonnes selections", "emoji": "🧀", "description": "x3 debit max - Fromagerie napolitaine" },
     "fromagerie_napolitaine_cost": { "name": "Contrat fromagerie", "emoji": "🧀", "description": "x0,8 cout - Fromagerie napolitaine" },
     "moulin_sicilien_rate": { "name": "Ble ancien sicilien", "emoji": "🌾", "description": "x3 debit max - Moulin sicilien" },
     "moulin_sicilien_cost": { "name": "Contrat moulin", "emoji": "🌾", "description": "x0,8 cout - Moulin sicilien" },
     "herboriste_rate": { "name": "Serre hydroponique", "emoji": "🌿", "description": "x3 debit max - Herboriste" },
     "herboriste_cost": { "name": "Contrat herboriste", "emoji": "🌿", "description": "x0,8 cout - Herboriste" },
-    "levurerie_rate": { "name": "Culture optimisee", "emoji": "🧫", "description": "x3 debit max - Levurerie" },
+    "levurerie_rate": { "name": "Culture optimisée", "emoji": "🧫", "description": "x3 debit max - Levurerie" },
     "levurerie_cost": { "name": "Contrat levurerie", "emoji": "🧫", "description": "x0,8 cout - Levurerie" }
   }
 }

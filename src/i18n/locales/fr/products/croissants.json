@@ -46,7 +46,7 @@
   "supplier_upgrades": {
     "beurrier_artisanal_rate": { "name": "Beurre premium", "emoji": "🧈", "description": "x3 debit max - Beurrier artisanal" },
     "beurrier_artisanal_cost": { "name": "Négociation beurre", "emoji": "🧈", "description": "x0,8 cout - Beurrier artisanal" },
-    "moulin_a_farine_rate": { "name": "Moulin ameliore", "emoji": "🌾", "description": "x3 debit max - Moulin a farine" },
+    "moulin_a_farine_rate": { "name": "Moulin amélioré", "emoji": "🌾", "description": "x3 debit max - Moulin a farine" },
     "moulin_a_farine_cost": { "name": "Négociation farine", "emoji": "🌾", "description": "x0,8 cout - Moulin a farine" }
   }
 }

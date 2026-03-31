@@ -11,11 +11,11 @@
     "brunch_dominical": { "name": "Brunch dominical", "emoji": "☀️", "description": "+15% vente croissants et chocolatines" },
     "gouter_gourmand": { "name": "Gouter gourmand", "emoji": "🍬", "description": "+20% production chocolatines et curry wurst" },
     "apero_mixte": { "name": "Apero mixte", "emoji": "🥂", "description": "+25% vente pizzas, +10% vente croissants" },
-    "fusion_choco_pizza": { "name": "Fusion choco-pizza", "emoji": "🔥", "description": "+1,5% production globale par tranche de 25 batiments" },
+    "fusion_choco_pizza": { "name": "Fusion choco-pizza", "emoji": "🔥", "description": "+1,5% production globale par tranche de 25 bâtiments" },
     "buffet_francais": { "name": "Buffet francais", "emoji": "🇫🇷", "description": "+30% vente globale" },
-    "tour_du_monde": { "name": "Tour du monde", "emoji": "🌍", "description": "+2% production globale par amelioration achetee" },
+    "tour_du_monde": { "name": "Tour du monde", "emoji": "🌍", "description": "+2% production globale par amelioration achetée" },
     "carte_complete": { "name": "Carte complete", "emoji": "👨‍🍳", "description": "+50% production globale et +25% vente globale" },
-    "empire_gastronomique": { "name": "Empire gastronomique", "emoji": "👑", "description": "+3% vente globale par batiment possede" },
+    "empire_gastronomique": { "name": "Empire gastronomique", "emoji": "👑", "description": "+3% vente globale par bâtiment possédé" },
     "paintinification_planetaire": { "name": "Paintinification planetaire", "emoji": "🌍\uD83C\uDF96\uFE0F", "description": "Saucer toutes les saucisses, termine le jeuj." }
   },
   "combos": {
