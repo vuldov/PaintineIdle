@@ -178,7 +178,7 @@ function SellButton() {
         `}
       >
         {hasProduct
-          ? <>Vendre <NumberDisplay value={sellAmount} /> <GameEmoji value={finishedEmoji} /> {'\u2192'} <NumberDisplay value={sellValue} /> 🪙</>
+          ? <>Vendre <NumberDisplay value={sellAmount} integer /> <GameEmoji value={finishedEmoji} /> {'\u2192'} <NumberDisplay value={sellValue} integer /> 🪙</>
           : t('sell_panel.no_product', { product: tp(bundle.definition.name).toLowerCase() })
         }
       </button>

@@ -65,7 +65,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
-          {tc('actions.sign_contract')} — <NumberDisplay value={data.contractCost} /> 🪙
+          {tc('actions.sign_contract')} — <NumberDisplay value={data.contractCost} integer /> 🪙
         </button>
       </div>
     )
@@ -138,7 +138,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
-          {tc('supplier.upgrade_contract')} → {nextTierData.emoji} {nextTierData.name} (x{nextTierData.rateMultiplier} {tc('supplier.rate').toLowerCase()}) — <NumberDisplay value={upgradeCost} /> 🪙
+          {tc('supplier.upgrade_contract')} → {nextTierData.emoji} {nextTierData.name} (x{nextTierData.rateMultiplier} {tc('supplier.rate').toLowerCase()}) — <NumberDisplay value={upgradeCost} integer /> 🪙
         </button>
       )}
       {!canUpgradeTier && (

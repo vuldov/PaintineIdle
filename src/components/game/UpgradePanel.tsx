@@ -343,7 +343,7 @@ export function UpgradePanel() {
                   <p className="text-xs text-amber-800 font-medium mt-1 flex items-center gap-2 flex-wrap">
                     {item.costs.map((c, i) => (
                       <span key={i} className="inline-flex items-center gap-0.5">
-                        <NumberDisplay value={c.amount} /> <GameEmoji value={c.emoji} />
+                        <NumberDisplay value={c.amount} integer /> <GameEmoji value={c.emoji} />
                       </span>
                     ))}
                   </p>

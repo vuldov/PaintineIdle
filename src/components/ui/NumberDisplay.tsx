@@ -4,8 +4,9 @@ import { formatNumber } from '@/lib/formatNumber'
 interface NumberDisplayProps {
   value: Decimal
   className?: string
+  integer?: boolean
 }
 
-export function NumberDisplay({ value, className = '' }: NumberDisplayProps) {
-  return <span className={`tabular-nums ${className}`}>{formatNumber(value)}</span>
+export function NumberDisplay({ value, className = '', integer = false }: NumberDisplayProps) {
+  return <span className={`tabular-nums ${className}`}>{formatNumber(value, { integer })}</span>
 }

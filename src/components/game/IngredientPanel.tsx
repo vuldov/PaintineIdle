@@ -34,7 +34,7 @@ export function IngredientPanel() {
               </span>
               <div className="flex flex-col leading-tight min-w-0">
                 <span className="text-xs font-bold text-amber-900 tabular-nums truncate">
-                  <NumberDisplay value={resource.amount} />
+                  <NumberDisplay value={resource.amount} integer />
                 </span>
                 <span className={`text-[10px] tabular-nums ${isNegative ? 'text-red-500' : 'text-green-600'}`}>
                   {isNegative ? '' : '+'}
@@ -60,7 +60,7 @@ export function IngredientPanel() {
               <div className="min-w-0">
                 <div className="text-xs text-amber-700 truncate">{t(data.name)}</div>
                 <div className="text-sm font-bold text-amber-900">
-                  <NumberDisplay value={resource.amount} />
+                  <NumberDisplay value={resource.amount} integer />
                 </div>
                 <div className={`text-xs ${isNegative ? 'text-red-500' : 'text-green-600'}`}>
                   {isNegative ? '' : '+'}

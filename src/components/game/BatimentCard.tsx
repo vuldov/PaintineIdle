@@ -284,7 +284,7 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
           `}
         >
           {buyLabel && <span className="mr-1 text-amber-200 text-xs">{buyLabel}</span>}
-          {cost ? <NumberDisplay value={cost} /> : '—'} <GameEmoji value={costEmoji} />
+          {cost ? <NumberDisplay value={cost} integer /> : '—'} <GameEmoji value={costEmoji} />
         </button>
       </div>
     </div>

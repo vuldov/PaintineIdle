@@ -71,7 +71,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
               </span>
               <div className="flex flex-col leading-tight tabular-nums">
                 <span className="font-bold text-sm">
-                  <NumberDisplay value={coinsResource.amount} />
+                  <NumberDisplay value={coinsResource.amount} integer />
                 </span>
                 <span className="text-[10px] text-amber-700">
                   <NumberDisplay value={coinsResource.perSecond} />/s
@@ -109,7 +109,7 @@ export function ResourceBar({ onOpenSettings }: { onOpenSettings: () => void }) 
                 </span>
                 <div className="flex flex-col leading-tight tabular-nums">
                   <span className="font-bold text-sm">
-                    <NumberDisplay value={finishedRes.amount} />
+                    <NumberDisplay value={finishedRes.amount} integer />
                   </span>
                   <span className="text-[10px] text-amber-700">
                     <NumberDisplay value={finishedRes.perSecond} />/s

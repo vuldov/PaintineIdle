@@ -32,7 +32,7 @@ const SUFFIXES = [
  * formatNumber(new Decimal(1234567))    // "1,23M"
  * formatNumber(new Decimal("1e15"))     // "1,00T"
  */
-export function formatNumber(n: Decimal): string {
+export function formatNumber(n: Decimal, { integer = false }: { integer?: boolean } = {}): string {
   // Cas négatif
   if (n.isNeg()) {
     return `-${formatNumber(n.abs())}`
@@ -46,6 +46,12 @@ export function formatNumber(n: Decimal): string {
   // Nombres très petits (< 0.01) → afficher 0
   if (n.lt(new Decimal('0.01'))) {
     return '0'
+  }
+
+  // Mode entier : tronquer les décimales
+  if (integer) {
+    n = n.floor()
+    if (n.isZero()) return '0'
   }
 
   // Nombres < 1
