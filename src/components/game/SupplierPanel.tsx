@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Decimal from 'decimal.js'
 import { useTranslation } from 'react-i18next'
 import type { SupplierData, SupplierState, SupplierContractTier } from '@/types'
@@ -10,6 +11,76 @@ import { ALL_SUPPLIERS, ALL_SUPPLIER_UPGRADES } from '@/lib/products/registry'
 import { SUPPLIER_CONTRACT_TIERS } from '@/lib/constants'
 import { GameEmoji } from '@/components/ui/GameEmoji'
 import { calcEffectiveMaxRate, calcEffectiveCostPerSecond, calcSupplierProduction, calcSupplierCostPerSecond, calcContractUpgradeCost } from '@/mechanics/supplierMechanics'
+
+// ─── Collapsible wrapper for mobile ──────────────────────────────
+
+function CollapsibleSupplier({
+  emoji,
+  name,
+  description,
+  resourceEmoji,
+  production,
+  costPerSec,
+  tierEmoji,
+  tierName,
+  children,
+}: {
+  emoji: string
+  name: string
+  description: string
+  resourceEmoji: string
+  production: Decimal
+  costPerSec: Decimal
+  tierEmoji: string
+  tierName: string
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(true)
+
+  return (
+    <div className="rounded-xl border shadow-sm transition-colors bg-amber-50 border-amber-300">
+      {/* Header — always visible, clickable on mobile to toggle */}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`w-full flex items-center justify-between sm:pointer-events-none cursor-pointer sm:cursor-default p-4 ${open ? 'pb-2' : ''}`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-2xl"><GameEmoji value={emoji} /></span>
+          <div className="min-w-0 text-left">
+            <h3 className="font-semibold text-amber-900 text-sm">{name}</h3>
+            {open && <p className="text-xs text-amber-600">{description}</p>}
+          </div>
+        </div>
+        <span className="text-amber-400 text-sm sm:hidden shrink-0">{open ? '▲' : '▼'}</span>
+      </button>
+
+      {/* Collapsed summary — compact rate badges */}
+      {!open && (
+        <div className="flex items-center gap-2 px-4 pb-3 pt-1">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[11px] font-medium">
+            +<NumberDisplay value={production} />/s <GameEmoji value={resourceEmoji} />
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-500 text-[11px] font-medium">
+            -<NumberDisplay value={costPerSec} />/s 🪙
+          </span>
+          <span className="text-[10px] text-amber-500 ml-auto">{tierEmoji} {tierName}</span>
+        </div>
+      )}
+
+      {/* Expanded body */}
+      {open && (
+        <div className="px-4 pb-4">
+          {/* Contract tier */}
+          <div className="text-xs font-medium text-amber-600 mb-1">
+            {tierEmoji} {tierName}
+          </div>
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Single supplier card ────────────────────────────────────────
 
@@ -82,22 +153,16 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
   const canAffordUpgrade = upgradeCost !== null && coinsAmount.gte(upgradeCost)
 
   return (
-    <div className="rounded-xl border p-4 shadow-sm transition-colors bg-amber-50 border-amber-300">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="text-2xl"><GameEmoji value={tp(data.emoji)} /></span>
-          <div className="min-w-0">
-            <h3 className="font-semibold text-amber-900 text-sm">{tp(data.name)}</h3>
-            <p className="text-xs text-amber-600">{tp(data.description)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Contract tier */}
-      <div className="text-xs font-medium text-amber-600 mb-1">
-        {currentTierData.emoji} {currentTierData.name}
-      </div>
-
+    <CollapsibleSupplier
+      emoji={tp(data.emoji)}
+      name={tp(data.name)}
+      description={tp(data.description)}
+      resourceEmoji={resourceEmoji}
+      production={production}
+      costPerSec={costPerSec}
+      tierEmoji={currentTierData.emoji}
+      tierName={currentTierData.name}
+    >
       {/* Resource info */}
       <div className="text-xs text-amber-700 mb-3">
         <GameEmoji value={resourceEmoji} /> {resourceName} — max <NumberDisplay value={effectiveMax} />/s
@@ -146,7 +211,7 @@ function SupplierCard({ supplierId }: { supplierId: string }) {
           {tc('status.max_tier')}
         </div>
       )}
-    </div>
+    </CollapsibleSupplier>
   )
 }
 

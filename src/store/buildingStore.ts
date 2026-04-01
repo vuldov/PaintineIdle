@@ -3,7 +3,7 @@ import Decimal from 'decimal.js'
 import type { Building, BuildingId, ProductId } from '@/types'
 import { MILESTONE_THRESHOLDS } from '@/types'
 import { PRODUCT_REGISTRY, getBuildingProduct } from '@/lib/products/registry'
-import { calcCost, calcCostReduction, calcBulkCost, calcMaxAffordable } from '@/mechanics/productionMechanics'
+import { calcCost, calcCostReduction, calcBulkCost, calcBulkSellRefund, calcMaxAffordable } from '@/mechanics/productionMechanics'
 import { useResourceStore } from '@/store/resourceStore'
 import { useUpgradeStore } from '@/store/upgradeStore'
 
@@ -53,7 +53,7 @@ interface BuildingStore {
   /** Buy building(s) according to current buyMode */
   buyBuilding: (id: BuildingId) => boolean
 
-  /** Sell one building */
+  /** Sell building(s) according to current buyMode */
   sellBuilding: (id: BuildingId) => boolean
 
   /** Unlock a building */
@@ -160,9 +160,30 @@ export const useBuildingStore = create<BuildingStore>((set, get) => ({
     const building = get().buildings[productId]?.[bid]
     if (!building || building.count <= 0) return false
 
-    // Refund 50% of the last building's cost
     const costReduction = getScopedCostReduction(productId)
-    const refund = calcCost(building, building.count - 1, costReduction).mul(0.5)
+    const mode = get().buyMode
+
+    // Resolve sell amount based on mode
+    let amount: number
+    switch (mode) {
+      case '1': amount = 1; break
+      case '10': amount = 10; break
+      case 'max': amount = building.count; break
+      case 'next': {
+        // Sell down to the previous milestone threshold
+        const thresholds = MILESTONE_THRESHOLDS.filter(t => t < building.count)
+        const prevThreshold = thresholds.length > 0 ? thresholds[thresholds.length - 1] : 0
+        amount = building.count - prevThreshold
+        break
+      }
+    }
+    amount = Math.min(amount, building.count)
+    if (amount <= 0) return false
+
+    // Refund 50% of the sold buildings' costs
+    const refund = amount === 1
+      ? calcCost(building, building.count - 1, costReduction).mul(0.5)
+      : calcBulkSellRefund(building, building.count, amount, costReduction)
     useResourceStore.getState().applyDeltas({ [building.costResource as string]: refund })
 
     set((state) => ({
@@ -172,7 +193,7 @@ export const useBuildingStore = create<BuildingStore>((set, get) => ({
           ...state.buildings[productId],
           [bid]: {
             ...state.buildings[productId][bid],
-            count: state.buildings[productId][bid].count - 1,
+            count: state.buildings[productId][bid].count - amount,
           },
         },
       },
