@@ -109,6 +109,14 @@ export function calcBulkCost(building: Building, count: number, amount: number, 
   return costReduction ? raw.mul(costReduction) : raw
 }
 
+/** Calculate refund for selling `amount` buildings (50% of their costs, from count-1 down) */
+export function calcBulkSellRefund(building: Building, count: number, amount: number, costReduction?: Decimal): Decimal {
+  const actualAmount = Math.min(amount, count)
+  if (actualAmount <= 0) return new Decimal(0)
+  // Refund = 50% of the sum of costs from (count - actualAmount) to (count - 1)
+  return calcBulkCost(building, count - actualAmount, actualAmount, costReduction).mul(0.5)
+}
+
 /** How many buildings can be bought with a given budget */
 export function calcMaxAffordable(building: Building, count: number, budget: Decimal, costReduction?: Decimal): number {
   const base = costReduction ? building.baseCost.mul(costReduction) : building.baseCost

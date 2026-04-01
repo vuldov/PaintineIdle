@@ -63,7 +63,7 @@
     "product_unlocked": "Nouveau produit débloqué : {{name}} !"
   },
   "building_card": {
-    "sell_tooltip": "Vendre 1 (50% remboursé)",
+    "sell_tooltip": "Vendre (50% remboursé)",
     "total": "Total :",
     "next_milestone": "Prochain palier : {{threshold}} ({{effect}})",
     "no_buildings_hint": "Produisez des ressources pour débloquer vos premiers bâtiments.",

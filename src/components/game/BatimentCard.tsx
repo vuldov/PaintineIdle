@@ -6,7 +6,7 @@ import { useUpgradeStore } from '@/store/upgradeStore'
 import { useSynergyStore } from '@/store/synergyStore'
 import { useProduct } from './ProductContext'
 import { ALL_RESOURCES } from '@/lib/products/registry'
-import { calcCost, calcBulkCost, calcCostReduction, calcMaxAffordable, calcBuildingRates } from '@/mechanics/productionMechanics'
+import { calcCost, calcBulkCost, calcBulkSellRefund, calcCostReduction, calcMaxAffordable, calcBuildingRates } from '@/mechanics/productionMechanics'
 import { getNextMilestone, getMilestoneProgress } from '@/mechanics/milestoneMechanics'
 import { NumberDisplay } from '@/components/ui/NumberDisplay'
 import { formatNumber } from '@/lib/formatNumber'
@@ -201,6 +201,32 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
     synergySellMult,
   )
 
+  // Compute sell amount and refund based on mode
+  let sellAmount = 0
+  if (building && building.count > 0) {
+    switch (buyMode) {
+      case '1': sellAmount = 1; break
+      case '10': sellAmount = Math.min(10, building.count); break
+      case 'max': sellAmount = building.count; break
+      case 'next': {
+        const thresholds = MILESTONE_THRESHOLDS.filter(t => t < building.count)
+        const prevThreshold = thresholds.length > 0 ? thresholds[thresholds.length - 1] : 0
+        sellAmount = building.count - prevThreshold
+        break
+      }
+    }
+  }
+
+  const sellRefund = building && sellAmount > 0
+    ? (sellAmount === 1
+      ? calcCost(building, building.count - 1, costReduction).mul(0.5)
+      : calcBulkSellRefund(building, building.count, sellAmount, costReduction))
+    : undefined
+
+  const sellLabel = (buyMode === 'max' || buyMode === 'next' || buyMode === '10') && sellAmount > 1
+    ? `×${sellAmount}`
+    : ''
+
   const buyLabel = buyMode === 'max'
     ? (buyAmount > 0 ? `×${buyAmount}` : 'Max')
     : buyMode === 'next'
@@ -274,14 +300,17 @@ export function BatimentCard({ buildingId }: BatimentCardProps) {
 
       {/* Buy / Sell buttons */}
       <div className="flex items-center justify-between gap-2">
-        {building.count > 0 && (
+        {building.count > 0 && sellAmount > 0 && (
           <button
             onClick={() => sellBuilding(buildingId)}
             className="px-2 py-1.5 rounded-lg text-xs font-medium transition-colors
               text-red-600 hover:bg-red-50 border border-red-200 cursor-pointer"
             title={t('building_card.sell_tooltip')}
           >
-            {t('actions.sell')}
+            {t('actions.sell')} {sellLabel && <span className="text-red-400">{sellLabel}</span>}
+            {sellRefund && (
+              <span className="ml-1 text-green-600">+<NumberDisplay value={sellRefund} integer /> <GameEmoji value={costEmoji} /></span>
+            )}
           </button>
         )}
         <button
