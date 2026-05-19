@@ -51,6 +51,7 @@ export type MilestoneThreshold = typeof MILESTONE_THRESHOLDS[number]
 
 export type MilestoneEffectType =
   | 'building_production_multiplier'
+  | 'sell_multiplier'
 
 export interface MilestoneEffect {
   type: MilestoneEffectType

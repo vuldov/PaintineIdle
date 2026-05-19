@@ -384,14 +384,18 @@ describe('calcSupplierTick', () => {
     expect(Object.keys(result.resourceDeltas)).toHaveLength(0)
   })
 
-  it('produces nothing when availableCoins is 0', () => {
+  it('produces at minimum 10% rate when availableCoins is 0 (deadlock prevention)', () => {
     const suppliers = { test_supplier: makeState() }
-    const supplierData = { test_supplier: makeData() }
+    const data = makeData()
+    const supplierData = { test_supplier: data }
 
     const result = calcSupplierTick(suppliers, supplierData, NO_UPGRADES, NO_UPGRADE_STATES, new Decimal(0), 1)
 
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].production.isZero()).toBe(true)
+    // Production is floored at 10% of full rate
+    const expectedProduction = data.baseMaxRate.mul(0.1)
+    expect(result.entries[0].production.toNumber()).toBeCloseTo(expectedProduction.toNumber(), 6)
+    // Cost remains 0 (no coins available, so actual cost throttle is 0)
     expect(result.entries[0].cost.isZero()).toBe(true)
   })
 

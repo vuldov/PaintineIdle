@@ -62,6 +62,9 @@ export function calcBuildingRates(
     }
   }
 
+  // Raw throughput (without multipliers) → consumption stays stable
+  const rawProd = baseProduction
+  // Boosted throughput (with multipliers) → only output benefits
   const effectiveProd = baseProduction.mul(bMult).mul(globalMult)
 
   const produces: RateInfo[] = []
@@ -83,7 +86,7 @@ export function calcBuildingRates(
       produces.push({ resource: p.resource, amount })
     }
     for (const c of matchingStage.consumes) {
-      consumes.push({ resource: c.resource, amount: effectiveProd.mul(c.ratio) })
+      consumes.push({ resource: c.resource, amount: rawProd.mul(c.ratio) })
     }
   }
 
@@ -261,7 +264,10 @@ export function calcProductionForProduct(
 
     const bMult = buildingMultipliers[bid] ?? new Decimal(1)
     const totalMult = bMult.mul(globalMultiplier)
-    const baseProd = building.baseProduction.mul(building.count).mul(totalMult)
+    // Raw throughput (without multipliers) → used for consumption
+    const rawProd = building.baseProduction.mul(building.count)
+    // Boosted throughput (with multipliers) → used for production
+    const baseProd = rawProd.mul(totalMult)
 
     // Find which pipeline stage this building belongs to
     const stageIndex = bundle.pipelineConfig.stages.findIndex(
@@ -272,10 +278,11 @@ export function calcProductionForProduct(
       const stageConfig = bundle.pipelineConfig.stages[stageIndex]
       const accumulator = stageAccumulators[stageIndex]
 
-      // Apply consumes/produces based on config ratios
+      // Consumes uses raw throughput (upgrades don't increase consumption)
       for (const c of stageConfig.consumes) {
-        addTo(accumulator.consumes, c.resource as string, baseProd.mul(c.ratio))
+        addTo(accumulator.consumes, c.resource as string, rawProd.mul(c.ratio))
       }
+      // Produces uses boosted throughput (upgrades increase output)
       for (const p of stageConfig.produces) {
         addTo(accumulator.produces, p.resource as string, baseProd.mul(p.ratio))
       }

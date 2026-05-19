@@ -83,7 +83,7 @@ const buildings: Record<string, BuildingData> = {
     id: POTAGER, name: 'buildings.potager.name', emoji: 'buildings.potager.emoji',
     description: 'buildings.potager.description',
     baseCost: new Decimal(100_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.25),
+    costMultiplier: 1.13, baseProduction: new Decimal(0.25),
     producedResource: SAUCE_TOMATE, pipelineRole: 'preparation_sauce', scope: 'pizzas',
     aura: {
       effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.05),
@@ -94,7 +94,7 @@ const buildings: Record<string, BuildingData> = {
     id: PETRIN_PIZZA, name: 'buildings.petrin_pizza.name', emoji: 'buildings.petrin_pizza.emoji',
     description: 'buildings.petrin_pizza.description',
     baseCost: new Decimal(120_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.35),
+    costMultiplier: 1.13, baseProduction: new Decimal(0.35),
     producedResource: PATE_A_PIZZA, pipelineRole: 'petrissage', scope: 'pizzas',
     aura: {
       effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.03),
@@ -105,7 +105,7 @@ const buildings: Record<string, BuildingData> = {
     id: PLAN_DE_TRAVAIL, name: 'buildings.plan_de_travail.name', emoji: 'buildings.plan_de_travail.emoji',
     description: 'buildings.plan_de_travail.description',
     baseCost: new Decimal(150_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.5),
+    costMultiplier: 1.13, baseProduction: new Decimal(0.5),
     producedResource: PATE_ETALEE, pipelineRole: 'etalage', scope: 'pizzas',
     aura: {
       effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.02),
@@ -116,7 +116,7 @@ const buildings: Record<string, BuildingData> = {
     id: TABLE_GARNITURE, name: 'buildings.table_garniture.name', emoji: 'buildings.table_garniture.emoji',
     description: 'buildings.table_garniture.description',
     baseCost: new Decimal(170_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.4),
+    costMultiplier: 1.13, baseProduction: new Decimal(0.4),
     producedResource: PIZZA_GARNIE, pipelineRole: 'garnissage', scope: 'pizzas',
     aura: {
       effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.03),
@@ -127,7 +127,7 @@ const buildings: Record<string, BuildingData> = {
     id: FOUR_A_BOIS, name: 'buildings.four_a_bois.name', emoji: 'buildings.four_a_bois.emoji',
     description: 'buildings.four_a_bois.description',
     baseCost: new Decimal(180_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(1.2),
+    costMultiplier: 1.13, baseProduction: new Decimal(1.2),
     producedResource: PIZZAS, pipelineRole: 'cuisson', scope: 'pizzas',
     aura: {
       effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.03),
@@ -138,7 +138,7 @@ const buildings: Record<string, BuildingData> = {
     id: PIZZERIA, name: 'buildings.pizzeria.name', emoji: 'buildings.pizzeria.emoji',
     description: 'buildings.pizzeria.description',
     baseCost: new Decimal(200_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.7),
+    costMultiplier: 1.13, baseProduction: new Decimal(0.7),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pizzas',
     aura: {
       effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
@@ -384,6 +384,40 @@ const upgrades: Record<string, UpgradeData> = {
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(750_000) },
     scope: 'pizzas',
   },
+  // ── Unique: pipeline efficiency — 6 stages benefit from a bigger global boost ──
+  pizza_chaleur_tournante: {
+    id: upgradeId('pizza_chaleur_tournante'), name: 'upgrades.pizza_chaleur_tournante.name',
+    description: 'upgrades.pizza_chaleur_tournante.description', emoji: 'upgrades.pizza_chaleur_tournante.emoji',
+    cost: new Decimal(2_000_000), costResource: PANTINS_COINS_ID,
+    effect: { type: 'global_multiplier', multiplier: new Decimal(2) },
+    unlockCondition: { type: 'building_count', buildingId: FOUR_A_BOIS, threshold: new Decimal(15) },
+    scope: 'pizzas',
+  },
+  // ── Unique: cross-product synergy with pains au chocolat ──
+  pizza_synergie_pac: {
+    id: upgradeId('pizza_synergie_pac'), name: 'upgrades.pizza_synergie_pac.name',
+    description: 'upgrades.pizza_synergie_pac.description', emoji: 'upgrades.pizza_synergie_pac.emoji',
+    cost: new Decimal(500_000), costResource: PANTINS_COINS_ID,
+    effect: {
+      type: 'cross_product_synergy', multiplier: new Decimal(1),
+      crossProductEffect: {
+        sourceProduct: 'pains_au_chocolat', targetProduct: 'pizzas',
+        bonusType: 'sell', bonusPerUnit: new Decimal(0.015), scalingDivisor: 1,
+      },
+    },
+    unlockCondition: { type: 'building_count', buildingId: PIZZERIA, threshold: new Decimal(10) },
+    scope: 'pizzas',
+    category: 'synergy',
+  },
+  // ── Unique: mozzarella artisanale — boosts the bottleneck ingredient ──
+  pizza_mozzarella_artisanale: {
+    id: upgradeId('pizza_mozzarella_artisanale'), name: 'upgrades.pizza_mozzarella_artisanale.name',
+    description: 'upgrades.pizza_mozzarella_artisanale.description', emoji: 'upgrades.pizza_mozzarella_artisanale.emoji',
+    cost: new Decimal(800_000), costResource: PANTINS_COINS_ID,
+    effect: { type: 'resource_multiplier', targetResource: MOZZARELLA, multiplier: new Decimal(3) },
+    unlockCondition: { type: 'resource_threshold', resourceId: MOZZARELLA, threshold: new Decimal(100) },
+    scope: 'pizzas',
+  },
 }
 
 // ─── Suppliers (1 per ingredient) ────────────────────────────
@@ -440,7 +474,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.maraicher_italien_rate.description',
     targetSupplier: MARAICHER_ITALIEN,
     cost: new Decimal(20), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('maraicher_italien_cost_1') as string]: {
@@ -458,7 +492,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.maraicher_italien_rate.description',
     targetSupplier: MARAICHER_ITALIEN,
     cost: new Decimal(65), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('maraicher_italien_cost_2') as string]: {
@@ -476,7 +510,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.maraicher_italien_rate.description',
     targetSupplier: MARAICHER_ITALIEN,
     cost: new Decimal(210), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('maraicher_italien_cost_3') as string]: {
@@ -494,7 +528,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.maraicher_italien_rate.description',
     targetSupplier: MARAICHER_ITALIEN,
     cost: new Decimal(680), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('maraicher_italien_cost_4') as string]: {
@@ -512,7 +546,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.maraicher_italien_rate.description',
     targetSupplier: MARAICHER_ITALIEN,
     cost: new Decimal(2204), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('maraicher_italien_cost_5') as string]: {
@@ -530,7 +564,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.maraicher_italien_rate.description',
     targetSupplier: MARAICHER_ITALIEN,
     cost: new Decimal(7141), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
 
@@ -541,7 +575,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.fromagerie_napolitaine_rate.description',
     targetSupplier: FROMAGERIE_NAPOLITAINE,
     cost: new Decimal(25), costResource: PIZZA_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('fromagerie_napolitaine_cost_1') as string]: {
@@ -559,7 +593,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.fromagerie_napolitaine_rate.description',
     targetSupplier: FROMAGERIE_NAPOLITAINE,
     cost: new Decimal(81), costResource: PIZZA_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('fromagerie_napolitaine_cost_2') as string]: {
@@ -577,7 +611,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.fromagerie_napolitaine_rate.description',
     targetSupplier: FROMAGERIE_NAPOLITAINE,
     cost: new Decimal(262), costResource: PIZZA_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('fromagerie_napolitaine_cost_3') as string]: {
@@ -595,7 +629,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.fromagerie_napolitaine_rate.description',
     targetSupplier: FROMAGERIE_NAPOLITAINE,
     cost: new Decimal(850), costResource: PIZZA_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('fromagerie_napolitaine_cost_4') as string]: {
@@ -613,7 +647,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.fromagerie_napolitaine_rate.description',
     targetSupplier: FROMAGERIE_NAPOLITAINE,
     cost: new Decimal(2755), costResource: PIZZA_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('fromagerie_napolitaine_cost_5') as string]: {
@@ -631,7 +665,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.fromagerie_napolitaine_rate.description',
     targetSupplier: FROMAGERIE_NAPOLITAINE,
     cost: new Decimal(8926), costResource: PIZZA_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
 
@@ -642,7 +676,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.moulin_sicilien_rate.description',
     targetSupplier: MOULIN_SICILIEN,
     cost: new Decimal(25), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('moulin_sicilien_cost_1') as string]: {
@@ -660,7 +694,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.moulin_sicilien_rate.description',
     targetSupplier: MOULIN_SICILIEN,
     cost: new Decimal(100), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('moulin_sicilien_cost_2') as string]: {
@@ -678,7 +712,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.moulin_sicilien_rate.description',
     targetSupplier: MOULIN_SICILIEN,
     cost: new Decimal(400), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('moulin_sicilien_cost_3') as string]: {
@@ -696,7 +730,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.moulin_sicilien_rate.description',
     targetSupplier: MOULIN_SICILIEN,
     cost: new Decimal(1600), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('moulin_sicilien_cost_4') as string]: {
@@ -714,7 +748,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.moulin_sicilien_rate.description',
     targetSupplier: MOULIN_SICILIEN,
     cost: new Decimal(6400), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('moulin_sicilien_cost_5') as string]: {
@@ -732,7 +766,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.moulin_sicilien_rate.description',
     targetSupplier: MOULIN_SICILIEN,
     cost: new Decimal(25600), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
 
@@ -743,7 +777,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.herboriste_rate.description',
     targetSupplier: HERBORISTE,
     cost: new Decimal(10), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('herboriste_cost_1') as string]: {
@@ -761,7 +795,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.herboriste_rate.description',
     targetSupplier: HERBORISTE,
     cost: new Decimal(44), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('herboriste_cost_2') as string]: {
@@ -779,7 +813,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.herboriste_rate.description',
     targetSupplier: HERBORISTE,
     cost: new Decimal(194), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('herboriste_cost_3') as string]: {
@@ -797,7 +831,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.herboriste_rate.description',
     targetSupplier: HERBORISTE,
     cost: new Decimal(855), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('herboriste_cost_4') as string]: {
@@ -815,7 +849,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.herboriste_rate.description',
     targetSupplier: HERBORISTE,
     cost: new Decimal(3769), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('herboriste_cost_5') as string]: {
@@ -833,7 +867,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.herboriste_rate.description',
     targetSupplier: HERBORISTE,
     cost: new Decimal(16621), costResource: SAUCE_TOMATE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
 
@@ -844,7 +878,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.levurerie_rate.description',
     targetSupplier: LEVURERIE,
     cost: new Decimal(12), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('levurerie_cost_1') as string]: {
@@ -862,7 +896,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.levurerie_rate.description',
     targetSupplier: LEVURERIE,
     cost: new Decimal(58), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('levurerie_cost_2') as string]: {
@@ -880,7 +914,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.levurerie_rate.description',
     targetSupplier: LEVURERIE,
     cost: new Decimal(280), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('levurerie_cost_3') as string]: {
@@ -898,7 +932,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.levurerie_rate.description',
     targetSupplier: LEVURERIE,
     cost: new Decimal(1355), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('levurerie_cost_4') as string]: {
@@ -916,7 +950,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.levurerie_rate.description',
     targetSupplier: LEVURERIE,
     cost: new Decimal(6558), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
   [supplierUpgradeId('levurerie_cost_5') as string]: {
@@ -934,7 +968,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.levurerie_rate.description',
     targetSupplier: LEVURERIE,
     cost: new Decimal(31742), costResource: PATE_A_PIZZA,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pizzas',
   },
 }
@@ -1028,7 +1062,7 @@ export const PIZZAS_BUNDLE: ProductBundle = {
     name: 'definition.name',
     emoji: 'definition.emoji',
     color: 'red',
-    unlockCondition: { resource: PANTINS_COINS_ID, amount: new Decimal(10_000_000) },
+    unlockCondition: { resource: PANTINS_COINS_ID, amount: new Decimal(25_000_000) },
   },
   resources,
   buildings,
@@ -1057,6 +1091,9 @@ export const PIZZAS_BUNDLE: ProductBundle = {
     upgradeId('pizza_four_bois_boost'),
     upgradeId('pizza_global'),
     upgradeId('pizza_achat_en_gros'),
+    upgradeId('pizza_chaleur_tournante'),
+    upgradeId('pizza_synergie_pac'),
+    upgradeId('pizza_mozzarella_artisanale'),
     ...milestonesPotager.upgradeOrder.map(id => upgradeId(id)),
     ...milestonesPetrinPizza.upgradeOrder.map(id => upgradeId(id)),
     ...milestonesPlanDeTravail.upgradeOrder.map(id => upgradeId(id)),

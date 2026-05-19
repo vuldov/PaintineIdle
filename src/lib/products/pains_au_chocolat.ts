@@ -57,7 +57,7 @@ const buildings: Record<string, BuildingData> = {
     id: MALAXEUR, name: 'buildings.malaxeur.name', emoji: 'buildings.malaxeur.emoji',
     description: 'buildings.malaxeur.description',
     baseCost: new Decimal(1_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.45),
+    costMultiplier: 1.10, baseProduction: new Decimal(0.45),
     producedResource: PATE_LEVEE_FEUILLETEE, pipelineRole: 'petrissage', scope: 'pains_au_chocolat',
     aura: {
       effectType: 'cross_product_bonus', bonusPerBuilding: new Decimal(0.02),
@@ -68,7 +68,7 @@ const buildings: Record<string, BuildingData> = {
     id: GARNISSEUR, name: 'buildings.garnisseur.name', emoji: 'buildings.garnisseur.emoji',
     description: 'buildings.garnisseur.description',
     baseCost: new Decimal(800), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.35),
+    costMultiplier: 1.10, baseProduction: new Decimal(0.35),
     producedResource: PATON_CHOCOLAT, pipelineRole: 'garnissage', scope: 'pains_au_chocolat',
     aura: {
       effectType: 'production_bonus', bonusPerBuilding: new Decimal(0.03),
@@ -79,7 +79,7 @@ const buildings: Record<string, BuildingData> = {
     id: FOUR_VENTILE, name: 'buildings.four_ventile.name', emoji: 'buildings.four_ventile.emoji',
     description: 'buildings.four_ventile.description',
     baseCost: new Decimal(1_600), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(1.8),
+    costMultiplier: 1.10, baseProduction: new Decimal(1.8),
     producedResource: PAINS_AU_CHOCOLAT, pipelineRole: 'cuisson', scope: 'pains_au_chocolat',
     aura: {
       effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.02),
@@ -90,7 +90,7 @@ const buildings: Record<string, BuildingData> = {
     id: CHOCOLATERIE, name: 'buildings.chocolaterie.name', emoji: 'buildings.chocolaterie.emoji',
     description: 'buildings.chocolaterie.description',
     baseCost: new Decimal(2_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.9),
+    costMultiplier: 1.10, baseProduction: new Decimal(0.9),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'pains_au_chocolat',
     aura: {
       effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
@@ -264,6 +264,31 @@ const upgrades: Record<string, UpgradeData> = {
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(4_000) },
     scope: 'pains_au_chocolat',
   },
+  // ── Unique: cross-product synergy with croissants ──
+  pac_synergie_croissants: {
+    id: upgradeId('pac_synergie_croissants'), name: 'upgrades.pac_synergie_croissants.name',
+    description: 'upgrades.pac_synergie_croissants.description', emoji: 'upgrades.pac_synergie_croissants.emoji',
+    cost: new Decimal(3_000), costResource: PANTINS_COINS_ID,
+    effect: {
+      type: 'cross_product_synergy', multiplier: new Decimal(1),
+      crossProductEffect: {
+        sourceProduct: 'croissants', targetProduct: 'pains_au_chocolat',
+        bonusType: 'production', bonusPerUnit: new Decimal(0.02), scalingDivisor: 1,
+      },
+    },
+    unlockCondition: { type: 'building_count', buildingId: MALAXEUR, threshold: new Decimal(10) },
+    scope: 'pains_au_chocolat',
+    category: 'synergy',
+  },
+  // ── Unique: chocolat premium — boosts the unique 3rd ingredient ──
+  pac_chocolat_premium: {
+    id: upgradeId('pac_chocolat_premium'), name: 'upgrades.pac_chocolat_premium.name',
+    description: 'upgrades.pac_chocolat_premium.description', emoji: 'upgrades.pac_chocolat_premium.emoji',
+    cost: new Decimal(5_000), costResource: PANTINS_COINS_ID,
+    effect: { type: 'resource_multiplier', targetResource: CHOCOLAT_PATISSIER, multiplier: new Decimal(3) },
+    unlockCondition: { type: 'resource_threshold', resourceId: CHOCOLAT_PATISSIER, threshold: new Decimal(50) },
+    scope: 'pains_au_chocolat',
+  },
 }
 
 // ─── Suppliers (1 per ingredient) ────────────────────────────
@@ -304,7 +329,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.cremerie_normande_rate.description',
     targetSupplier: CREMERIE_NORMANDE,
     cost: new Decimal(15), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('cremerie_normande_cost_1') as string]: {
@@ -322,7 +347,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.cremerie_normande_rate.description',
     targetSupplier: CREMERIE_NORMANDE,
     cost: new Decimal(49), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('cremerie_normande_cost_2') as string]: {
@@ -340,7 +365,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.cremerie_normande_rate.description',
     targetSupplier: CREMERIE_NORMANDE,
     cost: new Decimal(157), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('cremerie_normande_cost_3') as string]: {
@@ -358,7 +383,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.cremerie_normande_rate.description',
     targetSupplier: CREMERIE_NORMANDE,
     cost: new Decimal(510), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('cremerie_normande_cost_4') as string]: {
@@ -376,7 +401,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.cremerie_normande_rate.description',
     targetSupplier: CREMERIE_NORMANDE,
     cost: new Decimal(1653), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('cremerie_normande_cost_5') as string]: {
@@ -394,7 +419,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.cremerie_normande_rate.description',
     targetSupplier: CREMERIE_NORMANDE,
     cost: new Decimal(5356), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
 
@@ -405,7 +430,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.minoterie_rate.description',
     targetSupplier: MINOTERIE,
     cost: new Decimal(22), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('minoterie_cost_1') as string]: {
@@ -423,7 +448,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.minoterie_rate.description',
     targetSupplier: MINOTERIE,
     cost: new Decimal(88), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('minoterie_cost_2') as string]: {
@@ -441,7 +466,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.minoterie_rate.description',
     targetSupplier: MINOTERIE,
     cost: new Decimal(352), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('minoterie_cost_3') as string]: {
@@ -459,7 +484,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.minoterie_rate.description',
     targetSupplier: MINOTERIE,
     cost: new Decimal(1408), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('minoterie_cost_4') as string]: {
@@ -477,7 +502,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.minoterie_rate.description',
     targetSupplier: MINOTERIE,
     cost: new Decimal(5632), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('minoterie_cost_5') as string]: {
@@ -495,7 +520,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.minoterie_rate.description',
     targetSupplier: MINOTERIE,
     cost: new Decimal(22528), costResource: PATE_LEVEE_FEUILLETEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
 
@@ -506,7 +531,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.chocolatier_suisse_rate.description',
     targetSupplier: CHOCOLATIER_BELGE,
     cost: new Decimal(8), costResource: PATON_CHOCOLAT,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('chocolatier_suisse_cost_1') as string]: {
@@ -524,7 +549,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.chocolatier_suisse_rate.description',
     targetSupplier: CHOCOLATIER_BELGE,
     cost: new Decimal(37), costResource: PATON_CHOCOLAT,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('chocolatier_suisse_cost_2') as string]: {
@@ -542,7 +567,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.chocolatier_suisse_rate.description',
     targetSupplier: CHOCOLATIER_BELGE,
     cost: new Decimal(170), costResource: PATON_CHOCOLAT,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('chocolatier_suisse_cost_3') as string]: {
@@ -560,7 +585,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.chocolatier_suisse_rate.description',
     targetSupplier: CHOCOLATIER_BELGE,
     cost: new Decimal(786), costResource: PATON_CHOCOLAT,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('chocolatier_suisse_cost_4') as string]: {
@@ -578,7 +603,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.chocolatier_suisse_rate.description',
     targetSupplier: CHOCOLATIER_BELGE,
     cost: new Decimal(3634), costResource: PATON_CHOCOLAT,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
   [supplierUpgradeId('chocolatier_suisse_cost_5') as string]: {
@@ -596,7 +621,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.chocolatier_suisse_rate.description',
     targetSupplier: CHOCOLATIER_BELGE,
     cost: new Decimal(16799), costResource: PATON_CHOCOLAT,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'pains_au_chocolat',
   },
 }
@@ -662,7 +687,7 @@ export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
     name: 'definition.name',
     emoji: 'definition.emoji',
     color: 'orange',
-    unlockCondition: { resource: PANTINS_COINS_ID, amount: new Decimal(10_000) },
+    unlockCondition: { resource: PANTINS_COINS_ID, amount: new Decimal(25_000) },
   },
   resources,
   buildings,
@@ -686,6 +711,8 @@ export const PAINS_AU_CHOCOLAT_BUNDLE: ProductBundle = {
     upgradeId('cuisson_parfaite'),
     upgradeId('pac_farine_premium'),
     upgradeId('pac_achat_en_gros'),
+    upgradeId('pac_synergie_croissants'),
+    upgradeId('pac_chocolat_premium'),
     ...milestonesMalaxeur.upgradeOrder.map(id => upgradeId(id)),
     ...milestonesGarnisseur.upgradeOrder.map(id => upgradeId(id)),
     ...milestonesFourVentile.upgradeOrder.map(id => upgradeId(id)),

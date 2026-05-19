@@ -48,7 +48,9 @@
     "cuisson_parfaite": { "name": "Cuisson parfaite", "emoji": "🔥", "description": "x2 production du four ventile" },
     "pac_meilleur_prix": { "name": "Emballage premium", "emoji": "💰", "description": "x2 prix de vente" },
     "pac_farine_premium": { "name": "Farine premium", "emoji": "🌾", "description": "x1,5 production de tous les bâtiments chocolatines" },
-    "pac_achat_en_gros": { "name": "Achats groupes", "emoji": "📦", "description": "Bâtiments chocolatines 15% moins chers" }
+    "pac_achat_en_gros": { "name": "Achats groupes", "emoji": "📦", "description": "Bâtiments chocolatines 15% moins chers" },
+    "pac_synergie_croissants": { "name": "Savoir-faire croisé", "emoji": "🤝", "description": "Chaque bâtiment croissant booste la production chocolatines de +2%" },
+    "pac_chocolat_premium": { "name": "Chocolat grand cru", "emoji": "🍫", "description": "x3 production de chocolat pâtissier" }
   },
   "suppliers": {
     "cremerie_normande": { "name": "Crèmerie normande", "emoji": "🧈", "description": "Beurre doux de Normandie, onctueux et frais" },

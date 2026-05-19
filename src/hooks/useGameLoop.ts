@@ -238,7 +238,11 @@ export function useGameLoop() {
     const delta = Math.min(rawDelta, 1)
     lastTimeRef.current = timestamp
 
-    executeTick(delta)
+    try {
+      executeTick(delta)
+    } catch (err) {
+      console.error('[GameLoop] Erreur dans le tick:', err)
+    }
 
     rafRef.current = requestAnimationFrame(tick)
   }, [])
@@ -254,7 +258,11 @@ export function useGameLoop() {
       const rawDelta = (now - lastBackgroundTimeRef.current) / 1000
       const delta = Math.min(rawDelta, 2) // allow slightly larger ticks in background
       lastBackgroundTimeRef.current = now
-      executeTick(delta)
+      try {
+        executeTick(delta)
+      } catch (err) {
+        console.error('[GameLoop] Erreur dans le tick (background):', err)
+      }
     }, BACKGROUND_INTERVAL_MS)
   }, [])
 

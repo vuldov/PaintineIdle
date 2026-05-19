@@ -170,17 +170,25 @@ export function calcSupplierTick(
 
   // 2. Compute throttle factor
   const totalCostThisTick = totalCostPerSecond.mul(delta)
-  let throttle = new Decimal(1)
+  let costThrottle = new Decimal(1)
   if (totalCostThisTick.gt(0) && totalCostThisTick.gt(availableCoins)) {
-    throttle = availableCoins.div(totalCostThisTick)
+    costThrottle = availableCoins.div(totalCostThisTick)
   }
 
+  // Production throttle: floored at 10% to prevent complete deadlock when coins are depleted.
+  // The "free" portion (beyond what coins cover) represents suppliers extending credit.
+  const MIN_SUPPLIER_THROTTLE = new Decimal(0.1)
+  const productionThrottle = (costThrottle.lt(MIN_SUPPLIER_THROTTLE) && totalCostThisTick.gt(0))
+    ? MIN_SUPPLIER_THROTTLE
+    : costThrottle
+
   // 3. Apply throttle and build results
+  // Production uses the floored throttle; cost uses the actual throttle (don't charge more than available)
   let totalCoinCost = new Decimal(0)
 
   for (const raw of rawEntries) {
-    const production = raw.productionPerSec.mul(delta).mul(throttle)
-    const cost = raw.costPerSec.mul(delta).mul(throttle)
+    const production = raw.productionPerSec.mul(delta).mul(productionThrottle)
+    const cost = raw.costPerSec.mul(delta).mul(costThrottle)
 
     entries.push({
       supplierId: raw.supplierId,

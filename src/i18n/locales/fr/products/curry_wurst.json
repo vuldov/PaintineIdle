@@ -62,7 +62,10 @@
     "wurst_melangeur_boost": { "name": "Mélangeur turbo", "emoji": "⚙️", "description": "x2 production du mélangeur d'épices" },
     "wurst_garnisseuse_boost": { "name": "Garnisseuse automatique", "emoji": "🍟", "description": "x2 production de la garnisseuse" },
     "wurst_global": { "name": "Recette de Berlin", "emoji": "🇩🇪", "description": "x1,5 production de tous les bâtiments" },
-    "wurst_achat_en_gros": { "name": "Approvisionnement en gros", "emoji": "📦", "description": "Bâtiments 15% moins chers" }
+    "wurst_achat_en_gros": { "name": "Approvisionnement en gros", "emoji": "📦", "description": "Bâtiments 15% moins chers" },
+    "wurst_industrialisation": { "name": "Industrialisation", "emoji": "🏭", "description": "+1% production globale par tranche de 5 bâtiments totaux" },
+    "wurst_synergie_pizzas": { "name": "Street food combo", "emoji": "🤝", "description": "Chaque bâtiment pizza booste la production curry wurst de +1,5%" },
+    "wurst_epices_rares": { "name": "Épices rares", "emoji": "🌶️", "description": "x3 production d'épices" }
   },
   "suppliers": {
     "tofu_meister": { "name": "Tofu-Meister", "emoji": "🌱", "description": "Saucisses végé artisanales au seitan et tofu" },

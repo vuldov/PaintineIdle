@@ -70,7 +70,7 @@ const buildings: Record<string, BuildingData> = {
     id: MELANGEUR_EPICES, name: 'buildings.melangeur_epices.name', emoji: 'buildings.melangeur_epices.emoji',
     description: 'buildings.melangeur_epices.description',
     baseCost: new Decimal(10_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.4),
+    costMultiplier: 1.12, baseProduction: new Decimal(0.4),
     producedResource: GEWURZ_KETCHUP, pipelineRole: 'petrissage', scope: 'curry_wurst',
     aura: {
       effectType: 'crafting_speed_bonus', bonusPerBuilding: new Decimal(0.02),
@@ -81,7 +81,7 @@ const buildings: Record<string, BuildingData> = {
     id: SAUCIER, name: 'buildings.saucier.name', emoji: 'buildings.saucier.emoji',
     description: 'buildings.saucier.description',
     baseCost: new Decimal(12_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.3),
+    costMultiplier: 1.12, baseProduction: new Decimal(0.3),
     producedResource: SAUCISSE_SAUCEE, pipelineRole: 'garnissage', scope: 'curry_wurst',
     aura: {
       effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.05),
@@ -92,7 +92,7 @@ const buildings: Record<string, BuildingData> = {
     id: GARNISSEUSE, name: 'buildings.garnisseuse.name', emoji: 'buildings.garnisseuse.emoji',
     description: 'buildings.garnisseuse.description',
     baseCost: new Decimal(20_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.6),
+    costMultiplier: 1.12, baseProduction: new Decimal(0.6),
     producedResource: WURST_GARNIE, pipelineRole: 'dorure', scope: 'curry_wurst',
     aura: {
       effectType: 'ingredient_generation_bonus', bonusPerBuilding: new Decimal(0.04),
@@ -103,7 +103,7 @@ const buildings: Record<string, BuildingData> = {
     id: GRILL_VEGETAL, name: 'buildings.grill_vegetal.name', emoji: 'buildings.grill_vegetal.emoji',
     description: 'buildings.grill_vegetal.description',
     baseCost: new Decimal(30_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(1.5),
+    costMultiplier: 1.12, baseProduction: new Decimal(1.5),
     producedResource: CURRY_WURST, pipelineRole: 'cuisson', scope: 'curry_wurst',
     aura: {
       effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.02),
@@ -114,7 +114,7 @@ const buildings: Record<string, BuildingData> = {
     id: IMBISS, name: 'buildings.imbiss.name', emoji: 'buildings.imbiss.emoji',
     description: 'buildings.imbiss.description',
     baseCost: new Decimal(50_000), costResource: PANTINS_COINS_ID,
-    costMultiplier: 1.15, baseProduction: new Decimal(0.8),
+    costMultiplier: 1.12, baseProduction: new Decimal(0.8),
     producedResource: PANTINS_COINS_ID, pipelineRole: 'vente', scope: 'curry_wurst',
     aura: {
       effectType: 'sell_price_bonus', bonusPerBuilding: new Decimal(0.01),
@@ -320,6 +320,47 @@ const upgrades: Record<string, UpgradeData> = {
     unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(40_000) },
     scope: 'curry_wurst',
   },
+  // ── Unique: scaling bonus — production grows with total buildings ──
+  wurst_industrialisation: {
+    id: upgradeId('wurst_industrialisation'), name: 'upgrades.wurst_industrialisation.name',
+    description: 'upgrades.wurst_industrialisation.description', emoji: 'upgrades.wurst_industrialisation.emoji',
+    cost: new Decimal(100_000), costResource: PANTINS_COINS_ID,
+    effect: {
+      type: 'scaling', multiplier: new Decimal(1),
+      scalingEffect: {
+        source: 'total_buildings', bonusType: 'global_production',
+        bonusPerUnit: new Decimal(0.01), scalingDivisor: 5,
+      },
+    },
+    unlockCondition: { type: 'resource_threshold', resourceId: PANTINS_COINS_ID, threshold: new Decimal(50_000) },
+    scope: 'curry_wurst',
+    category: 'scaling',
+  },
+  // ── Unique: cross-product synergy with pizzas ──
+  wurst_synergie_pizzas: {
+    id: upgradeId('wurst_synergie_pizzas'), name: 'upgrades.wurst_synergie_pizzas.name',
+    description: 'upgrades.wurst_synergie_pizzas.description', emoji: 'upgrades.wurst_synergie_pizzas.emoji',
+    cost: new Decimal(60_000), costResource: PANTINS_COINS_ID,
+    effect: {
+      type: 'cross_product_synergy', multiplier: new Decimal(1),
+      crossProductEffect: {
+        sourceProduct: 'pizzas', targetProduct: 'curry_wurst',
+        bonusType: 'production', bonusPerUnit: new Decimal(0.015), scalingDivisor: 1,
+      },
+    },
+    unlockCondition: { type: 'building_count', buildingId: IMBISS, threshold: new Decimal(10) },
+    scope: 'curry_wurst',
+    category: 'synergy',
+  },
+  // ── Unique: epices rares — massive boost to the unique spice resource ──
+  wurst_epices_rares: {
+    id: upgradeId('wurst_epices_rares'), name: 'upgrades.wurst_epices_rares.name',
+    description: 'upgrades.wurst_epices_rares.description', emoji: 'upgrades.wurst_epices_rares.emoji',
+    cost: new Decimal(40_000), costResource: PANTINS_COINS_ID,
+    effect: { type: 'resource_multiplier', targetResource: EPICES, multiplier: new Decimal(3) },
+    unlockCondition: { type: 'resource_threshold', resourceId: EPICES, threshold: new Decimal(100) },
+    scope: 'curry_wurst',
+  },
 }
 
 // ─── Suppliers (1 per ingredient) ────────────────────────────
@@ -368,7 +409,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.tofu_meister_rate.description',
     targetSupplier: TOFU_MEISTER,
     cost: new Decimal(10), costResource: SAUCISSE_SAUCEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('tofu_meister_cost_1') as string]: {
@@ -386,7 +427,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.tofu_meister_rate.description',
     targetSupplier: TOFU_MEISTER,
     cost: new Decimal(32), costResource: SAUCISSE_SAUCEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('tofu_meister_cost_2') as string]: {
@@ -404,7 +445,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.tofu_meister_rate.description',
     targetSupplier: TOFU_MEISTER,
     cost: new Decimal(105), costResource: SAUCISSE_SAUCEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('tofu_meister_cost_3') as string]: {
@@ -422,7 +463,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.tofu_meister_rate.description',
     targetSupplier: TOFU_MEISTER,
     cost: new Decimal(340), costResource: SAUCISSE_SAUCEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('tofu_meister_cost_4') as string]: {
@@ -440,7 +481,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.tofu_meister_rate.description',
     targetSupplier: TOFU_MEISTER,
     cost: new Decimal(1102), costResource: SAUCISSE_SAUCEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('tofu_meister_cost_5') as string]: {
@@ -458,7 +499,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.tofu_meister_rate.description',
     targetSupplier: TOFU_MEISTER,
     cost: new Decimal(3570), costResource: SAUCISSE_SAUCEE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
 
@@ -469,7 +510,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.ferme_tomates_rate.description',
     targetSupplier: FERME_TOMATES,
     cost: new Decimal(15), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('ferme_tomates_cost_1') as string]: {
@@ -487,7 +528,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.ferme_tomates_rate.description',
     targetSupplier: FERME_TOMATES,
     cost: new Decimal(60), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('ferme_tomates_cost_2') as string]: {
@@ -505,7 +546,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.ferme_tomates_rate.description',
     targetSupplier: FERME_TOMATES,
     cost: new Decimal(240), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('ferme_tomates_cost_3') as string]: {
@@ -523,7 +564,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.ferme_tomates_rate.description',
     targetSupplier: FERME_TOMATES,
     cost: new Decimal(960), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('ferme_tomates_cost_4') as string]: {
@@ -541,7 +582,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.ferme_tomates_rate.description',
     targetSupplier: FERME_TOMATES,
     cost: new Decimal(3840), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('ferme_tomates_cost_5') as string]: {
@@ -559,7 +600,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.ferme_tomates_rate.description',
     targetSupplier: FERME_TOMATES,
     cost: new Decimal(15360), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
 
@@ -570,7 +611,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.marche_epices_rate.description',
     targetSupplier: MARCHE_EPICES,
     cost: new Decimal(18), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('marche_epices_cost_1') as string]: {
@@ -588,7 +629,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.marche_epices_rate.description',
     targetSupplier: MARCHE_EPICES,
     cost: new Decimal(46), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('marche_epices_cost_2') as string]: {
@@ -606,7 +647,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.marche_epices_rate.description',
     targetSupplier: MARCHE_EPICES,
     cost: new Decimal(118), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('marche_epices_cost_3') as string]: {
@@ -624,7 +665,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.marche_epices_rate.description',
     targetSupplier: MARCHE_EPICES,
     cost: new Decimal(302), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('marche_epices_cost_4') as string]: {
@@ -642,7 +683,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.marche_epices_rate.description',
     targetSupplier: MARCHE_EPICES,
     cost: new Decimal(773), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('marche_epices_cost_5') as string]: {
@@ -660,7 +701,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.marche_epices_rate.description',
     targetSupplier: MARCHE_EPICES,
     cost: new Decimal(1979), costResource: GEWURZ_KETCHUP,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
 
@@ -671,7 +712,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.friterie_rate.description',
     targetSupplier: FRITERIE,
     cost: new Decimal(6), costResource: WURST_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('friterie_cost_1') as string]: {
@@ -689,7 +730,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.friterie_rate.description',
     targetSupplier: FRITERIE,
     cost: new Decimal(29), costResource: WURST_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('friterie_cost_2') as string]: {
@@ -707,7 +748,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.friterie_rate.description',
     targetSupplier: FRITERIE,
     cost: new Decimal(140), costResource: WURST_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('friterie_cost_3') as string]: {
@@ -725,7 +766,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.friterie_rate.description',
     targetSupplier: FRITERIE,
     cost: new Decimal(678), costResource: WURST_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('friterie_cost_4') as string]: {
@@ -743,7 +784,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.friterie_rate.description',
     targetSupplier: FRITERIE,
     cost: new Decimal(3281), costResource: WURST_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
   [supplierUpgradeId('friterie_cost_5') as string]: {
@@ -761,7 +802,7 @@ const supplierUpgrades: Record<string, SupplierUpgradeData> = {
     description: 'supplier_upgrades.friterie_rate.description',
     targetSupplier: FRITERIE,
     cost: new Decimal(15879), costResource: WURST_GARNIE,
-    effectType: 'max_rate_bonus', effectValue: new Decimal(3),
+    effectType: 'max_rate_bonus', effectValue: new Decimal(2),
     scope: 'curry_wurst',
   },
 }
@@ -840,7 +881,7 @@ export const CURRY_WURST_BUNDLE: ProductBundle = {
     name: 'definition.name',
     emoji: 'definition.emoji',
     color: 'yellow',
-    unlockCondition: { resource: PANTINS_COINS_ID, amount: new Decimal(500_000) },
+    unlockCondition: { resource: PANTINS_COINS_ID, amount: new Decimal(750_000) },
   },
   resources,
   buildings,
@@ -866,6 +907,9 @@ export const CURRY_WURST_BUNDLE: ProductBundle = {
     upgradeId('wurst_garnisseuse_boost'),
     upgradeId('wurst_global'),
     upgradeId('wurst_achat_en_gros'),
+    upgradeId('wurst_industrialisation'),
+    upgradeId('wurst_synergie_pizzas'),
+    upgradeId('wurst_epices_rares'),
     ...milestonesMelangeur.upgradeOrder.map(id => upgradeId(id)),
     ...milestonesSaucier.upgradeOrder.map(id => upgradeId(id)),
     ...milestonesGarnisseuse.upgradeOrder.map(id => upgradeId(id)),

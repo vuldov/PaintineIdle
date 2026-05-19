@@ -5,45 +5,53 @@ import { MILESTONE_THRESHOLDS, upgradeId, PANTINS_COINS_ID } from '@/types'
 
 type EffectTemplate = { effects: Array<{ type: MilestoneEffect['type']; value: number }> }
 
+// Petrissage: steady growth, lower peaks — raw material processing
+// Total mult: ~16K× (lower than cuisson — not the bottleneck)
 const PETRISSAGE_TEMPLATE: Record<MilestoneThreshold, EffectTemplate> = {
   1:   { effects: [{ type: 'building_production_multiplier', value: 1.5 }] },
   5:   { effects: [{ type: 'building_production_multiplier', value: 1.5 }] },
-  10:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
+  10:  { effects: [{ type: 'building_production_multiplier', value: 1.5 }] },
   25:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  50:  { effects: [{ type: 'building_production_multiplier', value: 2.5 }] },
+  50:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
   75:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  100: { effects: [{ type: 'building_production_multiplier', value: 3 }] },
+  100: { effects: [{ type: 'building_production_multiplier', value: 2.5 }] },
   150: { effects: [{ type: 'building_production_multiplier', value: 3 }] },
-  200: { effects: [{ type: 'building_production_multiplier', value: 5 }] },
-  250: { effects: [{ type: 'building_production_multiplier', value: 5 }] },
+  200: { effects: [{ type: 'building_production_multiplier', value: 8 }] },
+  250: { effects: [{ type: 'building_production_multiplier', value: 20 }] },
 }
 
+// Cuisson: high burst multipliers — the bottleneck breaker
+// Total mult: ~200K× (highest — rewards investment in the production stage)
 const CUISSON_TEMPLATE: Record<MilestoneThreshold, EffectTemplate> = {
-  1:   { effects: [{ type: 'building_production_multiplier', value: 1.5 }] },
-  5:   { effects: [{ type: 'building_production_multiplier', value: 1.5 }] },
+  1:   { effects: [{ type: 'building_production_multiplier', value: 2 }] },
+  5:   { effects: [{ type: 'building_production_multiplier', value: 2 }] },
   10:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  25:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  50:  { effects: [{ type: 'building_production_multiplier', value: 2.5 }] },
-  75:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  100: { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  150: { effects: [{ type: 'building_production_multiplier', value: 3 }] },
-  200: { effects: [{ type: 'building_production_multiplier', value: 3 }] },
-  250: { effects: [{ type: 'building_production_multiplier', value: 5 }] },
+  25:  { effects: [{ type: 'building_production_multiplier', value: 2.5 }] },
+  50:  { effects: [{ type: 'building_production_multiplier', value: 3 }] },
+  75:  { effects: [{ type: 'building_production_multiplier', value: 2.5 }] },
+  100: { effects: [{ type: 'building_production_multiplier', value: 3 }] },
+  150: { effects: [{ type: 'building_production_multiplier', value: 4 }] },
+  200: { effects: [{ type: 'building_production_multiplier', value: 12 }] },
+  250: { effects: [{ type: 'building_production_multiplier', value: 25 }] },
 }
 
+// Vente: sell price bonuses — increases coin value per unit sold
+// Total sell mult: ~50K× (different axis: sell_multiplier instead of production)
 const VENTE_TEMPLATE: Record<MilestoneThreshold, EffectTemplate> = {
-  1:   { effects: [{ type: 'building_production_multiplier', value: 1.5 }] },
-  5:   { effects: [{ type: 'building_production_multiplier', value: 1.5 }] },
-  10:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  25:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  50:  { effects: [{ type: 'building_production_multiplier', value: 2.5 }] },
-  75:  { effects: [{ type: 'building_production_multiplier', value: 3 }] },
-  100: { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  150: { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  200: { effects: [{ type: 'building_production_multiplier', value: 3 }] },
-  250: { effects: [{ type: 'building_production_multiplier', value: 5 }] },
+  1:   { effects: [{ type: 'sell_multiplier', value: 1.5 }] },
+  5:   { effects: [{ type: 'sell_multiplier', value: 1.5 }] },
+  10:  { effects: [{ type: 'sell_multiplier', value: 2 }] },
+  25:  { effects: [{ type: 'sell_multiplier', value: 2 }] },
+  50:  { effects: [{ type: 'sell_multiplier', value: 2 }] },
+  75:  { effects: [{ type: 'sell_multiplier', value: 2.5 }] },
+  100: { effects: [{ type: 'sell_multiplier', value: 3 }] },
+  150: { effects: [{ type: 'sell_multiplier', value: 3 }] },
+  200: { effects: [{ type: 'sell_multiplier', value: 8 }] },
+  250: { effects: [{ type: 'sell_multiplier', value: 20 }] },
 }
 
+// Balanced: default for garnissage, dorure, etalage, preparation_sauce
+// Total mult: ~100K× (middle ground)
 const BALANCED_TEMPLATE: Record<MilestoneThreshold, EffectTemplate> = {
   1:   { effects: [{ type: 'building_production_multiplier', value: 1.5 }] },
   5:   { effects: [{ type: 'building_production_multiplier', value: 1.5 }] },
@@ -52,9 +60,9 @@ const BALANCED_TEMPLATE: Record<MilestoneThreshold, EffectTemplate> = {
   50:  { effects: [{ type: 'building_production_multiplier', value: 2.5 }] },
   75:  { effects: [{ type: 'building_production_multiplier', value: 2 }] },
   100: { effects: [{ type: 'building_production_multiplier', value: 3 }] },
-  150: { effects: [{ type: 'building_production_multiplier', value: 2 }] },
-  200: { effects: [{ type: 'building_production_multiplier', value: 3 }] },
-  250: { effects: [{ type: 'building_production_multiplier', value: 5 }] },
+  150: { effects: [{ type: 'building_production_multiplier', value: 3 }] },
+  200: { effects: [{ type: 'building_production_multiplier', value: 10 }] },
+  250: { effects: [{ type: 'building_production_multiplier', value: 25 }] },
 }
 
 function getTemplate(role: PipelineRole): Record<MilestoneThreshold, EffectTemplate> {
@@ -69,6 +77,7 @@ function getTemplate(role: PipelineRole): Record<MilestoneThreshold, EffectTempl
 function effectDescription(e: { type: MilestoneEffect['type']; value: number }): string {
   switch (e.type) {
     case 'building_production_multiplier': return `x${e.value} production`
+    case 'sell_multiplier': return `x${e.value} prix de vente`
   }
 }
 
@@ -92,8 +101,12 @@ const INTERMEDIATE_COST_THRESHOLDS: ReadonlySet<MilestoneThreshold> = new Set([5
 
 // ─── Effect type mapping ──────────────────────────────────────────
 
-function milestoneEffectToUpgradeEffectType(_e: MilestoneEffect['type']): UpgradeEffectType {
-  return 'building_multiplier'
+function milestoneEffectToUpgradeEffectType(e: MilestoneEffect['type']): UpgradeEffectType {
+  switch (e) {
+    case 'sell_multiplier': return 'sell_multiplier'
+    case 'building_production_multiplier':
+    default: return 'building_multiplier'
+  }
 }
 
 // ─── Generate result type ────────────────────────────────────────
@@ -157,8 +170,13 @@ export function generateMilestones(
     const costResource = useIntermediate ? intermediateResource : PANTINS_COINS_ID
     const cost = MILESTONE_COSTS[threshold].mul(costScale)
 
-    // All milestone effects are building_production_multiplier
     const primaryEffect = entry.effects[0]
+    const upgradeEffectType = milestoneEffectToUpgradeEffectType(primaryEffect.type)
+
+    // sell_multiplier doesn't target a building — it boosts the product's sell price
+    const effect: UpgradeData['effect'] = upgradeEffectType === 'sell_multiplier'
+      ? { type: 'sell_multiplier', multiplier: new Decimal(primaryEffect.value) }
+      : { type: upgradeEffectType, targetBuilding: bId, multiplier: new Decimal(primaryEffect.value) }
 
     const upgradeData: UpgradeData = {
       id: upgradeId(id),
@@ -167,11 +185,7 @@ export function generateMilestones(
       emoji: '🏆',
       cost,
       costResource,
-      effect: {
-        type: milestoneEffectToUpgradeEffectType(primaryEffect.type),
-        targetBuilding: bId,
-        multiplier: new Decimal(primaryEffect.value),
-      },
+      effect,
       unlockCondition: {
         type: 'building_count',
         buildingId: bId,

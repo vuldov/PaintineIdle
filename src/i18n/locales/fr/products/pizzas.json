@@ -67,7 +67,10 @@
     "pizza_plan_travail_boost": { "name": "Plan de travail en marbre", "emoji": "🪵", "description": "x2 production du plan de travail" },
     "pizza_four_bois_boost": { "name": "Bois de chêne", "emoji": "🔥", "description": "x2 production du four à bois" },
     "pizza_global": { "name": "Recette napolitaine", "emoji": "🇮🇹", "description": "x1,5 production de tous les bâtiments" },
-    "pizza_achat_en_gros": { "name": "Fournisseur italien", "emoji": "📦", "description": "Bâtiments 15% moins chers" }
+    "pizza_achat_en_gros": { "name": "Fournisseur italien", "emoji": "📦", "description": "Bâtiments 15% moins chers" },
+    "pizza_chaleur_tournante": { "name": "Chaleur tournante", "emoji": "🌀", "description": "x2 production de tous les bâtiments pizza" },
+    "pizza_synergie_pac": { "name": "Clientèle fidèle", "emoji": "🤝", "description": "Chaque bâtiment chocolatines booste le prix de vente des pizzas de +1,5%" },
+    "pizza_mozzarella_artisanale": { "name": "Mozzarella artisanale", "emoji": "🧀", "description": "x3 production de mozzarella" }
   },
   "suppliers": {
     "maraicher_italien": { "name": "Maraicher italien", "emoji": "🍅", "description": "Tomates San Marzano fraiches du Vésuve" },
